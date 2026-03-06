@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Theme CSS Variables ───────────────────────────────────────────────────── */
+:root {
+  --ink-950: 3 3 3;
+  --ink-900: 10 10 10;
+  --ink-800: 17 17 17;
+  --ink-700: 26 26 26;
+  --ink-600: 36 36 36;
+  --ink-500: 46 46 46;
+  --ink-400: 61 61 61;
+  --ink-300: 82 82 82;
+  --ink-200: 115 115 115;
+  --ink-100: 163 163 163;
+}
+
+[data-theme="light"] {
+  --ink-950: 244 245 247;
+  --ink-900: 248 249 251;
+  --ink-800: 255 255 255;
+  --ink-700: 241 243 246;
+  --ink-600: 226 229 235;
+  --ink-500: 209 213 219;
+  --ink-400: 148 163 184;
+  --ink-300: 100 116 139;
+  --ink-200: 71 85 105;
+  --ink-100: 15 23 42;
+}
+
+/* ─── Smooth Theme Transition ───────────────────────────────────────────────── */
+body, header, aside, nav, main,
+.glass-card, .glass-card-hover, .input-dark, .btn-ghost {
+  transition: background-color 280ms ease, color 280ms ease,
+              border-color 280ms ease, box-shadow 280ms ease;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply bg-ink-900 antialiased;
+    color: rgb(var(--ink-100));
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* ─── Components ────────────────────────────────────────────────────────────── */
+@layer components {
+  .glass-card {
+    @apply bg-ink-800/60 backdrop-blur-md border border-ink-600/30 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .glass-card-hover {
+    @apply bg-ink-800/60 backdrop-blur-md border border-ink-600/30 rounded-2xl transition-all duration-300;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .crimson-glow {
+    box-shadow: 0 0 20px rgba(220,20,60,0.3), 0 0 60px rgba(220,20,60,0.1);
+  }
+
+  .btn-primary {
+    @apply bg-crimson-700 hover:bg-crimson-600 text-white font-medium px-5 py-2.5 rounded-xl
+           transition-all duration-200 hover:shadow-crimson active:scale-95 flex items-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply font-medium px-5 py-2.5 rounded-xl transition-all duration-200
+           flex items-center gap-2 border border-transparent;
+    color: rgb(var(--ink-200));
+  }
+
+  .badge {
+    @apply text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+
+  .input-dark {
+    @apply border rounded-xl px-4 py-2.5
+           focus:outline-none focus:border-crimson-700/50 transition-all duration-200 w-full;
+    background-color: rgb(var(--ink-700) / 0.5);
+    border-color: rgb(var(--ink-500) / 0.4);
+    color: rgb(var(--ink-100));
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
+           transition-all duration-200 cursor-pointer;
+    color: rgb(var(--ink-200));
+  }
+
+  .nav-item-active {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-white font-medium text-sm
+           transition-all duration-200 cursor-pointer bg-crimson-700/20 border border-crimson-700/30;
+  }
+
+  .section-title {
+    @apply text-2xl font-bold tracking-tight;
+    color: rgb(var(--ink-100));
+  }
+
+  .page-header {
+    @apply flex items-center justify-between mb-8;
+  }
+
+  .metric-card {
+    @apply bg-ink-800/60 backdrop-blur-md border border-ink-600/30 rounded-2xl p-6 flex flex-col gap-3;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+}
+
+/* ─── Utilities ─────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(to right, rgb(var(--ink-100)), rgb(var(--ink-300)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-crimson {
+    background: linear-gradient(to right, #f83856, #DC143C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ─── Non-layer styles ──────────────────────────────────────────────────────── */
+.dot-pattern {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.glass-card-hover:hover {
+  border-color: rgb(220 20 60 / 0.3);
+  background-color: rgb(var(--ink-700) / 0.6);
+}
+
+.btn-ghost:hover {
+  color: rgb(var(--ink-100));
+  background-color: rgb(var(--ink-700) / 0.6);
+  border-color: rgb(var(--ink-500) / 0.4);
+}
+
+.input-dark:focus {
+  background-color: rgb(var(--ink-700));
+}
+
+.input-dark::placeholder {
+  color: rgb(var(--ink-300));
+}
+
+/* ─── Light Mode Overrides (flat selectors — no nesting) ────────────────────── */
+[data-theme="light"] .text-white  { color: rgb(var(--ink-100)) !important; }
+[data-theme="light"] .hover\:text-white:hover { color: rgb(var(--ink-100)) !important; }
+
+[data-theme="light"] .glass-card {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
+  border-color: rgb(var(--ink-600) / 0.5);
+}
+
+[data-theme="light"] .glass-card-hover:hover {
+  border-color: rgb(220 20 60 / 0.25);
+  background-color: rgb(var(--ink-800) / 0.95);
+}
+
+[data-theme="light"] .dot-pattern {
+  background-image: radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px);
+}
+
+[data-theme="light"] .input-dark {
+  background-color: rgb(var(--ink-700)) !important;
+  border-color: rgb(var(--ink-500) / 0.5) !important;
+  color: rgb(var(--ink-100)) !important;
+}
+
+[data-theme="light"] .input-dark::placeholder {
+  color: rgb(var(--ink-300)) !important;
+}
+
+[data-theme="light"] .hover\:bg-white\/5:hover,
+[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: rgb(var(--ink-700) / 0.6) !important;
+}
+
+[data-theme="light"] select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}

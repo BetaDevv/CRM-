@@ -2,6 +2,7 @@ import { Router, Response } from 'express'
 import { pool } from '../db'
 import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
+import { logActivity } from '../services/activityLogger'
 
 const router = Router()
 router.use(verifyToken, requireAdmin)
@@ -28,6 +29,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
       [id, title, description || null, status || 'brainstorm', JSON.stringify(tags || []), emoji || '💡', client_id || null]
     )
+    logActivity({ type: 'idea_created', description: `Nueva idea: ${title}`, entityType: 'idea', entityId: id })
     res.status(201).json(parseIdea(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -41,6 +43,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       `UPDATE ideas SET title=$1, description=$2, status=$3, tags=$4, emoji=$5 WHERE id=$6 RETURNING *`,
       [title, description || null, status || 'brainstorm', JSON.stringify(tags || []), emoji || '💡', req.params.id]
     )
+    logActivity({ type: 'idea_updated', description: `Idea actualizada: ${title}`, entityType: 'idea', entityId: req.params.id })
     res.json(parseIdea(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })

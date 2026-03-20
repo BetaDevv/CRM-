@@ -7,7 +7,7 @@ import {
 import {
   TrendingUp, Users, Eye, Heart, MessageSquare, Share2,
   Linkedin, ExternalLink, Loader2, AlertCircle, ArrowUpRight, ArrowDownRight,
-  RefreshCw, Unlink, Globe, BarChart3, Play, ThumbsUp,
+  RefreshCw, Unlink, Globe, BarChart3, Play, ThumbsUp, FileDown,
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
@@ -470,6 +470,7 @@ export default function Metricas() {
   const [loading, setLoading] = useState(false)
   const [days, setDays] = useState(30)
   const [syncing, setSyncing] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const activeClients = clients.filter(c => c.status === 'active')
 
@@ -503,6 +504,27 @@ export default function Metricas() {
     setTimeout(() => setSyncing(false), 2000)
   }
 
+  const handleExport = async () => {
+    if (!selectedClientId) return
+    setExporting(true)
+    try {
+      const response = await api.get(`/reports/${selectedClientId}?days=${days}`, {
+        responseType: 'blob',
+      })
+      const clientName = clients.find(c => c.id === selectedClientId)?.company || 'cliente'
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `reporte-${clientName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      link.click()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Error exportando reporte:', err)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const client = clients.find(c => c.id === selectedClientId)
   const conn = data?.connections?.[activePlatform]
   const platformData = data?.platforms?.[activePlatform]
@@ -525,6 +547,13 @@ export default function Metricas() {
               </button>
             ))}
           </div>
+          {selectedClientId && data && (
+            <button onClick={handleExport} disabled={exporting}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-crimson-700/20 border border-crimson-700/30 text-crimson-400 hover:bg-crimson-700/30 hover:text-white transition-all disabled:opacity-50">
+              <FileDown size={13} className={exporting ? 'animate-bounce' : ''} />
+              {exporting ? 'Exportando...' : 'Exportar PDF'}
+            </button>
+          )}
           {isAdmin() && (
             <button onClick={handleSync} disabled={syncing}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-ink-800/60 border border-white/10 text-ink-300 hover:text-white transition-all disabled:opacity-50">

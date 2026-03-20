@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Lightbulb,
   CheckSquare, ThumbsUp, Map, ChevronLeft, ChevronRight,
-  BarChart2, LogOut,
+  BarChart2, LogOut, UserCog, CalendarDays,
 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useAuthStore } from '../../store/useAuthStore'
@@ -17,7 +17,9 @@ const adminNav = [
   { path: '/todo',         icon: CheckSquare,     label: 'To-Do Semanal' },
   { path: '/aprobaciones', icon: ThumbsUp,        label: 'Aprobaciones' },
   { path: '/plan',         icon: Map,             label: 'Plan de Marketing' },
+  { path: '/calendario',   icon: CalendarDays,    label: 'Calendario' },
   { path: '/metricas',     icon: BarChart2,       label: 'Métricas' },
+  { path: '/usuarios',    icon: UserCog,         label: 'Usuarios' },
 ]
 
 export default function Sidebar() {

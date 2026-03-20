@@ -17,6 +17,7 @@ export interface Prospect {
   createdAt: string
   avatar?: string
   source: string
+  probability?: number
 }
 
 export interface Client {

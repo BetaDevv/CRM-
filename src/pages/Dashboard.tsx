@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, Users, UserCheck, Lightbulb, CheckSquare, ThumbsUp, ArrowUpRight, Zap } from 'lucide-react'
+import { TrendingUp, Users, UserCheck, Lightbulb, CheckSquare, ThumbsUp, ArrowUpRight, Zap, Target } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { formatCurrency } from '../lib/utils'
 import { Link } from 'react-router-dom'
+import { getActivity, type ActivityLog } from '../lib/api'
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.07 } },
@@ -20,6 +22,15 @@ export default function Dashboard() {
   const completedTodos = todos.filter(t => t.done).length
   const totalTodos = todos.length
   const progress = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0
+
+  // Pipeline estimado — sum(budget * probability / 100) for active prospects
+  const pipelineEstimado = prospects
+    .filter(p => p.status !== 'won' && p.status !== 'lost')
+    .reduce((acc, p) => {
+      const budgetNum = parseFloat((p.budget || '0').replace(/[^0-9.,]/g, '').replace(',', '')) || 0
+      const prob = p.probability ?? 0
+      return acc + (budgetNum * prob / 100)
+    }, 0)
 
   const metrics = [
     {
@@ -47,6 +58,14 @@ export default function Dashboard() {
       bg: 'rgba(96,165,250,0.1)',
     },
     {
+      label: 'Pipeline Estimado',
+      value: formatCurrency(pipelineEstimado),
+      sub: `${prospects.filter(p => p.status !== 'won' && p.status !== 'lost').length} prospectos activos`,
+      icon: Target,
+      color: '#f97316',
+      bg: 'rgba(249,115,22,0.1)',
+    },
+    {
       label: 'Posts Pendientes',
       value: pendingPosts.toString(),
       sub: 'Esperando aprobación',
@@ -56,13 +75,39 @@ export default function Dashboard() {
     },
   ]
 
-  const recentActivity = [
-    { text: 'TechNova aprobó post para LinkedIn', time: 'Hace 30 min', color: '#34d399' },
-    { text: 'Nuevo prospecto: Moda Élite', time: 'Hace 1 hora', color: '#60a5fa' },
-    { text: 'Informe mensual Urban Bites entregado', time: 'Hace 3 horas', color: '#DC143C' },
-    { text: 'Bloom Wellness solicitó revisión de propuesta', time: 'Ayer, 6:00 PM', color: '#f59e0b' },
-    { text: 'Idea "Serie Behind the Brand" marcada como ready', time: 'Ayer, 2:30 PM', color: '#a78bfa' },
-  ]
+  const [activity, setActivity] = useState<ActivityLog[]>([])
+  const [activityLoading, setActivityLoading] = useState(true)
+
+  useEffect(() => {
+    getActivity(10)
+      .then(setActivity)
+      .catch(() => {})
+      .finally(() => setActivityLoading(false))
+  }, [])
+
+  function activityColor(type: string): string {
+    if (type.startsWith('prospect')) return '#60a5fa'
+    if (type.startsWith('client')) return '#34d399'
+    if (type.startsWith('post')) return '#DC143C'
+    if (type.startsWith('idea')) return '#a78bfa'
+    if (type.startsWith('todo')) return '#f59e0b'
+    return '#9ca3af'
+  }
+
+  function timeAgo(dateStr: string): string {
+    const now = Date.now()
+    const then = new Date(dateStr).getTime()
+    const diff = Math.max(0, now - then)
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'Justo ahora'
+    if (mins < 60) return `Hace ${mins} min`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `Hace ${hours}h`
+    const days = Math.floor(hours / 24)
+    if (days === 1) return 'Ayer'
+    if (days < 7) return `Hace ${days} días`
+    return new Date(dateStr).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+  }
 
   return (
     <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-8">
@@ -103,7 +148,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Metrics */}
-      <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {metrics.map((m) => (
           <motion.div key={m.label} variants={fadeUp} whileHover={{ y: -2 }} className="metric-card">
             <div className="flex items-start justify-between">
@@ -163,22 +208,38 @@ export default function Dashboard() {
             <h3 className="font-semibold text-white">Actividad Reciente</h3>
           </div>
           <div className="space-y-4">
-            {recentActivity.map((a, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-start gap-3"
-              >
-                <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
-                  style={{ background: a.color }} />
-                <div>
-                  <p className="text-sm text-white leading-snug">{a.text}</p>
-                  <p className="text-xs text-ink-400 mt-0.5">{a.time}</p>
-                </div>
-              </motion.div>
-            ))}
+            {activityLoading ? (
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 animate-pulse">
+                    <div className="w-2 h-2 rounded-full mt-1.5 bg-ink-600 flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-3 bg-ink-700 rounded w-3/4" />
+                      <div className="h-2 bg-ink-700 rounded w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : activity.length === 0 ? (
+              <p className="text-sm text-ink-400">Sin actividad reciente</p>
+            ) : (
+              activity.map((a, i) => (
+                <motion.div
+                  key={a.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-start gap-3"
+                >
+                  <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
+                    style={{ background: activityColor(a.type) }} />
+                  <div>
+                    <p className="text-sm text-white leading-snug">{a.description}</p>
+                    <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.div>
 

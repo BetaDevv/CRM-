@@ -18,6 +18,11 @@ import ideaRoutes    from './routes/ideas'
 import postRoutes    from './routes/posts'
 import planRoutes    from './routes/plans'
 import metricRoutes  from './routes/metrics'
+import reportRoutes  from './routes/reports'
+import activityRoutes from './routes/activity'
+import userRoutes     from './routes/users'
+import notificationRoutes from './routes/notifications'
+import calendarRoutes from './routes/calendar'
 
 import { v4 as uuid } from 'uuid'
 
@@ -44,6 +49,11 @@ app.use('/api/ideas',     ideaRoutes)
 app.use('/api/posts',     postRoutes)
 app.use('/api/plans',     planRoutes)
 app.use('/api/metrics',   metricRoutes)
+app.use('/api/reports',   reportRoutes)
+app.use('/api/activity',  activityRoutes)
+app.use('/api/users',     userRoutes)
+app.use('/api/notifications', notificationRoutes)
+app.use('/api/calendar', calendarRoutes)
 
 // ─── OAuth Initiation ──────────────────────────────────────────────────────────
 // GET /api/oauth/:platform/connect/:clientId — redirige al proveedor OAuth

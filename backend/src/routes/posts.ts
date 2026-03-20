@@ -5,6 +5,8 @@ import fs from 'fs'
 import { pool } from '../db'
 import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
+import { logActivity } from '../services/activityLogger'
+import { notifyClient, notifyAdmins } from '../services/notificationService'
 
 const uploadDir = path.resolve(__dirname, '../../../uploads')
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
@@ -60,6 +62,8 @@ router.post('/', requireAdmin, upload.array('images', 4), async (req: AuthReques
        VALUES ($1,$2,$3,$4,$5,$6,'pending',$7,$8) RETURNING *`,
       [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, JSON.stringify(mediaUrls), type || 'post']
     )
+    logActivity({ type: 'post_created', description: `Nuevo post creado: ${title}`, entityType: 'post', entityId: id })
+    notifyClient(client_id, { type: 'post_pending', title: 'Post pendiente de aprobación', description: `Tienes un nuevo post para revisar: ${title}`, entityType: 'post', entityId: id })
     res.status(201).json(parsePost(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -83,6 +87,43 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
       'UPDATE posts SET status=$1, feedback=$2 WHERE id=$3 RETURNING *',
       [status, feedback || post.feedback, req.params.id]
     )
+    logActivity({ type: `post_${status}`, description: `Post ${status}: ${post.title}`, entityType: 'post', entityId: req.params.id })
+
+    // Notify on approval/rejection
+    if (status === 'approved' || status === 'rejected') {
+      const { rows: clientRows } = await pool.query('SELECT company FROM clients WHERE id = $1', [post.client_id])
+      const clientName = clientRows[0]?.company || 'Cliente'
+      const notifType = status === 'approved' ? 'post_approved' : 'post_rejected'
+      const notifTitle = status === 'approved' ? 'Post aprobado' : 'Post rechazado'
+      const notifDesc = `${clientName} ${status === 'approved' ? 'aprobó' : 'rechazó'} el post: ${post.title}`
+      notifyAdmins({ type: notifType, title: notifTitle, description: notifDesc, entityType: 'post', entityId: req.params.id })
+    }
+
+    res.json(parsePost(rows[0]))
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+router.put('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params
+    const { rows: cur } = await pool.query('SELECT * FROM posts WHERE id = $1', [id])
+    if (!cur.length) { res.status(404).json({ error: 'Post no encontrado' }); return }
+
+    const post = cur[0]
+    const title = req.body.title ?? post.title
+    const content = req.body.content ?? post.content
+    const platform = req.body.platform ?? post.platform
+    const scheduled_date = req.body.scheduled_date ?? post.scheduled_date
+    const status = req.body.status ?? post.status
+    const type = req.body.type ?? post.type
+
+    const { rows } = await pool.query(
+      `UPDATE posts SET title=$1, content=$2, platform=$3, scheduled_date=$4, status=$5, type=$6 WHERE id=$7 RETURNING *`,
+      [title, content, platform, scheduled_date, status, type, id]
+    )
+    logActivity({ type: 'post_updated', description: `Post actualizado: ${title}`, entityType: 'post', entityId: id })
     res.json(parsePost(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket } from 'lucide-react'
-import { useStore } from '../store/useStore'
-import { ideaStatusConfig, generateId } from '../lib/utils'
+import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket, Loader2 } from 'lucide-react'
+import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi } from '../lib/api'
+import { ideaStatusConfig } from '../lib/utils'
 import type { Idea, IdeaStatus } from '../types'
 
 const statusColumns: { key: IdeaStatus; label: string; icon: ReactNode }[] = [
@@ -61,25 +61,58 @@ function IdeaCard({ idea, onUpdate, onDelete }: {
 }
 
 export default function Ideas() {
-  const { ideas, addIdea, updateIdea, deleteIdea } = useStore()
+  const [ideas, setIdeas] = useState<Idea[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({
     title: '', description: '', emoji: '💡', tags: [] as string[], customTag: '',
   })
 
-  const handleAdd = () => {
+  useEffect(() => {
+    getIdeas()
+      .then(setIdeas)
+      .catch(err => console.error('Error fetching ideas:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleAdd = async () => {
     if (!form.title) return
-    addIdea({
-      id: generateId(),
-      title: form.title,
-      description: form.description,
-      status: 'brainstorm',
-      tags: form.tags,
-      emoji: form.emoji,
-      createdAt: new Date().toISOString().split('T')[0],
-    })
-    setForm({ title: '', description: '', emoji: '💡', tags: [], customTag: '' })
-    setShowModal(false)
+    try {
+      const newIdea = await createIdeaApi({
+        title: form.title,
+        description: form.description,
+        status: 'brainstorm',
+        tags: form.tags,
+        emoji: form.emoji,
+        createdAt: new Date().toISOString().split('T')[0],
+      })
+      setIdeas(prev => [newIdea, ...prev])
+      setForm({ title: '', description: '', emoji: '💡', tags: [], customTag: '' })
+      setShowModal(false)
+    } catch (err) {
+      console.error('Error creating idea:', err)
+    }
+  }
+
+  const handleUpdate = async (id: string, data: Partial<Idea>) => {
+    const existing = ideas.find(i => i.id === id)
+    if (!existing) return
+    try {
+      const merged = { ...existing, ...data }
+      const updated = await updateIdeaApi(id, merged)
+      setIdeas(prev => prev.map(i => i.id === id ? updated : i))
+    } catch (err) {
+      console.error('Error updating idea:', err)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteIdeaApi(id)
+      setIdeas(prev => prev.filter(i => i.id !== id))
+    } catch (err) {
+      console.error('Error deleting idea:', err)
+    }
   }
 
   const toggleTag = (tag: string) => {
@@ -90,6 +123,14 @@ export default function Ideas() {
   }
 
   const emojis = ['💡', '🎬', '📈', '📧', '🎨', '🚀', '✨', '🎯', '📱', '🔥']
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 size={32} className="animate-spin text-crimson-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -132,7 +173,7 @@ export default function Ideas() {
               </div>
               <AnimatePresence>
                 {items.map(idea => (
-                  <IdeaCard key={idea.id} idea={idea} onUpdate={updateIdea} onDelete={deleteIdea} />
+                  <IdeaCard key={idea.id} idea={idea} onUpdate={handleUpdate} onDelete={handleDelete} />
                 ))}
               </AnimatePresence>
               {items.length === 0 && (

@@ -18,6 +18,11 @@ router.post('/login', async (req: Request, res: Response) => {
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) { res.status(401).json({ error: 'Credenciales incorrectas' }); return }
 
+    if (user.active === 0) { res.status(403).json({ error: 'Usuario desactivado' }); return }
+
+    // Update last_login
+    await pool.query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id])
+
     const payload = {
       userId: user.id,
       email: user.email,

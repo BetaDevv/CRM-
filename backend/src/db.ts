@@ -72,6 +72,9 @@ export async function initDB() {
   `)
   // Safe migrations for columns added after initial schema
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url TEXT`)
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active INTEGER DEFAULT 1`)
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ`)
+  await pool.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS probability INTEGER DEFAULT 0`)
   await pool.query(`
 
     CREATE TABLE IF NOT EXISTS prospects (
@@ -154,6 +157,73 @@ export async function initDB() {
       target TEXT,
       current_value TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      actor TEXT,
+      description TEXT NOT NULL,
+      entity_type TEXT,
+      entity_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      entity_type TEXT,
+      entity_id TEXT,
+      is_read INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS client_notes (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      content TEXT NOT NULL,
+      author TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      start_time TIMESTAMPTZ NOT NULL,
+      end_time TIMESTAMPTZ NOT NULL,
+      all_day BOOLEAN DEFAULT FALSE,
+      color TEXT,
+      creator_id TEXT NOT NULL,
+      client_id TEXT,
+      todo_id TEXT,
+      milestone_id TEXT,
+      google_event_id TEXT,
+      is_shared BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS event_participants (
+      id TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(event_id, user_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS google_calendar_connections (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      token_expires_at TIMESTAMPTZ,
+      calendar_id TEXT DEFAULT 'primary',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `)
 }
 
@@ -189,15 +259,15 @@ export async function seedDB() {
   )
 
   const prospects = [
-    { id: 'p1', company: 'Nexus Inmobiliaria', contact: 'Carlos Mendoza', email: 'cmendoza@nexus.com', industry: 'Inmobiliaria', budget: '$3,000/mes', status: 'proposal', source: 'Referido' },
-    { id: 'p2', company: 'PetLove Store', contact: 'María Fernández', email: 'maria@petlove.co', industry: 'Retail', budget: '$800/mes', status: 'contacted', source: 'Instagram' },
-    { id: 'p3', company: 'Fintech Verde', contact: 'Diego Castillo', email: 'diego@fintechverde.io', industry: 'Fintech', budget: '$4,000/mes', status: 'negotiation', source: 'LinkedIn' },
-    { id: 'p4', company: 'Moda Élite', contact: 'Sofía Ramírez', email: 'sofia@modaelite.co', industry: 'Moda', budget: '$1,500/mes', status: 'new', source: 'Web' },
+    { id: 'p1', company: 'Nexus Inmobiliaria', contact: 'Carlos Mendoza', email: 'cmendoza@nexus.com', industry: 'Inmobiliaria', budget: '$3,000/mes', status: 'proposal', source: 'Referido', probability: 40 },
+    { id: 'p2', company: 'PetLove Store', contact: 'María Fernández', email: 'maria@petlove.co', industry: 'Retail', budget: '$800/mes', status: 'contacted', source: 'Instagram', probability: 20 },
+    { id: 'p3', company: 'Fintech Verde', contact: 'Diego Castillo', email: 'diego@fintechverde.io', industry: 'Fintech', budget: '$4,000/mes', status: 'negotiation', source: 'LinkedIn', probability: 70 },
+    { id: 'p4', company: 'Moda Élite', contact: 'Sofía Ramírez', email: 'sofia@modaelite.co', industry: 'Moda', budget: '$1,500/mes', status: 'new', source: 'Web', probability: 10 },
   ]
   for (const p of prospects) {
     await pool.query(
-      `INSERT INTO prospects (id, company, contact, email, industry, budget, status, source) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING`,
-      [p.id, p.company, p.contact, p.email, p.industry, p.budget, p.status, p.source]
+      `INSERT INTO prospects (id, company, contact, email, industry, budget, status, source, probability) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING`,
+      [p.id, p.company, p.contact, p.email, p.industry, p.budget, p.status, p.source, p.probability]
     )
   }
 
@@ -275,26 +345,154 @@ export async function seedDB() {
     )
   }
 
-  await seedDemoLinkedIn('c1')
-  await seedDemoMeta('c1')
+  // Seed activity log
+  const now = new Date()
+  const activitySeed = [
+    { id: 'act1', type: 'post_approved', actor: 'Alejandro Ruiz', description: 'TechNova aprobó post para LinkedIn', entity_type: 'post', entity_id: 'post1', minutes_ago: 30 },
+    { id: 'act2', type: 'prospect_created', actor: 'Admin TBS', description: 'Nuevo prospecto: Moda Élite', entity_type: 'prospect', entity_id: 'p4', minutes_ago: 60 },
+    { id: 'act3', type: 'todo_completed', actor: 'Admin TBS', description: 'Informe mensual Urban Bites entregado', entity_type: 'todo', entity_id: 't4', minutes_ago: 180 },
+    { id: 'act4', type: 'client_updated', actor: 'Valentina Torres', description: 'Bloom Wellness solicitó revisión de propuesta', entity_type: 'client', entity_id: 'c2', minutes_ago: 1080 },
+    { id: 'act5', type: 'idea_updated', actor: 'Admin TBS', description: 'Idea "Serie Behind the Brand" marcada como ready', entity_type: 'idea', entity_id: 'i1', minutes_ago: 1350 },
+    { id: 'act6', type: 'client_created', actor: 'Admin TBS', description: 'Nuevo cliente: Urban Bites', entity_type: 'client', entity_id: 'c3', minutes_ago: 2880 },
+  ]
+  for (const a of activitySeed) {
+    const createdAt = new Date(now.getTime() - a.minutes_ago * 60 * 1000)
+    await pool.query(
+      `INSERT INTO activity_log (id, type, actor, description, entity_type, entity_id, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING`,
+      [a.id, a.type, a.actor, a.description, a.entity_type, a.entity_id, createdAt.toISOString()]
+    )
+  }
+
+  // Platform connections for all clients
+  const platformConnections = [
+    // TechNova (c1) — LinkedIn + Meta + TikTok + GA4
+    { id: 'pc-c1-linkedin', client_id: 'c1', platform: 'linkedin', access_token: 'fake_token', refresh_token: null, platform_account_id: 'urn:li:organization:technova', platform_account_name: 'TechNova Solutions' },
+    { id: 'pc-c1-meta', client_id: 'c1', platform: 'meta', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'technova_page_id', platform_account_name: 'TechNova Solutions' },
+    { id: 'pc-c1-tiktok', client_id: 'c1', platform: 'tiktok', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'tt_technova', platform_account_name: 'TechNova Solutions' },
+    { id: 'pc-c1-ga4', client_id: 'c1', platform: 'ga4', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'properties/123456', platform_account_name: 'TechNova Web' },
+    // Bloom Wellness (c2)
+    { id: 'pc-c2-linkedin', client_id: 'c2', platform: 'linkedin', access_token: 'fake_token', refresh_token: null, platform_account_id: 'urn:li:organization:bloom', platform_account_name: 'Bloom Wellness' },
+    { id: 'pc-c2-meta', client_id: 'c2', platform: 'meta', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'bloom_page_id', platform_account_name: 'Bloom Wellness' },
+    { id: 'pc-c2-tiktok', client_id: 'c2', platform: 'tiktok', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'tt_bloom', platform_account_name: 'Bloom Wellness' },
+    { id: 'pc-c2-ga4', client_id: 'c2', platform: 'ga4', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'properties/789012', platform_account_name: 'Bloom Web' },
+    // Urban Bites (c3)
+    { id: 'pc-c3-linkedin', client_id: 'c3', platform: 'linkedin', access_token: 'fake_token', refresh_token: null, platform_account_id: 'urn:li:organization:urban', platform_account_name: 'Urban Bites' },
+    { id: 'pc-c3-meta', client_id: 'c3', platform: 'meta', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'urban_page_id', platform_account_name: 'Urban Bites' },
+    { id: 'pc-c3-tiktok', client_id: 'c3', platform: 'tiktok', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'tt_urban', platform_account_name: 'Urban Bites' },
+    { id: 'pc-c3-ga4', client_id: 'c3', platform: 'ga4', access_token: 'fake_token', refresh_token: 'fake_refresh', platform_account_id: 'properties/345678', platform_account_name: 'Urban Bites Web' },
+  ]
+  for (const pc of platformConnections) {
+    await pool.query(
+      `INSERT INTO platform_connections (id, client_id, platform, access_token, refresh_token, platform_account_id, platform_account_name, is_active, last_sync_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,1,NOW()) ON CONFLICT (client_id, platform) DO NOTHING`,
+      [pc.id, pc.client_id, pc.platform, pc.access_token, pc.refresh_token, pc.platform_account_id, pc.platform_account_name]
+    )
+  }
+
+  // Seed metrics for all clients and platforms
+  // c1: TechNova — larger tech company
+  await seedDemoLinkedIn('c1', 1840, 25, 5, 3000, 800, 400, 80)
+  await seedDemoMeta('c1', 3200, 15, 2, 5800, 30, 8, 5000, 1000, 8000, 2000)
+  await seedDemoTikTok('c1', 5200, 10, 50, 2000, 8000, 500, 2000, 50, 200, 20, 100)
+  await seedDemoGA4('c1', 400, 800, 300, 600, 800, 2000, 38, 52, 150, 280, 80, 200)
+
+  // c2: Bloom Wellness — smaller, wellness niche
+  await seedDemoLinkedIn('c2', 620, 10, 3, 1200, 300, 150, 30)
+  await seedDemoMeta('c2', 1400, 8, 1, 8200, 45, 12, 3000, 600, 5000, 1000)
+  await seedDemoTikTok('c2', 12000, 30, 80, 5000, 15000, 1200, 5000, 100, 400, 40, 200)
+  await seedDemoGA4('c2', 150, 350, 100, 250, 300, 800, 40, 55, 120, 240, 40, 120)
+
+  // c3: Urban Bites — medium food industry
+  await seedDemoLinkedIn('c3', 950, 12, 4, 1800, 500, 250, 50)
+  await seedDemoMeta('c3', 2100, 12, 3, 11500, 55, 15, 4500, 900, 7000, 1500)
+  await seedDemoTikTok('c3', 8500, 20, 60, 4000, 12000, 800, 3500, 80, 350, 30, 150)
+  await seedDemoGA4('c3', 250, 500, 180, 400, 500, 1200, 35, 50, 140, 260, 60, 160)
+
+  // Seed notifications
+  const notifSeed = [
+    { id: 'notif1', user_id: 'u_admin', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'TechNova tiene un post pendiente para LinkedIn', entity_type: 'post', entity_id: 'post1', minutes_ago: 15 },
+    { id: 'notif2', user_id: 'u_admin', type: 'prospect_new', title: 'Nuevo prospecto', description: 'Nuevo prospecto: Moda Élite desde Web', entity_type: 'prospect', entity_id: 'p4', minutes_ago: 60 },
+    { id: 'notif3', user_id: 'u_admin', type: 'post_approved', title: 'Post aprobado', description: 'Bloom Wellness aprobó el post: Tip de bienestar lunes', entity_type: 'post', entity_id: 'post2', minutes_ago: 180 },
+    { id: 'notif4', user_id: 'u_admin', type: 'milestone_upcoming', title: 'Hito próximo', description: 'TechNova: Lanzamiento Blog Corporativo en 5 días', entity_type: 'plan', entity_id: 'mp1', minutes_ago: 360 },
+    { id: 'notif5', user_id: 'u_client1', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'Tienes un nuevo post para revisar: Lanzamiento nueva feature cloud', entity_type: 'post', entity_id: 'post1', minutes_ago: 20 },
+    { id: 'notif6', user_id: 'u_client1', type: 'post_pending', title: 'Post en revisión', description: 'Tu post "Caso de éxito cliente enterprise" necesita cambios', entity_type: 'post', entity_id: 'post3', minutes_ago: 120 },
+  ]
+  for (const n of notifSeed) {
+    const createdAt = new Date(now.getTime() - n.minutes_ago * 60 * 1000)
+    await pool.query(
+      `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING`,
+      [n.id, n.user_id, n.type, n.title, n.description, n.entity_type, n.entity_id, createdAt.toISOString()]
+    )
+  }
+
+  // Seed client notes for TechNova (c1)
+  const notesSeed = [
+    { id: 'cn1', client_id: 'c1', content: 'Alejandro mencionó que quieren aumentar presupuesto en Q3 para campañas de awareness en LinkedIn. Preparar propuesta.', author: 'Admin TBS', minutes_ago: 2880 },
+    { id: 'cn2', client_id: 'c1', content: 'Reunión con equipo de producto de TechNova. Quieren destacar la nueva feature de migración automática en el próximo contenido.', author: 'Admin TBS', minutes_ago: 1440 },
+    { id: 'cn3', client_id: 'c1', content: 'El CEO de TechNova va a estar en un evento en Bogotá la semana del 24 de marzo. Oportunidad para contenido en vivo.', author: 'Admin TBS', minutes_ago: 360 },
+  ]
+  for (const n of notesSeed) {
+    const createdAt = new Date(now.getTime() - n.minutes_ago * 60 * 1000)
+    await pool.query(
+      `INSERT INTO client_notes (id, client_id, content, author, created_at)
+       VALUES ($1,$2,$3,$4,$5) ON CONFLICT (id) DO NOTHING`,
+      [n.id, n.client_id, n.content, n.author, createdAt.toISOString()]
+    )
+  }
+
+  // Seed calendar events
+  const eventsSeed = [
+    { id: 'ev1', title: 'Planificación contenido TechNova — Abril', description: 'Sesión de brainstorming y definición de calendario de contenido para abril.', start_time: '2026-03-23T10:00:00-05:00', end_time: '2026-03-23T11:30:00-05:00', all_day: false, color: '#DC143C', creator_id: 'u_admin', client_id: 'c1', todo_id: 't1', milestone_id: null, is_shared: false },
+    { id: 'ev2', title: 'Revisión métricas semanales', description: 'Revisión de KPIs y métricas de todas las plataformas.', start_time: '2026-03-24T09:00:00-05:00', end_time: '2026-03-24T09:45:00-05:00', all_day: false, color: '#7C3AED', creator_id: 'u_admin', client_id: null, todo_id: null, milestone_id: null, is_shared: false },
+    { id: 'ev3', title: 'Reunión con TechNova — Blog Corporativo', description: 'Presentación del plan de contenido para el blog corporativo. Revisar SEO y pilares de contenido.', start_time: '2026-03-25T14:00:00-05:00', end_time: '2026-03-25T15:00:00-05:00', all_day: false, color: '#DC143C', creator_id: 'u_admin', client_id: 'c1', todo_id: null, milestone_id: 'm3', is_shared: true },
+    { id: 'ev4', title: 'Deadline: Propuesta Nexus Inmobiliaria', description: 'Fecha límite para enviar propuesta comercial a Nexus.', start_time: '2026-03-26T00:00:00-05:00', end_time: '2026-03-26T23:59:59-05:00', all_day: true, color: '#F59E0B', creator_id: 'u_admin', client_id: null, todo_id: 't2', milestone_id: null, is_shared: false },
+    { id: 'ev5', title: 'Llamada onboarding PetLove', description: 'Primera llamada con PetLove Store para definir alcance y objetivos.', start_time: '2026-03-27T11:00:00-05:00', end_time: '2026-03-27T12:00:00-05:00', all_day: false, color: '#10B981', creator_id: 'u_admin', client_id: null, todo_id: 't5', milestone_id: null, is_shared: false },
+    { id: 'ev6', title: 'Review creativo Bloom Wellness', description: 'Revisión de stories y contenido visual con el equipo de diseño.', start_time: '2026-03-28T16:00:00-05:00', end_time: '2026-03-28T17:00:00-05:00', all_day: false, color: '#7C3AED', creator_id: 'u_admin', client_id: 'c2', todo_id: null, milestone_id: null, is_shared: true },
+  ]
+  for (const ev of eventsSeed) {
+    await pool.query(
+      `INSERT INTO events (id, title, description, start_time, end_time, all_day, color, creator_id, client_id, todo_id, milestone_id, is_shared)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT (id) DO NOTHING`,
+      [ev.id, ev.title, ev.description, ev.start_time, ev.end_time, ev.all_day, ev.color, ev.creator_id, ev.client_id, ev.todo_id, ev.milestone_id, ev.is_shared]
+    )
+  }
+
+  // Seed event participants for shared events
+  const participantsSeed = [
+    { id: 'ep1', event_id: 'ev3', user_id: 'u_client1', status: 'accepted' },
+    { id: 'ep2', event_id: 'ev6', user_id: 'u_client1', status: 'pending' },
+  ]
+  for (const ep of participantsSeed) {
+    await pool.query(
+      `INSERT INTO event_participants (id, event_id, user_id, status)
+       VALUES ($1,$2,$3,$4) ON CONFLICT (event_id, user_id) DO NOTHING`,
+      [ep.id, ep.event_id, ep.user_id, ep.status]
+    )
+  }
 
   console.log('✅ DB seeded (PostgreSQL)')
 }
 
-async function seedDemoLinkedIn(clientId: string) {
+async function seedDemoLinkedIn(
+  clientId: string,
+  startFollowers: number, followerRandMax: number, followerRandMin: number,
+  impressionMax: number, impressionMin: number, pvMax: number, pvMin: number,
+) {
   const today = new Date()
-  let followers = 1840
+  let followers = startFollowers
 
   for (let i = 89; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().split('T')[0]
-    followers += Math.floor(Math.random() * 25) + 5
+    followers += Math.floor(Math.random() * followerRandMax) + followerRandMin
 
     const snaps = [
       { id: `li_fl_${clientId}_${dateStr}`, metric_type: 'followers', value: followers },
-      { id: `li_im_${clientId}_${dateStr}`, metric_type: 'impressions', value: Math.floor(Math.random() * 3000) + 800 },
-      { id: `li_pv_${clientId}_${dateStr}`, metric_type: 'page_views', value: Math.floor(Math.random() * 400) + 80 },
+      { id: `li_im_${clientId}_${dateStr}`, metric_type: 'impressions', value: Math.floor(Math.random() * impressionMax) + impressionMin },
+      { id: `li_pv_${clientId}_${dateStr}`, metric_type: 'page_views', value: Math.floor(Math.random() * pvMax) + pvMin },
       { id: `li_er_${clientId}_${dateStr}`, metric_type: 'engagement_rate', value: parseFloat((Math.random() * 4 + 2).toFixed(2)) },
     ]
     if (i <= 29) {
@@ -311,29 +509,113 @@ async function seedDemoLinkedIn(clientId: string) {
   }
 }
 
-async function seedDemoMeta(clientId: string) {
+async function seedDemoMeta(
+  clientId: string,
+  startFb: number, fbRandMax: number, fbRandMin: number,
+  startIg: number, igRandMax: number, igRandMin: number,
+  reachMax: number, reachMin: number, impMax: number, impMin: number,
+) {
   const today = new Date()
-  let fbFollowers = 3200
-  let igFollowers = 5800
+  let fbFollowers = startFb
+  let igFollowers = startIg
 
   for (let i = 89; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().split('T')[0]
-    fbFollowers += Math.floor(Math.random() * 15) + 2
-    igFollowers += Math.floor(Math.random() * 30) + 8
+    fbFollowers += Math.floor(Math.random() * fbRandMax) + fbRandMin
+    igFollowers += Math.floor(Math.random() * igRandMax) + igRandMin
 
     const snaps = [
       { id: `meta_fb_${clientId}_${dateStr}`, metric_type: 'fb_followers', value: fbFollowers },
       { id: `meta_ig_${clientId}_${dateStr}`, metric_type: 'ig_followers', value: igFollowers },
-      { id: `meta_reach_${clientId}_${dateStr}`, metric_type: 'reach', value: Math.floor(Math.random() * 5000) + 1000 },
-      { id: `meta_imp_${clientId}_${dateStr}`, metric_type: 'impressions', value: Math.floor(Math.random() * 8000) + 2000 },
+      { id: `meta_reach_${clientId}_${dateStr}`, metric_type: 'reach', value: Math.floor(Math.random() * reachMax) + reachMin },
+      { id: `meta_imp_${clientId}_${dateStr}`, metric_type: 'impressions', value: Math.floor(Math.random() * impMax) + impMin },
       { id: `meta_er_${clientId}_${dateStr}`, metric_type: 'engagement_rate', value: parseFloat((Math.random() * 5 + 1).toFixed(2)) },
     ]
     for (const s of snaps) {
       await pool.query(
         `INSERT INTO metric_snapshots (id, client_id, platform, metric_type, value, snapshot_date)
          VALUES ($1,$2,'meta',$3,$4,$5)
+         ON CONFLICT (client_id, platform, metric_type, snapshot_date) DO NOTHING`,
+        [s.id, clientId, s.metric_type, s.value, dateStr]
+      )
+    }
+  }
+}
+
+async function seedDemoTikTok(
+  clientId: string,
+  startFollowers: number, followerRandMin: number, followerRandMax: number,
+  viewsMin: number, viewsMax: number,
+  likesMin: number, likesMax: number,
+  commentsMin: number, commentsMax: number,
+  sharesMin: number, sharesMax: number,
+) {
+  const today = new Date()
+  let followers = startFollowers
+  let totalViews = Math.floor(startFollowers * 8)
+  let totalLikes = Math.floor(startFollowers * 3)
+  let totalComments = Math.floor(startFollowers * 0.4)
+  let totalShares = Math.floor(startFollowers * 0.15)
+
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+
+    followers += Math.floor(Math.random() * (followerRandMax - followerRandMin)) + followerRandMin
+    totalViews += Math.floor(Math.random() * (viewsMax - viewsMin)) + viewsMin
+    totalLikes += Math.floor(Math.random() * (likesMax - likesMin)) + likesMin
+    totalComments += Math.floor(Math.random() * (commentsMax - commentsMin)) + commentsMin
+    totalShares += Math.floor(Math.random() * (sharesMax - sharesMin)) + sharesMin
+
+    const snaps = [
+      { id: `tt_fl_${clientId}_${dateStr}`, metric_type: 'followers', value: followers },
+      { id: `tt_vv_${clientId}_${dateStr}`, metric_type: 'total_video_views', value: totalViews },
+      { id: `tt_vl_${clientId}_${dateStr}`, metric_type: 'total_video_likes', value: totalLikes },
+      { id: `tt_vc_${clientId}_${dateStr}`, metric_type: 'total_video_comments', value: totalComments },
+      { id: `tt_vs_${clientId}_${dateStr}`, metric_type: 'total_video_shares', value: totalShares },
+    ]
+    for (const s of snaps) {
+      await pool.query(
+        `INSERT INTO metric_snapshots (id, client_id, platform, metric_type, value, snapshot_date)
+         VALUES ($1,$2,'tiktok',$3,$4,$5)
+         ON CONFLICT (client_id, platform, metric_type, snapshot_date) DO NOTHING`,
+        [s.id, clientId, s.metric_type, s.value, dateStr]
+      )
+    }
+  }
+}
+
+async function seedDemoGA4(
+  clientId: string,
+  sessionsMin: number, sessionsMax: number,
+  usersMin: number, usersMax: number,
+  pvMin: number, pvMax: number,
+  bounceMin: number, bounceMax: number,
+  durationMin: number, durationMax: number,
+  newUsersMin: number, newUsersMax: number,
+) {
+  const today = new Date()
+
+  for (let i = 89; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().split('T')[0]
+
+    const snaps = [
+      { id: `ga_sess_${clientId}_${dateStr}`, metric_type: 'sessions', value: Math.floor(Math.random() * (sessionsMax - sessionsMin)) + sessionsMin },
+      { id: `ga_users_${clientId}_${dateStr}`, metric_type: 'active_users', value: Math.floor(Math.random() * (usersMax - usersMin)) + usersMin },
+      { id: `ga_pv_${clientId}_${dateStr}`, metric_type: 'page_views', value: Math.floor(Math.random() * (pvMax - pvMin)) + pvMin },
+      { id: `ga_br_${clientId}_${dateStr}`, metric_type: 'bounce_rate', value: parseFloat((Math.random() * (bounceMax - bounceMin) + bounceMin).toFixed(1)) },
+      { id: `ga_dur_${clientId}_${dateStr}`, metric_type: 'avg_session_duration', value: Math.floor(Math.random() * (durationMax - durationMin)) + durationMin },
+      { id: `ga_new_${clientId}_${dateStr}`, metric_type: 'new_users', value: Math.floor(Math.random() * (newUsersMax - newUsersMin)) + newUsersMin },
+    ]
+    for (const s of snaps) {
+      await pool.query(
+        `INSERT INTO metric_snapshots (id, client_id, platform, metric_type, value, snapshot_date)
+         VALUES ($1,$2,'ga4',$3,$4,$5)
          ON CONFLICT (client_id, platform, metric_type, snapshot_date) DO NOTHING`,
         [s.id, clientId, s.metric_type, s.value, dateStr]
       )

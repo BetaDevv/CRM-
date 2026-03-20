@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Building2, Mail, Phone, DollarSign, Tag, Pencil, Trash2, Loader2 } from 'lucide-react'
-import { prospectStatusConfig } from '../lib/utils'
-import { api } from '../lib/api'
+import { Plus, X, Mail, DollarSign, Tag, Pencil, Trash2, Loader2, Sparkles, TrendingUp } from 'lucide-react'
+import { prospectStatusConfig, formatCurrency } from '../lib/utils'
+import { api, convertProspect } from '../lib/api'
 import type { Prospect, ProspectStatus } from '../types'
 
 const columns: { key: ProspectStatus; label: string }[] = [
@@ -14,9 +14,24 @@ const columns: { key: ProspectStatus; label: string }[] = [
   { key: 'lost',        label: 'Perdidos' },
 ]
 
+const defaultProbabilityByStatus: Record<ProspectStatus, number> = {
+  new: 10,
+  contacted: 20,
+  proposal: 40,
+  negotiation: 70,
+  won: 100,
+  lost: 0,
+}
+
+function parseBudgetToNumber(budget?: string): number {
+  if (!budget) return 0
+  const cleaned = budget.replace(/[^0-9.,]/g, '').replace(',', '')
+  return parseFloat(cleaned) || 0
+}
+
 const emptyForm = {
   company: '', contact: '', email: '', phone: '',
-  industry: '', budget: '', source: 'Web', notes: '',
+  industry: '', budget: '', source: 'Web', notes: '', probability: 10,
 }
 
 function ProspectCard({
@@ -24,13 +39,19 @@ function ProspectCard({
   onUpdate,
   onEdit,
   onDelete,
+  onConvert,
 }: {
   prospect: Prospect
   onUpdate: (id: string, data: Partial<Prospect>) => void
   onEdit: (p: Prospect) => void
   onDelete: (id: string) => void
+  onConvert: (id: string) => void
 }) {
   const cfg = prospectStatusConfig[prospect.status]
+  const prob = prospect.probability ?? 0
+  const budgetNum = parseBudgetToNumber(prospect.budget)
+  const estimatedValue = budgetNum * prob / 100
+
   return (
     <motion.div
       layout
@@ -60,9 +81,16 @@ function ProspectCard({
         <div className="w-9 h-9 rounded-lg bg-ink-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
           {prospect.company.slice(0, 2).toUpperCase()}
         </div>
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>
-          {cfg.label}
-        </span>
+        <div className="flex items-center gap-1.5">
+          {prob > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-crimson-700/20 text-crimson-400">
+              {prob}%
+            </span>
+          )}
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>
+            {cfg.label}
+          </span>
+        </div>
       </div>
       <p className="font-semibold text-white text-sm mb-1">{prospect.company}</p>
       <p className="text-xs text-ink-300 mb-3">{prospect.contact}</p>
@@ -75,10 +103,30 @@ function ProspectCard({
             <DollarSign size={11} /> <span>{prospect.budget}</span>
           </div>
         )}
+        {estimatedValue > 0 && prospect.status !== 'won' && prospect.status !== 'lost' && (
+          <div className="flex items-center gap-1.5 text-xs text-emerald-400/80">
+            <TrendingUp size={11} /> <span>Est. {formatCurrency(estimatedValue)}</span>
+          </div>
+        )}
         <div className="flex items-center gap-1.5 text-xs text-ink-400">
           <Tag size={11} /> <span>{prospect.source}</span>
         </div>
       </div>
+
+      {/* Convert button for won prospects */}
+      {prospect.status === 'won' && (
+        <motion.button
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onConvert(prospect.id)}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-crimson-700/20 text-crimson-400 text-xs font-semibold hover:bg-crimson-700/30 transition-colors border border-crimson-700/30"
+        >
+          <Sparkles size={12} /> Convertir a Cliente
+        </motion.button>
+      )}
+
       <div className="mt-3 pt-3 border-t border-white/5">
         <select
           value={prospect.status}
@@ -96,6 +144,7 @@ function ProspectCard({
 interface ProspectForm {
   company: string; contact: string; email: string; phone: string;
   industry: string; budget: string; source: string; notes: string;
+  probability: number;
 }
 
 function ProspectModal({
@@ -111,10 +160,18 @@ function ProspectModal({
     initial
       ? { company: initial.company, contact: initial.contact, email: initial.email,
           phone: initial.phone || '', industry: initial.industry || '',
-          budget: initial.budget || '', source: initial.source, notes: initial.notes || '' }
-      : emptyForm
+          budget: initial.budget || '', source: initial.source, notes: initial.notes || '',
+          probability: initial.probability ?? defaultProbabilityByStatus[initial.status] }
+      : { ...emptyForm }
   )
+  const [status, setStatus] = useState<ProspectStatus>(initial?.status || 'new')
   const [loading, setLoading] = useState(false)
+
+  const handleStatusChange = (newStatus: ProspectStatus) => {
+    setStatus(newStatus)
+    // Auto-suggest default probability but user can override
+    setForm(prev => ({ ...prev, probability: defaultProbabilityByStatus[newStatus] }))
+  }
 
   const handleSubmit = async () => {
     if (!form.company || !form.email) return
@@ -136,7 +193,7 @@ function ProspectModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="glass-card p-6 w-full max-w-md"
+        className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -161,6 +218,50 @@ function ProspectModal({
               className="input-dark text-sm"
             />
           ))}
+
+          {/* Status selector */}
+          {initial && (
+            <div>
+              <label className="block text-xs text-ink-400 mb-1">Estado</label>
+              <select
+                value={status}
+                onChange={e => handleStatusChange(e.target.value as ProspectStatus)}
+                className="input-dark text-sm"
+              >
+                {columns.map(c => (
+                  <option key={c.key} value={c.key} className="bg-ink-800">{c.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Probability slider */}
+          <div>
+            <label className="block text-xs text-ink-400 mb-1">
+              Probabilidad de cierre
+              <span className="ml-2 text-crimson-400 font-bold">{form.probability}%</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={form.probability}
+                onChange={e => setForm(prev => ({ ...prev, probability: parseInt(e.target.value) }))}
+                className="flex-1 accent-crimson-500 h-1.5"
+              />
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={form.probability}
+                onChange={e => setForm(prev => ({ ...prev, probability: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) }))}
+                className="w-16 input-dark text-sm text-center"
+              />
+            </div>
+          </div>
+
           <select
             value={form.source}
             onChange={e => setForm(prev => ({ ...prev, source: e.target.value }))}
@@ -195,10 +296,20 @@ export default function Prospectos() {
   const [activeCol, setActiveCol] = useState<ProspectStatus | 'all'>('all')
   const [showModal, setShowModal] = useState(false)
   const [editProspect, setEditProspect] = useState<Prospect | null>(null)
+  const [convertMsg, setConvertMsg] = useState<string | null>(null)
 
   useEffect(() => {
     api.get('/prospects').then(r => setProspects(r.data)).finally(() => setLoading(false))
   }, [])
+
+  // Pipeline estimated value (active prospects only, not won/lost)
+  const pipelineEstimado = prospects
+    .filter(p => p.status !== 'won' && p.status !== 'lost')
+    .reduce((acc, p) => {
+      const budget = parseBudgetToNumber(p.budget)
+      const prob = p.probability ?? 0
+      return acc + (budget * prob / 100)
+    }, 0)
 
   const handleAdd = async (form: ProspectForm) => {
     const { data } = await api.post('/prospects', { ...form, status: 'new' })
@@ -216,7 +327,10 @@ export default function Prospectos() {
   const handleStatusUpdate = async (id: string, patch: Partial<Prospect>) => {
     const prospect = prospects.find(p => p.id === id)
     if (!prospect) return
-    const { data } = await api.put(`/prospects/${id}`, { ...prospect, ...patch })
+    // Auto-update probability when status changes via the card dropdown
+    const newStatus = patch.status || prospect.status
+    const newProbability = defaultProbabilityByStatus[newStatus]
+    const { data } = await api.put(`/prospects/${id}`, { ...prospect, ...patch, probability: newProbability })
     setProspects(p => p.map(x => x.id === id ? data : x))
   }
 
@@ -224,6 +338,20 @@ export default function Prospectos() {
     if (!confirm('¿Eliminar este prospecto?')) return
     await api.delete(`/prospects/${id}`)
     setProspects(p => p.filter(x => x.id !== id))
+  }
+
+  const handleConvert = async (id: string) => {
+    try {
+      const client = await convertProspect(id)
+      // Update local prospect to show converted state
+      setProspects(p => p.map(x => x.id === id ? { ...x, probability: 100 } : x))
+      setConvertMsg(`${client.company} convertido a cliente exitosamente`)
+      setTimeout(() => setConvertMsg(null), 4000)
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || 'Error al convertir prospecto'
+      setConvertMsg(msg)
+      setTimeout(() => setConvertMsg(null), 4000)
+    }
   }
 
   const byColumn = (key: ProspectStatus) => prospects.filter(p => p.status === key)
@@ -245,8 +373,19 @@ export default function Prospectos() {
         </motion.button>
       </div>
 
-      {/* Stats Row */}
+      {/* Pipeline Estimado + Stats Row */}
       <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+        {/* Pipeline estimated card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-shrink-0 px-4 py-2.5 rounded-xl border border-crimson-700/30 bg-crimson-700/10 text-sm font-medium flex items-center gap-2"
+        >
+          <TrendingUp size={14} className="text-crimson-400" />
+          <span className="text-ink-300 text-xs">Pipeline Estimado</span>
+          <span className="text-white font-bold">{formatCurrency(pipelineEstimado)}</span>
+        </motion.div>
+
         {columns.map(col => {
           const cfg = prospectStatusConfig[col.key]
           const count = byColumn(col.key).length
@@ -269,6 +408,21 @@ export default function Prospectos() {
           )
         })}
       </div>
+
+      {/* Success/Error toast */}
+      <AnimatePresence>
+        {convertMsg && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="glass-card p-3 flex items-center gap-2 text-sm border border-emerald-500/30 bg-emerald-500/10"
+          >
+            <Sparkles size={14} className="text-emerald-400" />
+            <span className="text-emerald-300">{convertMsg}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {loading && (
         <div className="flex items-center justify-center py-20">
@@ -300,6 +454,7 @@ export default function Prospectos() {
                         onUpdate={handleStatusUpdate}
                         onEdit={setEditProspect}
                         onDelete={handleDelete}
+                        onConvert={handleConvert}
                       />
                     ))}
                   </AnimatePresence>

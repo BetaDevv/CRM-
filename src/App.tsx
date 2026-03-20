@@ -12,6 +12,8 @@ import TodoSemanal from './pages/TodoSemanal'
 import Aprobaciones from './pages/Aprobaciones'
 import PlanMarketing from './pages/PlanMarketing'
 import Metricas from './pages/Metricas'
+import Usuarios from './pages/Usuarios'
+import Calendario from './pages/Calendario'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, restoreSession, isAdmin } = useAuthStore()
@@ -68,6 +70,8 @@ function AppRoutes() {
         <Route path="aprobaciones" element={<Aprobaciones />} />
         <Route path="plan" element={<PlanMarketing />} />
         <Route path="metricas" element={<Metricas />} />
+        <Route path="usuarios" element={<Usuarios />} />
+        <Route path="calendario" element={<Calendario />} />
       </Route>
 
       {/* Catch all */}

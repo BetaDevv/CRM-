@@ -2,6 +2,7 @@ import { Router, Response } from 'express'
 import { pool } from '../db'
 import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
+import { logActivity } from '../services/activityLogger'
 
 const router = Router()
 router.use(verifyToken, requireAdmin)
@@ -24,6 +25,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [id, title, description || null, priority || 'medium', category || 'General', client_id || null, week_of || null, due_date || null]
     )
+    logActivity({ type: 'todo_created', description: `Nueva tarea: ${title}`, entityType: 'todo', entityId: id })
     res.status(201).json(rows[0])
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -46,9 +48,11 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 
 router.patch('/:id/toggle', async (req, res: Response) => {
   try {
-    const { rows: cur } = await pool.query('SELECT done FROM todos WHERE id = $1', [req.params.id])
+    const { rows: cur } = await pool.query('SELECT done, title FROM todos WHERE id = $1', [req.params.id])
     if (!cur.length) { res.status(404).json({ error: 'Not found' }); return }
-    const { rows } = await pool.query('UPDATE todos SET done=$1 WHERE id=$2 RETURNING *', [cur[0].done ? 0 : 1, req.params.id])
+    const newDone = cur[0].done ? 0 : 1
+    const { rows } = await pool.query('UPDATE todos SET done=$1 WHERE id=$2 RETURNING *', [newDone, req.params.id])
+    logActivity({ type: 'todo_toggled', description: `Tarea ${newDone ? 'completada' : 'reabierta'}: ${cur[0].title}`, entityType: 'todo', entityId: req.params.id })
     res.json(rows[0])
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })

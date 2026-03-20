@@ -5,6 +5,7 @@ import fs from 'fs'
 import { pool } from '../db'
 import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
+import { logActivity } from '../services/activityLogger'
 
 const uploadDir = path.resolve(__dirname, '../../../uploads')
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
@@ -57,6 +58,7 @@ router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
       [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#DC143C', description || null]
     )
+    logActivity({ type: 'client_created', description: `Nuevo cliente: ${company}`, entityType: 'client', entityId: id })
     res.status(201).json(parseClient(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -73,6 +75,7 @@ router.put('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
       [company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', color || '#DC143C', description || null, linkedin_connected ? 1 : 0, id]
     )
     if (!rows.length) { res.status(404).json({ error: 'Cliente no encontrado' }); return }
+    logActivity({ type: 'client_updated', description: `Cliente actualizado: ${company}`, entityType: 'client', entityId: id })
     res.json(parseClient(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -99,6 +102,71 @@ router.delete('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     await pool.query('DELETE FROM clients WHERE id = $1', [req.params.id])
     res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── Client Notes ──────────────────────────────────────────────────────────────
+
+router.get('/:id/notes', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM client_notes WHERE client_id = $1 ORDER BY created_at DESC',
+      [req.params.id]
+    )
+    res.json(rows)
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+router.post('/:id/notes', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { content } = req.body
+    if (!content?.trim()) { res.status(400).json({ error: 'Contenido requerido' }); return }
+    const id = uuid()
+    const author = req.user?.name || 'Admin'
+    const { rows } = await pool.query(
+      'INSERT INTO client_notes (id, client_id, content, author) VALUES ($1,$2,$3,$4) RETURNING *',
+      [id, req.params.id, content.trim(), author]
+    )
+    // Get client company for the activity log
+    const { rows: clientRows } = await pool.query('SELECT company FROM clients WHERE id = $1', [req.params.id])
+    const company = clientRows[0]?.company || 'cliente'
+    logActivity({ type: 'note_added', description: `Nota agregada para ${company}`, entityType: 'client', entityId: req.params.id })
+    res.status(201).json(rows[0])
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+router.delete('/:id/notes/:noteId', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    await pool.query('DELETE FROM client_notes WHERE id = $1 AND client_id = $2', [req.params.noteId, req.params.id])
+    res.json({ ok: true })
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── Client Activity ───────────────────────────────────────────────────────────
+
+router.get('/:id/activity', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const clientId = req.params.id
+    // Get the client company name for ILIKE matching
+    const { rows: clientRows } = await pool.query('SELECT company FROM clients WHERE id = $1', [clientId])
+    const company = clientRows[0]?.company || ''
+
+    const { rows } = await pool.query(
+      `SELECT * FROM activity_log
+       WHERE (entity_type = 'client' AND entity_id = $1)
+          OR description ILIKE $2
+       ORDER BY created_at DESC LIMIT 20`,
+      [clientId, `%${company}%`]
+    )
+    res.json(rows)
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

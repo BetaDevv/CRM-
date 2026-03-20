@@ -1,12 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Calendar, Target, TrendingUp, ThumbsUp, RotateCcw, Send, ThumbsDown, Loader2, LogOut, BarChart2, CheckCircle, Bell, Linkedin, Users, Eye, Heart, Globe, Play } from 'lucide-react'
+import { Check, Calendar, Target, TrendingUp, ThumbsUp, RotateCcw, Send, ThumbsDown, Loader2, LogOut, BarChart2, CheckCircle, Bell, Linkedin, Users, Eye, Heart, Globe, Play, X, Plus, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import FullCalendar from '@fullcalendar/react'
+import dayGridPlugin from '@fullcalendar/daygrid'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import interactionPlugin from '@fullcalendar/interaction'
+import esLocale from '@fullcalendar/core/locales/es'
+import type { EventInput, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core'
+import type { EventResizeDoneArg } from '@fullcalendar/interaction'
+import type { DatesSetArg } from '@fullcalendar/core'
 import { useAuthStore } from '../store/useAuthStore'
 import { useStore } from '../store/useStore'
 import { LogoMark } from '../components/Logo'
-import { api } from '../lib/api'
+import { api, getCalendarEvents, createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, getCalendarUsers, type CalendarEvent, type CalendarUser } from '../lib/api'
 import { postStatusConfig, platformConfig, formatDate, categoryColors } from '../lib/utils'
 import type { PostStatus } from '../types'
 
@@ -17,6 +25,168 @@ function formatShort(n: number): string {
   return n.toString()
 }
 
+const PORTAL_COLORS = ['#DC143C', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#14B8A6', '#F97316']
+
+function toDatetimeLocal(isoStr: string): string {
+  const d = new Date(isoStr)
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function toISOFromLocal(localStr: string): string {
+  return new Date(localStr).toISOString()
+}
+
+function toFCEvent(event: CalendarEvent): EventInput {
+  return {
+    id: event.id,
+    title: event.title,
+    start: event.startTime,
+    end: event.endTime,
+    allDay: event.allDay,
+    backgroundColor: event.color || '#DC143C',
+    borderColor: event.color || '#DC143C',
+    extendedProps: {
+      description: event.description,
+      participants: event.participants,
+    },
+  }
+}
+
+/* ─── Client Calendar Modal ─── */
+function ClientEventModal({
+  mode, initial, users, onSave, onDelete, onClose,
+}: {
+  mode: 'create' | 'edit'
+  initial: { title: string; description: string; startTime: string; endTime: string; allDay: boolean; color: string; participantIds: string[] }
+  users: CalendarUser[]
+  onSave: (data: any) => Promise<void>
+  onDelete?: () => Promise<void>
+  onClose: () => void
+}) {
+  const [title, setTitle] = useState(initial.title)
+  const [description, setDescription] = useState(initial.description)
+  const [startTime, setStartTime] = useState(initial.startTime)
+  const [endTime, setEndTime] = useState(initial.endTime)
+  const [allDay, setAllDay] = useState(initial.allDay)
+  const [color, setColor] = useState(initial.color)
+  const [participantIds, setParticipantIds] = useState<string[]>(initial.participantIds)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const adminUsers = users.filter(u => u.role === 'admin')
+
+  const handleSave = async () => {
+    if (!title.trim()) return
+    setSaving(true)
+    try {
+      await onSave({
+        title: title.trim(),
+        description: description.trim() || null,
+        startTime: toISOFromLocal(startTime),
+        endTime: toISOFromLocal(endTime),
+        allDay,
+        color,
+        participantIds,
+        isShared: true,
+      })
+      onClose()
+    } catch {} finally { setSaving(false) }
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    setDeleting(true)
+    try { await onDelete(); onClose() } catch {} finally { setDeleting(false) }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={e => e.stopPropagation()}
+        className="glass-card w-full max-w-md max-h-[85vh] overflow-y-auto no-scrollbar"
+      >
+        <div className="flex items-center justify-between p-5 pb-3 border-b border-white/5">
+          <h3 className="text-lg font-bold text-white">{mode === 'create' ? 'Nueva Reunion' : 'Editar Evento'}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-400"><X size={18} /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div>
+            <label className="block text-xs font-medium mb-1.5 text-ink-300">Titulo</label>
+            <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Nombre del evento..." className="input-dark" autoFocus />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1.5 text-ink-300">Descripcion</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalles..." rows={2} className="input-dark resize-none" />
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setAllDay(!allDay)} className={`relative w-10 h-5 rounded-full transition-colors ${allDay ? 'bg-crimson-600' : 'bg-ink-600'}`}>
+              <motion.div animate={{ x: allDay ? 20 : 2 }} transition={{ type: 'spring', stiffness: 500, damping: 30 }} className="absolute top-0.5 w-4 h-4 bg-white rounded-full" />
+            </button>
+            <span className="text-sm font-medium text-ink-200">Todo el dia</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1.5 text-ink-300">Inicio</label>
+              <input type={allDay ? 'date' : 'datetime-local'} value={allDay ? startTime.split('T')[0] : startTime} onChange={e => setStartTime(allDay ? e.target.value + 'T00:00' : e.target.value)} className="input-dark text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5 text-ink-300">Fin</label>
+              <input type={allDay ? 'date' : 'datetime-local'} value={allDay ? endTime.split('T')[0] : endTime} onChange={e => setEndTime(allDay ? e.target.value + 'T23:59' : e.target.value)} className="input-dark text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-2 text-ink-300">Color</label>
+            <div className="flex gap-2">
+              {PORTAL_COLORS.map(c => (
+                <button key={c} onClick={() => setColor(c)} className="w-7 h-7 rounded-full transition-transform hover:scale-110 flex items-center justify-center"
+                  style={{ backgroundColor: c, boxShadow: color === c ? `0 0 0 2px rgb(var(--ink-800)), 0 0 0 4px ${c}` : 'none' }}>
+                  {color === c && <Check size={14} className="text-white" />}
+                </button>
+              ))}
+            </div>
+          </div>
+          {adminUsers.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium mb-2 text-ink-300">Invitar al equipo</label>
+              <div className="space-y-1">
+                {adminUsers.map(u => (
+                  <label key={u.id} className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors">
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${participantIds.includes(u.id) ? 'bg-crimson-600 border-crimson-600' : 'border-ink-500'}`}>
+                      {participantIds.includes(u.id) && <Check size={10} className="text-white" />}
+                    </div>
+                    <span className="text-sm font-medium text-ink-100">{u.name}</span>
+                    <input type="checkbox" className="sr-only" checked={participantIds.includes(u.id)} onChange={() => setParticipantIds(prev => prev.includes(u.id) ? prev.filter(id => id !== u.id) : [...prev, u.id])} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-3 p-5 pt-3 border-t border-white/5">
+          {mode === 'edit' && onDelete && (
+            <button onClick={handleDelete} disabled={deleting} className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-all disabled:opacity-50">
+              {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} Eliminar
+            </button>
+          )}
+          <div className="flex-1" />
+          <button onClick={onClose} className="btn-ghost text-sm">Cancelar</button>
+          <button onClick={handleSave} disabled={saving || !title.trim()} className="btn-primary text-sm disabled:opacity-50">
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+            {mode === 'create' ? 'Crear' : 'Guardar'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function ClientPortal() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
@@ -25,8 +195,20 @@ export default function ClientPortal() {
   const [posts, setPosts] = useState<any[]>([])
   const [metrics, setMetrics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'plan' | 'posts' | 'metrics'>('plan')
+  const [activeTab, setActiveTab] = useState<'plan' | 'posts' | 'metrics' | 'calendario'>('plan')
   const [feedbackState, setFeedbackState] = useState<Record<string, { show: boolean; text: string }>>({})
+
+  // Calendar state
+  const [calEvents, setCalEvents] = useState<CalendarEvent[]>([])
+  const [calUsers, setCalUsers] = useState<CalendarUser[]>([])
+  const [calModalOpen, setCalModalOpen] = useState(false)
+  const [calModalMode, setCalModalMode] = useState<'create' | 'edit'>('create')
+  const [calEditingEvent, setCalEditingEvent] = useState<CalendarEvent | null>(null)
+  const [calModalInitial, setCalModalInitial] = useState<any>(null)
+  const calRef = useRef<FullCalendar>(null)
+  const calDateRangeRef = useRef<{ start: string; end: string } | null>(null)
+  const calClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const calLastClickIdRef = useRef<string | null>(null)
 
   const client = clients.find(c => c.id === user?.clientId)
 
@@ -37,6 +219,84 @@ export default function ClientPortal() {
       user?.clientId ? api.get(`/metrics/${user.clientId}`).then(r => setMetrics(r.data)).catch(() => {}) : Promise.resolve(),
     ]).finally(() => setLoading(false))
   }, [])
+
+  // Fetch calendar users on mount
+  useEffect(() => {
+    getCalendarUsers().then(setCalUsers).catch(() => {})
+  }, [])
+
+  const fetchCalEvents = useCallback(async (start?: string, end?: string) => {
+    const s = start || calDateRangeRef.current?.start
+    const e = end || calDateRangeRef.current?.end
+    if (!s || !e) return
+    try {
+      const data = await getCalendarEvents(s, e)
+      setCalEvents(data)
+    } catch {}
+  }, [])
+
+  const handleCalDatesSet = useCallback((info: DatesSetArg) => {
+    calDateRangeRef.current = { start: info.startStr, end: info.endStr }
+    fetchCalEvents(info.startStr, info.endStr)
+  }, [fetchCalEvents])
+
+  const handleCalDateSelect = useCallback((info: DateSelectArg) => {
+    setCalEditingEvent(null)
+    setCalModalMode('create')
+    setCalModalInitial({
+      title: '', description: '',
+      startTime: info.allDay ? info.startStr + 'T09:00' : toDatetimeLocal(info.startStr),
+      endTime: info.allDay ? info.startStr + 'T10:00' : toDatetimeLocal(info.endStr),
+      allDay: info.allDay, color: '#DC143C', participantIds: [],
+    })
+    setCalModalOpen(true)
+    calRef.current?.getApi()?.unselect()
+  }, [])
+
+  const handleCalEventClick = useCallback((info: EventClickArg) => {
+    const eventId = info.event.id
+    if (calLastClickIdRef.current === eventId && calClickTimerRef.current) {
+      clearTimeout(calClickTimerRef.current)
+      calClickTimerRef.current = null
+      calLastClickIdRef.current = null
+      const ev = calEvents.find(e => e.id === eventId)
+      if (!ev) return
+      setCalEditingEvent(ev)
+      setCalModalMode('edit')
+      setCalModalInitial({
+        title: ev.title, description: ev.description || '',
+        startTime: toDatetimeLocal(ev.startTime), endTime: toDatetimeLocal(ev.endTime),
+        allDay: ev.allDay, color: ev.color || '#DC143C',
+        participantIds: ev.participants.map(p => p.id),
+      })
+      setCalModalOpen(true)
+      return
+    }
+    calLastClickIdRef.current = eventId
+    calClickTimerRef.current = setTimeout(() => { calClickTimerRef.current = null; calLastClickIdRef.current = null }, 300)
+  }, [calEvents])
+
+  const handleCalEventDrop = useCallback(async (info: EventDropArg) => {
+    try { await updateCalendarEvent(info.event.id, { startTime: info.event.start?.toISOString(), endTime: (info.event.end || info.event.start)?.toISOString(), allDay: info.event.allDay }); fetchCalEvents() }
+    catch { info.revert() }
+  }, [fetchCalEvents])
+
+  const handleCalEventResize = useCallback(async (info: EventResizeDoneArg) => {
+    try { await updateCalendarEvent(info.event.id, { startTime: info.event.start?.toISOString(), endTime: (info.event.end || info.event.start)?.toISOString() }); fetchCalEvents() }
+    catch { info.revert() }
+  }, [fetchCalEvents])
+
+  const handleCalSave = useCallback(async (data: any) => {
+    if (calModalMode === 'create') { await createCalendarEvent(data) }
+    else if (calEditingEvent) { await updateCalendarEvent(calEditingEvent.id, data) }
+    fetchCalEvents()
+  }, [calModalMode, calEditingEvent, fetchCalEvents])
+
+  const handleCalDelete = useCallback(async () => {
+    if (!calEditingEvent) return
+    await deleteCalendarEvent(calEditingEvent.id)
+    fetchCalEvents()
+  }, [calEditingEvent, fetchCalEvents])
 
   const plan = plans.find(p => p.client_id === user?.clientId)
   const pendingPosts = posts.filter(p => p.status === 'pending')
@@ -141,6 +401,7 @@ export default function ClientPortal() {
           {[
             { k: 'plan', l: 'Plan Estratégico' },
             { k: 'posts', l: `Aprobaciones${pendingPosts.length > 0 ? ` (${pendingPosts.length})` : ''}` },
+            { k: 'calendario', l: 'Calendario' },
             { k: 'metrics', l: 'Métricas' },
           ].map(tab => (
             <button
@@ -327,6 +588,69 @@ export default function ClientPortal() {
                   </motion.div>
                 )
               })}
+            </motion.div>
+          )}
+
+          {/* ─── Calendario Tab ─── */}
+          {activeTab === 'calendario' && (
+            <motion.div key="calendario" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}>
+              <div className="glass-card p-4 rounded-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-white flex items-center gap-2">
+                    <Calendar size={16} className="text-crimson-400" /> Tu Calendario
+                  </h4>
+                  <motion.button
+                    whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      const now = new Date(); const end = new Date(now.getTime() + 60 * 60 * 1000)
+                      setCalEditingEvent(null); setCalModalMode('create')
+                      setCalModalInitial({ title: '', description: '', startTime: toDatetimeLocal(now.toISOString()), endTime: toDatetimeLocal(end.toISOString()), allDay: false, color: '#DC143C', participantIds: [] })
+                      setCalModalOpen(true)
+                    }}
+                    className="btn-primary text-xs py-2 px-3"
+                  >
+                    <Plus size={14} /> Nueva reunion
+                  </motion.button>
+                </div>
+                <FullCalendar
+                  ref={calRef}
+                  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                  initialView="timeGridWeek"
+                  headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' }}
+                  locale={esLocale}
+                  firstDay={1}
+                  slotMinTime="06:00:00"
+                  slotMaxTime="22:00:00"
+                  slotDuration="00:30:00"
+                  snapDuration="00:15:00"
+                  editable={true}
+                  selectable={true}
+                  selectMirror={true}
+                  dayMaxEvents={true}
+                  nowIndicator={true}
+                  events={calEvents.map(toFCEvent)}
+                  eventDrop={handleCalEventDrop}
+                  eventResize={handleCalEventResize}
+                  select={handleCalDateSelect}
+                  eventClick={handleCalEventClick}
+                  datesSet={handleCalDatesSet}
+                  height="auto"
+                  eventTimeFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false, hour12: false }}
+                  slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false, hour12: false }}
+                />
+              </div>
+              <AnimatePresence>
+                {calModalOpen && calModalInitial && (
+                  <ClientEventModal
+                    mode={calModalMode}
+                    initial={calModalInitial}
+                    users={calUsers}
+                    onSave={handleCalSave}
+                    onDelete={calModalMode === 'edit' ? handleCalDelete : undefined}
+                    onClose={() => { setCalModalOpen(false); setCalEditingEvent(null) }}
+                  />
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
 

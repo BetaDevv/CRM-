@@ -99,6 +99,7 @@ const sampleProspects: Prospect[] = [
     status: 'proposal',
     source: 'Referido',
     createdAt: '2025-02-20',
+    probability: 40,
   },
   {
     id: 'p2',
@@ -110,6 +111,7 @@ const sampleProspects: Prospect[] = [
     status: 'contacted',
     source: 'Instagram',
     createdAt: '2025-03-01',
+    probability: 20,
   },
   {
     id: 'p3',
@@ -121,6 +123,7 @@ const sampleProspects: Prospect[] = [
     status: 'negotiation',
     source: 'LinkedIn',
     createdAt: '2025-02-10',
+    probability: 70,
   },
   {
     id: 'p4',
@@ -132,6 +135,7 @@ const sampleProspects: Prospect[] = [
     status: 'new',
     source: 'Web',
     createdAt: '2025-03-05',
+    probability: 10,
   },
 ]
 

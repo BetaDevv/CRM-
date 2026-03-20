@@ -80,6 +80,22 @@ router.delete('/:id', requireAdmin, async (req, res: Response) => {
   }
 })
 
+// ─── GET all milestones (for calendar picker) ───────────────────────────────
+router.get('/milestones/all', async (_req: AuthRequest, res: Response) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT m.*, p.title as plan_title, c.company as client_name
+       FROM milestones m
+       JOIN plans p ON m.plan_id = p.id
+       JOIN clients c ON p.client_id = c.id
+       ORDER BY m.date ASC`
+    )
+    res.json(rows)
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
 // ─── Milestone routes ─────────────────────────────────────────────────────────
 
 router.post('/:planId/milestones', requireAdmin, async (req: AuthRequest, res: Response) => {

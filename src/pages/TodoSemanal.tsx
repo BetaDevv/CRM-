@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Check, Trash2, Calendar } from 'lucide-react'
+import { Plus, X, Check, Trash2, Calendar, Loader2 } from 'lucide-react'
 import { useStore } from '../store/useStore'
-import { priorityConfig, generateId } from '../lib/utils'
+import { getTodos, createTodo as createTodoApi, toggleTodo as toggleTodoApi, deleteTodo as deleteTodoApi } from '../lib/api'
+import { priorityConfig } from '../lib/utils'
 import type { Priority, TodoItem } from '../types'
 
 const categories = ['Contenido', 'Diseño', 'Ventas', 'Reportes', 'Estrategia', 'Admin', 'Otro']
@@ -57,7 +58,9 @@ function TodoCard({
 }
 
 export default function TodoSemanal() {
-  const { todos, addTodo, toggleTodo, deleteTodo, clients } = useStore()
+  const { clients } = useStore()
+  const [todos, setTodos] = useState<TodoItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [filterCat, setFilterCat] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -67,27 +70,64 @@ export default function TodoSemanal() {
 
   const weekOf = new Date().toISOString().split('T')[0]
 
-  const handleAdd = () => {
+  useEffect(() => {
+    getTodos()
+      .then(setTodos)
+      .catch(err => console.error('Error fetching todos:', err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleAdd = async () => {
     if (!form.title) return
-    addTodo({
-      id: generateId(),
-      title: form.title,
-      description: form.description,
-      priority: form.priority,
-      category: form.category,
-      clientId: form.clientId || undefined,
-      dueDate: form.dueDate || undefined,
-      done: false,
-      weekOf,
-    })
-    setForm({ title: '', description: '', priority: 'medium', category: 'Contenido', clientId: '', dueDate: '' })
-    setShowModal(false)
+    try {
+      const newTodo = await createTodoApi({
+        title: form.title,
+        description: form.description,
+        priority: form.priority,
+        category: form.category,
+        clientId: form.clientId || undefined,
+        dueDate: form.dueDate || undefined,
+        done: false,
+        weekOf,
+      })
+      setTodos(prev => [newTodo, ...prev])
+      setForm({ title: '', description: '', priority: 'medium', category: 'Contenido', clientId: '', dueDate: '' })
+      setShowModal(false)
+    } catch (err) {
+      console.error('Error creating todo:', err)
+    }
+  }
+
+  const handleToggle = async (id: string) => {
+    try {
+      const updated = await toggleTodoApi(id)
+      setTodos(prev => prev.map(t => t.id === id ? updated : t))
+    } catch (err) {
+      console.error('Error toggling todo:', err)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteTodoApi(id)
+      setTodos(prev => prev.filter(t => t.id !== id))
+    } catch (err) {
+      console.error('Error deleting todo:', err)
+    }
   }
 
   const filtered = todos.filter(t => !filterCat || t.category === filterCat)
   const pending = filtered.filter(t => !t.done)
   const done = filtered.filter(t => t.done)
   const progress = todos.length > 0 ? Math.round((todos.filter(t => t.done).length / todos.length) * 100) : 0
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 size={32} className="animate-spin text-crimson-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -184,7 +224,7 @@ export default function TodoSemanal() {
                   return order[a.priority] - order[b.priority]
                 })
                 .map(todo => (
-                  <TodoCard key={todo.id} todo={todo} onToggle={toggleTodo} onDelete={deleteTodo} />
+                  <TodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
                 ))}
             </AnimatePresence>
             {pending.length === 0 && (
@@ -206,7 +246,7 @@ export default function TodoSemanal() {
           <div className="space-y-2">
             <AnimatePresence>
               {done.map(todo => (
-                <TodoCard key={todo.id} todo={todo} onToggle={toggleTodo} onDelete={deleteTodo} />
+                <TodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={handleDelete} />
               ))}
             </AnimatePresence>
             {done.length === 0 && (

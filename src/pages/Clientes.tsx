@@ -3,10 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Mail, Phone, DollarSign, Calendar, Briefcase, ExternalLink,
   CheckCircle, Pencil, Trash2, Loader2, Plus, Upload,
+  Clock, MessageSquare, Send, FileText, UserPlus, Bell,
 } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { formatCurrency, formatDate } from '../lib/utils'
-import { api } from '../lib/api'
+import {
+  api,
+  getClientNotes, addClientNote, deleteClientNote,
+  getClientActivity,
+} from '../lib/api'
 import type { Client } from '../types'
+import type { ClientNote, ActivityLog } from '../lib/api'
 
 const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
 
@@ -272,6 +280,159 @@ function ClientModal({
   )
 }
 
+// ─── Activity type config ─────────────────────────────────────────────────────
+const activityTypeConfig: Record<string, { color: string; icon: typeof Clock }> = {
+  client_created:  { color: '#34d399', icon: UserPlus },
+  client_updated:  { color: '#60a5fa', icon: Pencil },
+  post_approved:   { color: '#34d399', icon: CheckCircle },
+  post_created:    { color: '#a78bfa', icon: FileText },
+  note_added:      { color: '#f59e0b', icon: MessageSquare },
+  todo_completed:  { color: '#34d399', icon: CheckCircle },
+  prospect_created:{ color: '#60a5fa', icon: UserPlus },
+  idea_updated:    { color: '#a78bfa', icon: Bell },
+}
+const defaultActivityConfig = { color: '#6b7280', icon: Clock }
+
+function relativeTime(dateStr: string) {
+  return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: es })
+}
+
+// ─── Activity Timeline ───────────────────────────────────────────────────────
+function ActivityTimeline({ clientId }: { clientId: string }) {
+  const [activities, setActivities] = useState<ActivityLog[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    getClientActivity(clientId).then(setActivities).finally(() => setLoading(false))
+  }, [clientId])
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>
+  if (!activities.length) return <p className="text-center py-8 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>Sin actividad registrada</p>
+
+  return (
+    <div className="relative pl-6 space-y-0">
+      {/* Vertical line */}
+      <div className="absolute left-[9px] top-2 bottom-2 w-px" style={{ backgroundColor: 'rgb(var(--ink-600) / 0.5)' }} />
+
+      {activities.map((a, i) => {
+        const cfg = activityTypeConfig[a.type] || defaultActivityConfig
+        const Icon = cfg.icon
+        return (
+          <motion.div
+            key={a.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.04 }}
+            className="relative flex items-start gap-3 py-3"
+          >
+            {/* Dot */}
+            <div className="absolute -left-6 top-3.5 w-[18px] h-[18px] rounded-full flex items-center justify-center z-10"
+              style={{ backgroundColor: cfg.color + '20', border: `2px solid ${cfg.color}` }}>
+              <Icon size={9} style={{ color: cfg.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm leading-snug" style={{ color: 'rgb(var(--ink-200))' }}>{a.description}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'rgb(var(--ink-400))' }}>{relativeTime(a.created_at)}</p>
+            </div>
+          </motion.div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Notes Panel ─────────────────────────────────────────────────────────────
+function NotesPanel({ clientId }: { clientId: string }) {
+  const [notes, setNotes] = useState<ClientNote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [content, setContent] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    getClientNotes(clientId).then(setNotes).finally(() => setLoading(false))
+  }, [clientId])
+
+  const handleAdd = async () => {
+    if (!content.trim() || saving) return
+    setSaving(true)
+    try {
+      const note = await addClientNote(clientId, content)
+      setNotes(prev => [note, ...prev])
+      setContent('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (noteId: string) => {
+    await deleteClientNote(clientId, noteId)
+    setNotes(prev => prev.filter(n => n.id !== noteId))
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Add note form */}
+      <div className="glass-card p-3 space-y-2">
+        <textarea
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="Agregar nota interna..."
+          rows={3}
+          className="input-dark text-sm w-full resize-none"
+          onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleAdd() }}
+        />
+        <div className="flex justify-end">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleAdd}
+            disabled={!content.trim() || saving}
+            className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-40"
+          >
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+            Agregar nota
+          </motion.button>
+        </div>
+      </div>
+
+      {loading && <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>}
+
+      {!loading && !notes.length && (
+        <p className="text-center py-6 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>Sin notas todavía</p>
+      )}
+
+      <AnimatePresence>
+        {notes.map(note => (
+          <motion.div
+            key={note.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="glass-card p-4 group relative"
+          >
+            <p className="text-sm leading-relaxed pr-6" style={{ color: 'rgb(var(--ink-200))' }}>{note.content}</p>
+            <div className="flex items-center gap-2 mt-2">
+              {note.author && (
+                <span className="text-xs font-medium" style={{ color: 'rgb(var(--ink-300))' }}>{note.author}</span>
+              )}
+              <span className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{relativeTime(note.created_at)}</span>
+            </div>
+            <button
+              onClick={() => handleDelete(note.id)}
+              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all hover:bg-red-500/10"
+              style={{ color: 'rgb(var(--ink-400))' }}
+            >
+              <Trash2 size={13} className="hover:text-red-400" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function Clientes() {
   const [clients, setClients] = useState<Client[]>([])
@@ -279,6 +440,7 @@ export default function Clientes() {
   const [selected, setSelected] = useState<Client | null>(null)
   const [editClient, setEditClient] = useState<Client | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [drawerTab, setDrawerTab] = useState<'info' | 'historial' | 'notas'>('info')
 
   useEffect(() => {
     api.get('/clients').then(r => setClients(r.data)).finally(() => setLoading(false))
@@ -357,7 +519,7 @@ export default function Clientes() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <AnimatePresence>
             {clients.map(c => (
-              <ClientCard key={c.id} client={c} onSelect={setSelected} onEdit={setEditClient} />
+              <ClientCard key={c.id} client={c} onSelect={(c) => { setDrawerTab('info'); setSelected(c) }} onEdit={setEditClient} />
             ))}
           </AnimatePresence>
         </div>
@@ -390,47 +552,87 @@ export default function Clientes() {
                   </div>
                 </div>
 
-                <ClientAvatar client={selected} size="lg" className="mb-6" />
-
-                <div className="space-y-3">
-                  {[
-                    { icon: Mail,        label: 'Email',              value: selected.email },
-                    { icon: Phone,       label: 'Teléfono',           value: selected.phone || 'N/A' },
-                    { icon: Briefcase,   label: 'Industria',          value: selected.industry },
-                    { icon: Calendar,    label: 'Cliente desde',      value: formatDate(selected.startDate || selected.start_date) },
-                    { icon: DollarSign,  label: 'Retención mensual',  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl"
-                      style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
-                      <item.icon size={16} style={{ color: 'rgb(var(--ink-400))' }} className="flex-shrink-0" />
-                      <div>
-                        <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{item.label}</p>
-                        <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-100))' }}>{item.value}</p>
-                      </div>
-                    </div>
+                {/* Tab buttons */}
+                <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.6)' }}>
+                  {([
+                    { key: 'info' as const, label: 'Info', icon: Briefcase },
+                    { key: 'historial' as const, label: 'Historial', icon: Clock },
+                    { key: 'notas' as const, label: 'Notas', icon: MessageSquare },
+                  ]).map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => setDrawerTab(tab.key)}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-medium transition-all"
+                      style={{
+                        backgroundColor: drawerTab === tab.key ? 'rgb(var(--ink-700))' : 'transparent',
+                        color: drawerTab === tab.key ? 'rgb(var(--ink-100))' : 'rgb(var(--ink-400))',
+                      }}
+                    >
+                      <tab.icon size={13} />
+                      {tab.label}
+                    </button>
                   ))}
                 </div>
 
-                {selected.services?.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Servicios</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selected.services.map(s => (
-                        <span key={s} className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5"
-                          style={{ backgroundColor: 'rgb(var(--ink-700) / 0.5)', color: 'rgb(var(--ink-100))' }}>
-                          <CheckCircle size={11} className="text-green-400" /> {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <AnimatePresence mode="wait">
+                  {drawerTab === 'info' && (
+                    <motion.div key="info" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
+                      <ClientAvatar client={selected} size="lg" className="mb-6" />
 
-                {selected.description && (
-                  <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Descripción</p>
-                    <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}>{selected.description}</p>
-                  </div>
-                )}
+                      <div className="space-y-3">
+                        {[
+                          { icon: Mail,        label: 'Email',              value: selected.email },
+                          { icon: Phone,       label: 'Teléfono',           value: selected.phone || 'N/A' },
+                          { icon: Briefcase,   label: 'Industria',          value: selected.industry },
+                          { icon: Calendar,    label: 'Cliente desde',      value: formatDate(selected.startDate || selected.start_date) },
+                          { icon: DollarSign,  label: 'Retención mensual',  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
+                        ].map(item => (
+                          <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl"
+                            style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
+                            <item.icon size={16} style={{ color: 'rgb(var(--ink-400))' }} className="flex-shrink-0" />
+                            <div>
+                              <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{item.label}</p>
+                              <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-100))' }}>{item.value}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {selected.services?.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Servicios</p>
+                          <div className="flex flex-wrap gap-2">
+                            {selected.services.map(s => (
+                              <span key={s} className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5"
+                                style={{ backgroundColor: 'rgb(var(--ink-700) / 0.5)', color: 'rgb(var(--ink-100))' }}>
+                                <CheckCircle size={11} className="text-green-400" /> {s}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selected.description && (
+                        <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
+                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Descripción</p>
+                          <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}>{selected.description}</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {drawerTab === 'historial' && (
+                    <motion.div key="historial" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
+                      <ActivityTimeline clientId={selected.id} />
+                    </motion.div>
+                  )}
+
+                  {drawerTab === 'notas' && (
+                    <motion.div key="notas" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
+                      <NotesPanel clientId={selected.id} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           </motion.div>

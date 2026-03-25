@@ -9,6 +9,7 @@ import { useAuthStore } from '../store/useAuthStore'
 import { categoryColors, formatDate } from '../lib/utils'
 import { api } from '../lib/api'
 import type { MarketingMilestone } from '../types'
+import { useTranslation } from 'react-i18next'
 
 const categoryLabels: Record<string, string> = {
   strategy:  'Estrategia',
@@ -32,9 +33,9 @@ function CategoryIcon({ category, size = 14 }: { category: string; size?: number
   }
 }
 
-function MilestoneNode({ milestone, index, total, onToggle, onDelete, isAdmin }: {
+function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, isAdmin }: {
   milestone: MarketingMilestone; index: number; total: number
-  onToggle: () => void; onDelete: () => void; isAdmin: boolean
+  onToggle: () => void; onDelete: () => void; onEdit: () => void; isAdmin: boolean
 }) {
   const color = categoryColors[milestone.category] || '#DC143C'
   const isLast = index === total - 1
@@ -90,12 +91,20 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, isAdmin }:
                 <Calendar size={11} /><span>{formatDate(milestone.date)}</span>
               </div>
               {isAdmin && (
-                <button
-                  onClick={e => { e.stopPropagation(); onDelete() }}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-ink-500 hover:text-crimson-400 hover:bg-crimson-500/10 transition-all"
-                >
-                  <Trash2 size={12} />
-                </button>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    onClick={e => { e.stopPropagation(); onEdit() }}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-ink-500 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); onDelete() }}
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-ink-500 hover:text-crimson-400 hover:bg-crimson-500/10 transition-all"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -114,6 +123,7 @@ interface KpiForm { label: string; target: string; current_value: string }
 function NewPlanModal({ clients, onClose, onCreated }: {
   clients: any[]; onClose: () => void; onCreated: (plan: any) => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -162,7 +172,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div>
-            <h3 className="font-bold text-white text-xl">Nuevo Plan de Marketing</h3>
+            <h3 className="font-bold text-white text-xl">{t('admin:plan.newPlanModal.title')}</h3>
             <p className="text-xs text-ink-400 mt-0.5">Paso {step} de 3</p>
           </div>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={20} /></button>
@@ -235,7 +245,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                 </div>
               ))}
               <button onClick={addMilestone} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all flex items-center justify-center gap-2">
-                <Plus size={14} /> Agregar hito
+                <Plus size={14} /> {t('admin:plan.addMilestone')}
               </button>
             </motion.div>
           )}
@@ -301,6 +311,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
 function EditPlanModal({ plan, onClose, onSaved }: {
   plan: any; onClose: () => void; onSaved: (updated: any) => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [title, setTitle] = useState(plan.title || '')
   const [objective, setObjective] = useState(plan.objective || '')
   const [startDate, setStartDate] = useState(plan.start_date?.split('T')[0] || '')
@@ -324,7 +335,7 @@ function EditPlanModal({ plan, onClose, onSaved }: {
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-white text-lg">Editar Plan</h3>
+          <h3 className="font-bold text-white text-lg">{t('admin:plan.editPlan')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
@@ -349,6 +360,7 @@ function EditPlanModal({ plan, onClose, onSaved }: {
 function AddMilestoneModal({ planId, onClose, onAdded }: {
   planId: string; onClose: () => void; onAdded: (m: any) => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const categories = ['strategy', 'content', 'ads', 'seo', 'analytics', 'design']
   const [form, setForm] = useState({ title: '', description: '', date: '', category: 'strategy' })
   const [loading, setLoading] = useState(false)
@@ -370,7 +382,7 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-white text-lg">Agregar Hito</h3>
+          <h3 className="font-bold text-white text-lg">{t('admin:plan.addMilestoneModal.title')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
@@ -394,9 +406,64 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
   )
 }
 
+function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
+  planId: string; milestone: MarketingMilestone; onClose: () => void; onSaved: (m: any) => void
+}) {
+  const { t } = useTranslation(['admin', 'common'])
+  const categories = ['strategy', 'content', 'ads', 'seo', 'analytics', 'design']
+  const [form, setForm] = useState({
+    title: milestone.title || '',
+    description: milestone.description || '',
+    date: milestone.date?.split('T')[0] || '',
+    category: milestone.category || 'strategy',
+  })
+  const [loading, setLoading] = useState(false)
+
+  const handleSave = async () => {
+    if (!form.title) return
+    setLoading(true)
+    try {
+      const { data } = await api.put(`/plans/${planId}/milestones/${milestone.id}`, form)
+      onSaved(data); onClose()
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={onClose}>
+      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-white text-lg">{t('admin:plan.editMilestoneModal.title')}</h3>
+          <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
+        </div>
+        <div className="space-y-3">
+          <input type="text" placeholder="Título *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder="Descripción" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
+          <div className="grid grid-cols-2 gap-3">
+            <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
+            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="input-dark text-sm">
+              {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
+            {loading ? <Loader2 size={14} className="animate-spin" /> : 'Guardar cambios'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
   planId: string; kpi: any; onClose: () => void; onSaved: (k: any) => void; onDeleted: (id: string) => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [form, setForm] = useState({ label: kpi.label || '', target: kpi.target || '', current_value: kpi.current_value || '' })
   const [loading, setLoading] = useState(false)
 
@@ -423,7 +490,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-sm"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-white text-lg">Editar KPI</h3>
+          <h3 className="font-bold text-white text-lg">{t('admin:plan.editKpiModal.title')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
@@ -448,6 +515,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PlanMarketing() {
+  const { t } = useTranslation(['admin', 'common'])
   const { clients } = useStore()
   const { isAdmin } = useAuthStore()
   const [plans, setPlans] = useState<any[]>([])
@@ -457,6 +525,7 @@ export default function PlanMarketing() {
   const [showEditPlan, setShowEditPlan] = useState(false)
   const [showAddMilestone, setShowAddMilestone] = useState(false)
   const [editingKpi, setEditingKpi] = useState<any | null>(null)
+  const [editingMilestone, setEditingMilestone] = useState<MarketingMilestone | null>(null)
 
   useEffect(() => {
     api.get('/plans').then(r => {
@@ -504,6 +573,14 @@ export default function PlanMarketing() {
     ))
   }
 
+  const handleMilestoneSaved = (updated: any) => {
+    if (!plan) return
+    setPlans(prev => prev.map(p => p.id === plan.id
+      ? { ...p, milestones: p.milestones.map((m: any) => m.id === updated.id ? updated : m) }
+      : p
+    ))
+  }
+
   const handleKpiSaved = (updated: any) => {
     if (!plan) return
     setPlans(prev => prev.map(p => p.id === plan.id
@@ -532,12 +609,12 @@ export default function PlanMarketing() {
     <div className="space-y-6">
       <div className="page-header">
         <div>
-          <h2 className="section-title">Plan de Marketing</h2>
+          <h2 className="section-title">{t('admin:plan.title')}</h2>
           <p className="text-ink-300 text-sm mt-1">Timeline estratégico por cliente · {plans.length} planes activos</p>
         </div>
         {admin && (
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowNewPlan(true)} className="btn-primary">
-            <Plus size={16} /> Nuevo Plan
+            <Plus size={16} /> {t('admin:plan.newPlan')}
           </motion.button>
         )}
       </div>
@@ -595,7 +672,7 @@ export default function PlanMarketing() {
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs text-ink-400">Progreso del plan</span>
+                      <span className="text-xs text-ink-400">{t('admin:plan.planProgress')}</span>
                       <span className="text-xs font-bold text-white">{completedCount}/{totalCount} hitos</span>
                     </div>
                     <div className="w-full h-1.5 bg-ink-700 rounded-full overflow-hidden">
@@ -638,10 +715,11 @@ export default function PlanMarketing() {
                   total={plan.milestones.length}
                   onToggle={() => toggleMilestone(plan.id, milestone.id)}
                   onDelete={() => handleDeleteMilestone(plan.id, milestone.id)}
+                  onEdit={() => setEditingMilestone(milestone)}
                   isAdmin={admin}
                 />
               )) : (
-                <p className="text-ink-400 text-sm">Sin hitos definidos aún.</p>
+                <p className="text-ink-400 text-sm">{t('admin:plan.noMilestones')}</p>
               )}
             </div>
           </div>
@@ -752,11 +830,11 @@ export default function PlanMarketing() {
       ) : !loading && (
         <div className="glass-card p-12 flex flex-col items-center justify-center text-center">
           <Target size={40} className="text-crimson-500 mb-4 opacity-50" />
-          <p className="text-lg font-semibold text-white mb-2">Sin plan de marketing</p>
-          <p className="text-sm text-ink-300 mb-5">Crea el primer plan estratégico para comenzar.</p>
+          <p className="text-lg font-semibold text-white mb-2">{t('admin:plan.noPlan')}</p>
+          <p className="text-sm text-ink-300 mb-5">{t('admin:plan.noPlanDesc')}</p>
           {admin && (
             <button onClick={() => setShowNewPlan(true)} className="btn-primary">
-              <Plus size={16} /> Crear Plan de Marketing
+              <Plus size={16} /> {t('admin:plan.createPlan')}
             </button>
           )}
         </div>
@@ -766,6 +844,9 @@ export default function PlanMarketing() {
         {showNewPlan && <NewPlanModal clients={clients} onClose={() => setShowNewPlan(false)} onCreated={handleCreated} />}
         {showEditPlan && plan && <EditPlanModal plan={plan} onClose={() => setShowEditPlan(false)} onSaved={handlePlanSaved} />}
         {showAddMilestone && plan && <AddMilestoneModal planId={plan.id} onClose={() => setShowAddMilestone(false)} onAdded={handleMilestoneAdded} />}
+        {editingMilestone && plan && (
+          <EditMilestoneModal planId={plan.id} milestone={editingMilestone} onClose={() => setEditingMilestone(null)} onSaved={handleMilestoneSaved} />
+        )}
         {editingKpi && plan && (
           <EditKpiModal planId={plan.id} kpi={editingKpi} onClose={() => setEditingKpi(null)} onSaved={handleKpiSaved} onDeleted={handleKpiDeleted} />
         )}

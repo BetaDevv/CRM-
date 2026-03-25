@@ -46,10 +46,17 @@ export interface TodoItem {
   description?: string
   priority: Priority
   done: boolean
-  dueDate?: string
   clientId?: string
   weekOf: string
   category: string
+  shared?: boolean
+  createdBy?: string
+  status: 'pending' | 'in_progress' | 'done'
+  startTime?: string
+  endTime?: string
+  assignedTo?: string
+
+  notesCount?: number
 }
 
 export interface Idea {
@@ -61,6 +68,10 @@ export interface Idea {
   clientId?: string
   createdAt: string
   emoji?: string
+  shared?: boolean
+  createdBy?: string
+
+  notesCount?: number
 }
 
 export interface Post {

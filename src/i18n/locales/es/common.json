@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "prospects": "Prospectos",
+    "clients": "Clientes",
+    "approvals": "Aprobaciones",
+    "ideas": "Ideas",
+    "todo": "To-Do",
+    "todoWeekly": "To-Do Semanal",
+    "marketingPlan": "Plan de Marketing",
+    "metrics": "Métricas",
+    "calendar": "Calendario",
+    "documents": "Documentos",
+    "users": "Usuarios",
+    "portal": "Portal",
+    "plan": "Plan Estratégico",
+    "activity": "Actividad",
+    "collapse": "Colapsar"
+  },
+  "header": {
+    "search": "Buscar...",
+    "notifications": "Notificaciones",
+    "noNotifications": "No hay notificaciones",
+    "markAllRead": "Marcar todas",
+    "logout": "Cerrar sesión",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro",
+    "markAsRead": "Marcar como leída",
+    "profile": "Mi Perfil",
+    "changePhoto": "Click para cambiar foto",
+    "name": "Nombre",
+    "role": "Rol",
+    "saving": "Guardando..."
+  },
+  "pageTitles": {
+    "dashboard": { "title": "Dashboard", "subtitle": "Bienvenido de vuelta" },
+    "prospects": { "title": "Prospectos", "subtitle": "Pipeline de nuevos negocios" },
+    "clients": { "title": "Clientes", "subtitle": "Tus clientes activos" },
+    "ideas": { "title": "Ideas Creativas", "subtitle": "El cerebro de la agencia" },
+    "todo": { "title": "To-Do Semanal", "subtitle": "Organiza tu semana" },
+    "approvals": { "title": "Aprobaciones", "subtitle": "Contenido pendiente de revisión" },
+    "plan": { "title": "Plan de Marketing", "subtitle": "Estrategia y timeline por cliente" },
+    "metrics": { "title": "Métricas", "subtitle": "Rendimiento de plataformas" }
+  },
+  "login": {
+    "title": "Bienvenido de vuelta",
+    "subtitle": "Ingresa tus credenciales para continuar",
+    "email": "Email",
+    "password": "Contraseña",
+    "submit": "Iniciar Sesión",
+    "loading": "Iniciando sesión...",
+    "error": "Credenciales inválidas",
+    "fillAll": "Completa todos los campos",
+    "inviteOnly": "El acceso es solo por invitación.",
+    "contactAdmin": "Contacta al administrador para obtener credenciales.",
+    "copyright": "TheBrandingStudio CRM © 2025 · Plataforma privada"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "noResults": "Sin resultados",
+    "confirmDelete": "¿Estás seguro?",
+    "cannotUndo": "Esta acción no se puede deshacer.",
+    "saveChanges": "Guardar cambios",
+    "add": "Agregar",
+    "search": "Buscar...",
+    "all": "Todas",
+    "filters": "Filtros",
+    "from": "Desde",
+    "to": "Hasta"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "inProgress": "En progreso",
+    "done": "Completado",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "priority": {
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja"
+  },
+  "categories": {
+    "content": "Contenido",
+    "design": "Diseño",
+    "sales": "Ventas",
+    "reports": "Reportes",
+    "strategy": "Estrategia",
+    "admin": "Admin",
+    "other": "Otro",
+    "general": "General"
+  },
+  "days": {
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "sharing": {
+    "shareWithAdmin": "Compartir con administrador",
+    "teamWillSee": "El equipo podrá ver esto",
+    "onlyYou": "Solo vos podrás ver esto",
+    "fromTeam": "Del equipo",
+    "fromClient": "de {{clientName}}"
+  },
+  "notes": {
+    "title": "Notas",
+    "placeholder": "Escribe una nota...",
+    "send": "Enviar",
+    "noNotes": "Sin notas aún"
+  },
+  "time": {
+    "justNow": "ahora",
+    "minutesAgo": "hace {{count}} min",
+    "hoursAgo": "hace {{count}}h",
+    "daysAgo": "hace {{count}}d",
+    "weeksAgo": "hace {{count}}sem"
+  }
+}

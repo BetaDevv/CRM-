@@ -7,6 +7,7 @@ import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
 import { notifyClient, notifyAdmins } from '../services/notificationService'
+import { sendPostForApproval, sendPostStatusNotification } from '../services/emailService'
 
 const uploadDir = path.resolve(__dirname, '../../../uploads')
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
@@ -64,6 +65,22 @@ router.post('/', requireAdmin, upload.array('images', 4), async (req: AuthReques
     )
     logActivity({ type: 'post_created', description: `Nuevo post creado: ${title}`, entityType: 'post', entityId: id })
     notifyClient(client_id, { type: 'post_pending', title: 'Post pendiente de aprobación', description: `Tienes un nuevo post para revisar: ${title}`, entityType: 'post', entityId: id })
+
+    // Email notification to client (fire and forget)
+    pool.query('SELECT u.email, u.name FROM users u WHERE u.client_id = $1 AND u.role = $2', [client_id, 'client'])
+      .then(({ rows: userRows }) => {
+        if (userRows.length) {
+          sendPostForApproval({
+            to: userRows[0].email,
+            clientName: userRows[0].name,
+            postTitle: title,
+            platform: platform || 'linkedin',
+            scheduledDate: scheduled_date || '',
+          }).catch(err => console.error('[Email] Error sending post approval email:', err))
+        }
+      })
+      .catch(err => console.error('[Email] Error querying client user:', err))
+
     res.status(201).json(parsePost(rows[0]))
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
@@ -89,14 +106,33 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
     )
     logActivity({ type: `post_${status}`, description: `Post ${status}: ${post.title}`, entityType: 'post', entityId: req.params.id })
 
-    // Notify on approval/rejection
-    if (status === 'approved' || status === 'rejected') {
+    // Notify on approval/rejection/revision
+    if (status === 'approved' || status === 'rejected' || status === 'revision') {
       const { rows: clientRows } = await pool.query('SELECT company FROM clients WHERE id = $1', [post.client_id])
       const clientName = clientRows[0]?.company || 'Cliente'
-      const notifType = status === 'approved' ? 'post_approved' : 'post_rejected'
-      const notifTitle = status === 'approved' ? 'Post aprobado' : 'Post rechazado'
-      const notifDesc = `${clientName} ${status === 'approved' ? 'aprobó' : 'rechazó'} el post: ${post.title}`
-      notifyAdmins({ type: notifType, title: notifTitle, description: notifDesc, entityType: 'post', entityId: req.params.id })
+
+      if (status === 'approved' || status === 'rejected') {
+        const notifType = status === 'approved' ? 'post_approved' : 'post_rejected'
+        const notifTitle = status === 'approved' ? 'Post aprobado' : 'Post rechazado'
+        const notifDesc = `${clientName} ${status === 'approved' ? 'aprobó' : 'rechazó'} el post: ${post.title}`
+        notifyAdmins({ type: notifType, title: notifTitle, description: notifDesc, entityType: 'post', entityId: req.params.id })
+      }
+
+      // Email notification to all admins (fire and forget)
+      pool.query("SELECT email FROM users WHERE role = 'admin'")
+        .then(({ rows: adminRows }) => {
+          for (const admin of adminRows) {
+            sendPostStatusNotification({
+              to: admin.email,
+              postTitle: post.title,
+              platform: post.platform || 'linkedin',
+              status: status as 'approved' | 'rejected' | 'revision',
+              clientName,
+              feedback: feedback || undefined,
+            }).catch(err => console.error('[Email] Error sending status notification:', err))
+          }
+        })
+        .catch(err => console.error('[Email] Error querying admin users:', err))
     }
 
     res.json(parsePost(rows[0]))

@@ -168,32 +168,15 @@ Objetivo: agregar las features que diferencian este CRM de uno genérico y lo ad
 Objetivo: convertir el CRM en un sistema más autónomo que reduzca trabajo manual del equipo.
 
 #### F3-1: Email notifications
-- Integración con Resend o SendGrid
+- Utiliza para esta fase la herramienta ya configurado de app gmail
 - Email al cliente cuando hay posts para aprobar
-- Email al admin cuando cliente rechaza un post
+- Email al admin cuando cliente rechaza o aprueba un post
 - Email de resumen semanal de métricas para clientes
 
 #### F3-2: Templates de contenido
 - Biblioteca de plantillas de posts por industria/tipo
 - Reutilizar estructura de posts anteriores
 - Variables dinámicas: `{{cliente}}`, `{{fecha}}`, `{{producto}}`
-
-#### F3-3: Multi-usuario admin
-- Asignar tareas a miembros del equipo
-- Ver workload por persona
-- Comentarios y menciones en tareas
-
-#### F3-4: Facturación básica
-- Registro de MRR por cliente (ya existe el campo)
-- Historial de pagos (fecha, monto, estado)
-- Alertas de renovación / vencimiento de contrato
-- No gateway de pago — solo tracking manual
-
-
-#### F3-5: API pública para integraciones
-- Webhook de salida: nuevo cliente, post aprobado, plan creado
-- Integración básica con Zapier/Make
-- API key por cliente para integraciones custom
 
 
 ### Fase 4: Almacenamineto de documentos
@@ -202,9 +185,19 @@ Objetivo: convertir el CRM en un sistema más autónomo que reduzca trabajo manu
 - El tamaño visual de esta seccion debe de ser mediano, estilo carpeta de windows o finder
 - Todo documento que se almacene aqui debe de ser guardado en la base de datos junto con su path y todas sus caracteristicas
 
+#### F5: API pública para integraciones
+- API key por cliente para todos los endpoints de creacion y de lectura disponibles en el CRM (interfaz Cliente). 
+- Aqui debe haber un endpoint especificamente para obtener los path de cada archivo que se cargue en la fase 4
+- API key por administrador, en este caso la api key debe tener completo acceso a todos los endpoints disponibles para su propio CRUD del CRM.
 ---
 
-## 5. Deuda técnica a resolver (transversal)
+### F6: Complementos (CRM Clientes y Admin):
+- Opcion para cambiar el idioma reflejado con una banderita del idioma en el que esta, los idiomas disponibles van a ser Español, Ingles y Aleman
+- se debe de traducir absolutamente todo texto que se vea en pantalla excepto lo que el mismo usuario escriba e los CRUD.
+- Al hacer click al simbolo del Perfil se desplegara una ventana donde se podra visualizar todos los datos.
+- Se podran modificar el nombre, y la foto de perfil que se va a visualizar despues en el header al lado de la campanita la foto.
+
+## 6. Deuda técnica a resolver (transversal)
 
 Estos issues no son features pero bloquean la estabilidad y deben resolverse durante la Fase 1:
 

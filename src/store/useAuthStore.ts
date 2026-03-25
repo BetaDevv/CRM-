@@ -7,6 +7,7 @@ interface AuthUser {
   role: 'admin' | 'client'
   name: string
   clientId: string | null
+  profile_photo: string | null
 }
 
 interface AuthState {
@@ -18,6 +19,7 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   restoreSession: () => void
+  updateUser: (updates: Partial<AuthUser>) => void
   isAdmin: () => boolean
   isClient: () => boolean
   isAuthenticated: () => boolean
@@ -47,6 +49,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem('tbs_token')
     localStorage.removeItem('tbs_user')
     set({ user: null, token: null })
+  },
+
+  updateUser: (updates) => {
+    const current = get().user
+    if (!current) return
+    const updated = { ...current, ...updates }
+    set({ user: updated })
+    localStorage.setItem('tbs_user', JSON.stringify(updated))
   },
 
   restoreSession: () => {

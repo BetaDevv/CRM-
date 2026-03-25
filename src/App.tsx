@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useAuthStore } from './store/useAuthStore'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
-import ClientPortal from './pages/ClientPortal'
 import Dashboard from './pages/Dashboard'
 import Prospectos from './pages/Prospectos'
 import Clientes from './pages/Clientes'
@@ -14,6 +13,15 @@ import PlanMarketing from './pages/PlanMarketing'
 import Metricas from './pages/Metricas'
 import Usuarios from './pages/Usuarios'
 import Calendario from './pages/Calendario'
+import Documentos from './pages/Documentos'
+import ClientDashboard from './pages/client/ClientDashboard'
+import ClientPlan from './pages/client/ClientPlan'
+import ClientPosts from './pages/client/ClientPosts'
+import ClientActividad from './pages/client/ClientActividad'
+import ClientMetricas from './pages/client/ClientMetricas'
+import ClientDocumentos from './pages/client/ClientDocumentos'
+import ClientTodos from './pages/client/ClientTodos'
+import ClientIdeas from './pages/client/ClientIdeas'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, restoreSession, isAdmin } = useAuthStore()
@@ -28,7 +36,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Client users → portal only
-  if (!isAdmin() && location.pathname !== '/portal' && location.pathname !== '/aprobaciones') {
+  if (!isAdmin() && !location.pathname.startsWith('/portal')) {
     return <Navigate to="/portal" replace />
   }
 
@@ -53,10 +61,19 @@ function AppRoutes() {
       {/* Public */}
       <Route path="/login" element={<Login />} />
 
-      {/* Client Portal */}
+      {/* Client Portal — Layout-wrapped */}
       <Route path="/portal" element={
-        <AuthGuard><ClientPortal /></AuthGuard>
-      } />
+        <AuthGuard><Layout /></AuthGuard>
+      }>
+        <Route index element={<ClientDashboard />} />
+        <Route path="plan" element={<ClientPlan />} />
+        <Route path="aprobaciones" element={<ClientPosts />} />
+        <Route path="actividad" element={<ClientActividad />} />
+        <Route path="metricas" element={<ClientMetricas />} />
+        <Route path="documentos" element={<ClientDocumentos />} />
+        <Route path="todo" element={<ClientTodos />} />
+        <Route path="ideas" element={<ClientIdeas />} />
+      </Route>
 
       {/* Admin routes via Layout */}
       <Route path="/" element={
@@ -72,6 +89,7 @@ function AppRoutes() {
         <Route path="metricas" element={<Metricas />} />
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="calendario" element={<Calendario />} />
+        <Route path="documentos" element={<Documentos />} />
       </Route>
 
       {/* Catch all */}

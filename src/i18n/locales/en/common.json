@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "prospects": "Prospects",
+    "clients": "Clients",
+    "approvals": "Approvals",
+    "ideas": "Ideas",
+    "todo": "To-Do",
+    "todoWeekly": "Weekly To-Do",
+    "marketingPlan": "Marketing Plan",
+    "metrics": "Metrics",
+    "calendar": "Calendar",
+    "documents": "Documents",
+    "users": "Users",
+    "portal": "Portal",
+    "plan": "Strategic Plan",
+    "activity": "Activity",
+    "collapse": "Collapse"
+  },
+  "header": {
+    "search": "Search...",
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "markAllRead": "Mark all",
+    "logout": "Log out",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "markAsRead": "Mark as read",
+    "profile": "My Profile",
+    "changePhoto": "Click to change photo",
+    "name": "Name",
+    "role": "Role",
+    "saving": "Saving..."
+  },
+  "pageTitles": {
+    "dashboard": { "title": "Dashboard", "subtitle": "Welcome back" },
+    "prospects": { "title": "Prospects", "subtitle": "New business pipeline" },
+    "clients": { "title": "Clients", "subtitle": "Your active clients" },
+    "ideas": { "title": "Creative Ideas", "subtitle": "The agency's brain" },
+    "todo": { "title": "Weekly To-Do", "subtitle": "Organize your week" },
+    "approvals": { "title": "Approvals", "subtitle": "Content pending review" },
+    "plan": { "title": "Marketing Plan", "subtitle": "Strategy and timeline by client" },
+    "metrics": { "title": "Metrics", "subtitle": "Platform performance" }
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Enter your credentials to continue",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign In",
+    "loading": "Signing in...",
+    "error": "Invalid credentials",
+    "fillAll": "Please fill in all fields",
+    "inviteOnly": "Access is by invitation only.",
+    "contactAdmin": "Contact the administrator for credentials.",
+    "copyright": "TheBrandingStudio CRM © 2025 · Private platform"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "loading": "Loading...",
+    "noResults": "No results",
+    "confirmDelete": "Are you sure?",
+    "cannotUndo": "This action cannot be undone.",
+    "saveChanges": "Save changes",
+    "add": "Add",
+    "search": "Search...",
+    "all": "All",
+    "filters": "Filters",
+    "from": "From",
+    "to": "To"
+  },
+  "status": {
+    "pending": "Pending",
+    "inProgress": "In Progress",
+    "done": "Completed",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "priority": {
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "categories": {
+    "content": "Content",
+    "design": "Design",
+    "sales": "Sales",
+    "reports": "Reports",
+    "strategy": "Strategy",
+    "admin": "Admin",
+    "other": "Other",
+    "general": "General"
+  },
+  "days": {
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "sharing": {
+    "shareWithAdmin": "Share with admin",
+    "teamWillSee": "The team will be able to see this",
+    "onlyYou": "Only you will be able to see this",
+    "fromTeam": "From team",
+    "fromClient": "from {{clientName}}"
+  },
+  "notes": {
+    "title": "Notes",
+    "placeholder": "Write a note...",
+    "send": "Send",
+    "noNotes": "No notes yet"
+  },
+  "time": {
+    "justNow": "now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "weeksAgo": "{{count}}w ago"
+  }
+}

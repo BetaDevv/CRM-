@@ -15,6 +15,7 @@ import {
 } from '../lib/api'
 import type { Client } from '../types'
 import type { ClientNote, ActivityLog } from '../lib/api'
+import { useTranslation } from 'react-i18next'
 
 const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
 
@@ -51,6 +52,7 @@ function ClientAvatar({
 function ClientCard({
   client, onSelect, onEdit,
 }: { client: Client; onSelect: (c: Client) => void; onEdit: (c: Client) => void }) {
+  const { t } = useTranslation(['admin', 'common'])
   return (
     <motion.div
       layout
@@ -74,7 +76,7 @@ function ClientCard({
           <p className="text-sm truncate" style={{ color: 'rgb(var(--ink-300))' }}>{client.contact}</p>
         </div>
         <span className={`badge flex-shrink-0 ${client.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-ink-600 text-ink-300'}`}>
-          {client.status === 'active' ? 'Activo' : 'Pausado'}
+          {client.status === 'active' ? t('admin:clients.status.active') : t('admin:clients.status.paused')}
         </span>
       </div>
 
@@ -95,7 +97,7 @@ function ClientCard({
         )}
         <div className="flex items-center gap-2 text-xs" style={{ color: 'rgb(var(--ink-300))' }}>
           <Calendar size={12} style={{ color: 'rgb(var(--ink-400))' }} />
-          <span>Desde {formatDate(client.startDate || client.start_date)}</span>
+          <span>{t('admin:clients.since', { date: formatDate(client.startDate || client.start_date) })}</span>
         </div>
       </div>
 
@@ -107,7 +109,7 @@ function ClientCard({
 
       <div className="pt-3 flex items-center justify-between" style={{ borderTop: '1px solid rgb(var(--ink-600) / 0.4)' }}>
         <div>
-          <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>Retención mensual</p>
+          <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.monthlyRetention')}</p>
           <p className="font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(client.monthlyFee || client.monthly_fee || 0)}</p>
         </div>
         <div className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all"
@@ -133,6 +135,7 @@ function ClientModal({
   onClose: () => void
   onSaved: (c: Client) => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const fileRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -205,7 +208,7 @@ function ClientModal({
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'rgb(var(--ink-100))' }}>
-            {initial ? 'Editar Cliente' : 'Nuevo Cliente'}
+            {initial ? 'Editar Cliente' : t('admin:clients.newClient')}
           </h3>
           <button onClick={onClose} style={{ color: 'rgb(var(--ink-300))' }} className="hover:text-white"><X size={18} /></button>
         </div>
@@ -223,22 +226,22 @@ function ClientModal({
             <button onClick={() => fileRef.current?.click()}
               className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all"
               style={{ borderColor: 'rgb(var(--ink-500) / 0.4)', color: 'rgb(var(--ink-200))' }}>
-              <Upload size={13} /> {avatarPreview ? 'Cambiar foto' : 'Subir foto'}
+              <Upload size={13} /> {avatarPreview ? t('admin:clients.form.changePhoto') : t('admin:clients.form.uploadPhoto')}
             </button>
-            <p className="text-xs mt-1" style={{ color: 'rgb(var(--ink-400))' }}>Opcional · JPG, PNG hasta 5MB</p>
+            <p className="text-xs mt-1" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.form.photoHint')}</p>
           </div>
         </div>
 
         <div className="space-y-3">
           {[
-            { key: 'company',     label: 'Empresa *',                    type: 'text' },
-            { key: 'contact',     label: 'Contacto Principal',           type: 'text' },
-            { key: 'email',       label: 'Email *',                      type: 'email' },
-            { key: 'phone',       label: 'Teléfono',                     type: 'tel' },
-            { key: 'industry',    label: 'Industria',                    type: 'text' },
-            { key: 'monthly_fee', label: 'Retención mensual (USD)',       type: 'number' },
-            { key: 'services',    label: 'Servicios (separados por coma)', type: 'text' },
-            { key: 'description', label: 'Descripción breve',            type: 'text' },
+            { key: 'company',     label: t('admin:clients.form.company'),                    type: 'text' },
+            { key: 'contact',     label: t('admin:clients.form.mainContact'),           type: 'text' },
+            { key: 'email',       label: t('admin:clients.form.email'),                      type: 'email' },
+            { key: 'phone',       label: t('admin:clients.form.phone'),    type: 'tel' },
+            { key: 'industry',    label: t('admin:clients.form.industry'),   type: 'text' },
+            { key: 'monthly_fee', label: t('admin:clients.form.monthlyFee'),       type: 'number' },
+            { key: 'services',    label: t('admin:clients.form.services'), type: 'text' },
+            { key: 'description', label: t('admin:clients.form.description'),            type: 'text' },
           ].map(f => (
             <input key={f.key} type={f.type} placeholder={f.label}
               value={(form as Record<string, string>)[f.key]}
@@ -258,7 +261,7 @@ function ClientModal({
 
           {/* Color picker */}
           <div>
-            <p className="text-xs mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Color del cliente</p>
+            <p className="text-xs mb-2" style={{ color: 'rgb(var(--ink-300))' }}>{t('admin:clients.form.clientColor')}</p>
             <div className="flex gap-2 flex-wrap">
               {clientColors.map(c => (
                 <button key={c} onClick={() => setForm(prev => ({ ...prev, color: c }))}
@@ -270,9 +273,9 @@ function ClientModal({
         </div>
 
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : initial ? 'Guardar cambios' : 'Agregar Cliente'}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : initial ? t('common:common.saveChanges') : t('admin:clients.addClient')}
           </button>
         </div>
       </motion.div>
@@ -299,6 +302,7 @@ function relativeTime(dateStr: string) {
 
 // ─── Activity Timeline ───────────────────────────────────────────────────────
 function ActivityTimeline({ clientId }: { clientId: string }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [activities, setActivities] = useState<ActivityLog[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -308,7 +312,7 @@ function ActivityTimeline({ clientId }: { clientId: string }) {
   }, [clientId])
 
   if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>
-  if (!activities.length) return <p className="text-center py-8 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>Sin actividad registrada</p>
+  if (!activities.length) return <p className="text-center py-8 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.noActivity')}</p>
 
   return (
     <div className="relative pl-6 space-y-0">
@@ -344,6 +348,7 @@ function ActivityTimeline({ clientId }: { clientId: string }) {
 
 // ─── Notes Panel ─────────────────────────────────────────────────────────────
 function NotesPanel({ clientId }: { clientId: string }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [notes, setNotes] = useState<ClientNote[]>([])
   const [loading, setLoading] = useState(true)
   const [content, setContent] = useState('')
@@ -378,7 +383,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
         <textarea
           value={content}
           onChange={e => setContent(e.target.value)}
-          placeholder="Agregar nota interna..."
+          placeholder={t('admin:clients.addNotePlaceholder')}
           rows={3}
           className="input-dark text-sm w-full resize-none"
           onKeyDown={e => { if (e.key === 'Enter' && e.metaKey) handleAdd() }}
@@ -400,7 +405,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
       {loading && <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>}
 
       {!loading && !notes.length && (
-        <p className="text-center py-6 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>Sin notas todavía</p>
+        <p className="text-center py-6 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.noNotes')}</p>
       )}
 
       <AnimatePresence>
@@ -435,6 +440,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function Clientes() {
+  const { t } = useTranslation(['admin', 'common'])
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Client | null>(null)
@@ -456,7 +462,7 @@ export default function Clientes() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return
+    if (!confirm(t('admin:clients.deleteConfirm'))) return
     await api.delete(`/clients/${id}`)
     setClients(p => p.filter(x => x.id !== id))
     if (selected?.id === id) setSelected(null)
@@ -470,14 +476,14 @@ export default function Clientes() {
     <div className="space-y-6">
       <div className="page-header">
         <div>
-          <h2 className="section-title">Clientes</h2>
+          <h2 className="section-title">{t('admin:clients.title')}</h2>
           <p className="text-sm mt-1" style={{ color: 'rgb(var(--ink-300))' }}>
             {clients.filter(c => c.status === 'active').length} activos · MRR total {formatCurrency(totalMRR)}
           </p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => setShowAdd(true)} className="btn-primary">
-          <Plus size={16} /> Nuevo Cliente
+          <Plus size={16} /> {t('admin:clients.newClient')}
         </motion.button>
       </div>
 
@@ -485,7 +491,7 @@ export default function Clientes() {
       {totalMRR > 0 && (
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>Distribución MRR</p>
+            <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>{t('admin:clients.mrrDistribution')}</p>
             <p className="text-sm font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(totalMRR)}</p>
           </div>
           <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
@@ -555,9 +561,9 @@ export default function Clientes() {
                 {/* Tab buttons */}
                 <div className="flex gap-1 p-1 rounded-xl mb-6" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.6)' }}>
                   {([
-                    { key: 'info' as const, label: 'Info', icon: Briefcase },
-                    { key: 'historial' as const, label: 'Historial', icon: Clock },
-                    { key: 'notas' as const, label: 'Notas', icon: MessageSquare },
+                    { key: 'info' as const, label: t('admin:clients.drawer.info'), icon: Briefcase },
+                    { key: 'historial' as const, label: t('admin:clients.drawer.history'), icon: Clock },
+                    { key: 'notas' as const, label: t('admin:clients.drawer.notes'), icon: MessageSquare },
                   ]).map(tab => (
                     <button
                       key={tab.key}
@@ -581,11 +587,11 @@ export default function Clientes() {
 
                       <div className="space-y-3">
                         {[
-                          { icon: Mail,        label: 'Email',              value: selected.email },
-                          { icon: Phone,       label: 'Teléfono',           value: selected.phone || 'N/A' },
-                          { icon: Briefcase,   label: 'Industria',          value: selected.industry },
-                          { icon: Calendar,    label: 'Cliente desde',      value: formatDate(selected.startDate || selected.start_date) },
-                          { icon: DollarSign,  label: 'Retención mensual',  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
+                          { icon: Mail,        label: t('admin:clients.drawer.email'),              value: selected.email },
+                          { icon: Phone,       label: t('admin:clients.drawer.phone'),           value: selected.phone || 'N/A' },
+                          { icon: Briefcase,   label: t('admin:clients.drawer.industry'),          value: selected.industry },
+                          { icon: Calendar,    label: t('admin:clients.drawer.clientSince'),      value: formatDate(selected.startDate || selected.start_date) },
+                          { icon: DollarSign,  label: t('admin:clients.drawer.monthlyRetention'),  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
                         ].map(item => (
                           <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl"
                             style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
@@ -600,7 +606,7 @@ export default function Clientes() {
 
                       {selected.services?.length > 0 && (
                         <div className="mt-4">
-                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Servicios</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>{t('admin:clients.drawer.services')}</p>
                           <div className="flex flex-wrap gap-2">
                             {selected.services.map(s => (
                               <span key={s} className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5"
@@ -614,7 +620,7 @@ export default function Clientes() {
 
                       {selected.description && (
                         <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
-                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>Descripción</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>{t('admin:clients.drawer.description')}</p>
                           <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}>{selected.description}</p>
                         </div>
                       )}

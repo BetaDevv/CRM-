@@ -5,6 +5,7 @@ import { useStore } from '../store/useStore'
 import { formatCurrency } from '../lib/utils'
 import { Link } from 'react-router-dom'
 import { getActivity, type ActivityLog } from '../lib/api'
+import { useTranslation } from 'react-i18next'
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.07 } },
@@ -15,6 +16,7 @@ const fadeUp = {
 }
 
 export default function Dashboard() {
+  const { t } = useTranslation('admin')
   const { clients, prospects, todos, ideas, posts } = useStore()
 
   const mrr = clients.filter(c => c.status === 'active').reduce((a, c) => a + c.monthlyFee, 0)
@@ -34,41 +36,41 @@ export default function Dashboard() {
 
   const metrics = [
     {
-      label: 'MRR',
+      label: t('dashboard.mrr'),
       value: formatCurrency(mrr),
-      sub: '+12% vs mes anterior',
+      sub: t('dashboard.mrrVsPrevious'),
       icon: TrendingUp,
       color: '#34d399',
       bg: 'rgba(52,211,153,0.1)',
     },
     {
-      label: 'Clientes Activos',
+      label: t('dashboard.activeClients'),
       value: clients.filter(c => c.status === 'active').length.toString(),
-      sub: `${clients.length} en total`,
+      sub: t('dashboard.totalClients', { count: clients.length }),
       icon: UserCheck,
       color: '#DC143C',
       bg: 'rgba(220,20,60,0.1)',
     },
     {
-      label: 'Prospectos',
+      label: t('dashboard.prospects'),
       value: prospects.length.toString(),
-      sub: `${prospects.filter(p => p.status === 'negotiation').length} en negociación`,
+      sub: t('dashboard.inNegotiation', { count: prospects.filter(p => p.status === 'negotiation').length }),
       icon: Users,
       color: '#60a5fa',
       bg: 'rgba(96,165,250,0.1)',
     },
     {
-      label: 'Pipeline Estimado',
+      label: t('dashboard.estimatedPipeline'),
       value: formatCurrency(pipelineEstimado),
-      sub: `${prospects.filter(p => p.status !== 'won' && p.status !== 'lost').length} prospectos activos`,
+      sub: t('dashboard.activeProspects', { count: prospects.filter(p => p.status !== 'won' && p.status !== 'lost').length }),
       icon: Target,
       color: '#f97316',
       bg: 'rgba(249,115,22,0.1)',
     },
     {
-      label: 'Posts Pendientes',
+      label: t('dashboard.pendingPosts'),
       value: pendingPosts.toString(),
-      sub: 'Esperando aprobación',
+      sub: t('dashboard.awaitingApproval'),
       icon: ThumbsUp,
       color: '#f59e0b',
       bg: 'rgba(245,158,11,0.1)',
@@ -99,13 +101,13 @@ export default function Dashboard() {
     const then = new Date(dateStr).getTime()
     const diff = Math.max(0, now - then)
     const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'Justo ahora'
-    if (mins < 60) return `Hace ${mins} min`
+    if (mins < 1) return t('dashboard.timeAgo.justNow')
+    if (mins < 60) return t('dashboard.timeAgo.minutesAgo', { count: mins })
     const hours = Math.floor(mins / 60)
-    if (hours < 24) return `Hace ${hours}h`
+    if (hours < 24) return t('dashboard.timeAgo.hoursAgo', { count: hours })
     const days = Math.floor(hours / 24)
-    if (days === 1) return 'Ayer'
-    if (days < 7) return `Hace ${days} días`
+    if (days === 1) return t('dashboard.timeAgo.yesterday')
+    if (days < 7) return t('dashboard.timeAgo.daysAgo', { count: days })
     return new Date(dateStr).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
   }
 
@@ -122,16 +124,15 @@ export default function Dashboard() {
             <span className="text-crimson-400 text-xs font-semibold uppercase tracking-widest">TheBrandingStudio CRM</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">
-            Hola, <span className="text-gradient-crimson">equipo creativo</span> 👋
+            {t('dashboard.greeting').split('<1>')[0]}<span className="text-gradient-crimson">{t('dashboard.greeting').split('<1>')[1]?.split('</1>')[0]}</span> 👋
           </h2>
           <p className="text-ink-200 max-w-xl">
-            Tienes <strong className="text-white">{pendingPosts} publicaciones</strong> esperando aprobación y{' '}
-            <strong className="text-white">{todos.filter(t => !t.done).length} tareas</strong> pendientes esta semana.
+            {t('dashboard.pendingPostsMessage', { pendingPosts, pendingTasks: todos.filter(tt => !tt.done).length }).replace(/<\/?[0-9]+>/g, '')}
           </p>
           <div className="mt-5 flex items-center gap-6">
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-ink-300">Progreso semanal</span>
+                <span className="text-xs text-ink-300">{t('dashboard.weeklyProgress')}</span>
                 <span className="text-xs font-semibold text-white">{progress}%</span>
               </div>
               <div className="w-48 h-1.5 bg-ink-600 rounded-full overflow-hidden">
@@ -171,9 +172,9 @@ export default function Dashboard() {
         {/* Client List */}
         <motion.div variants={fadeUp} className="lg:col-span-2 glass-card p-6">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-white">Clientes Activos</h3>
+            <h3 className="font-semibold text-white">{t('dashboard.activeClientsTitle')}</h3>
             <Link to="/clientes" className="text-xs text-crimson-400 hover:text-crimson-300 flex items-center gap-1">
-              Ver todos <ArrowUpRight size={12} />
+              {t('dashboard.viewAll')} <ArrowUpRight size={12} />
             </Link>
           </div>
           <div className="space-y-3">
@@ -195,7 +196,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="font-semibold text-white text-sm">{formatCurrency(c.monthlyFee)}</p>
-                  <p className="text-xs text-ink-400">/mes</p>
+                  <p className="text-xs text-ink-400">{t('dashboard.perMonth')}</p>
                 </div>
               </motion.div>
             ))}
@@ -205,7 +206,7 @@ export default function Dashboard() {
         {/* Activity Feed */}
         <motion.div variants={fadeUp} className="glass-card p-6">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="font-semibold text-white">Actividad Reciente</h3>
+            <h3 className="font-semibold text-white">{t('dashboard.recentActivity')}</h3>
           </div>
           <div className="space-y-4">
             {activityLoading ? (
@@ -221,7 +222,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : activity.length === 0 ? (
-              <p className="text-sm text-ink-400">Sin actividad reciente</p>
+              <p className="text-sm text-ink-400">{t('dashboard.noRecentActivity')}</p>
             ) : (
               activity.map((a, i) => (
                 <motion.div
@@ -248,9 +249,9 @@ export default function Dashboard() {
       {/* Quick Links */}
       <motion.div variants={stagger} className="grid grid-cols-3 gap-4">
         {[
-          { to: '/ideas', icon: Lightbulb, label: 'Ideas', count: ideas.length, color: '#a78bfa' },
-          { to: '/todo', icon: CheckSquare, label: 'Tareas', count: todos.filter(t => !t.done).length, color: '#f59e0b' },
-          { to: '/prospectos', icon: Users, label: 'Prospectos', count: prospects.length, color: '#60a5fa' },
+          { to: '/ideas', icon: Lightbulb, label: t('dashboard.ideas'), count: ideas.length, color: '#a78bfa' },
+          { to: '/todo', icon: CheckSquare, label: t('dashboard.tasks'), count: todos.filter(tt => !tt.done).length, color: '#f59e0b' },
+          { to: '/prospectos', icon: Users, label: t('dashboard.prospects'), count: prospects.length, color: '#60a5fa' },
         ].map(item => (
           <motion.div key={item.to} variants={fadeUp} whileHover={{ y: -3 }}>
             <Link to={item.to} className="glass-card-hover p-5 flex items-center gap-4 block">

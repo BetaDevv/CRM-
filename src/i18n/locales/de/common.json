@@ -1,0 +1,133 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "prospects": "Interessenten",
+    "clients": "Kunden",
+    "approvals": "Genehmigungen",
+    "ideas": "Ideen",
+    "todo": "Aufgaben",
+    "todoWeekly": "Wochenaufgaben",
+    "marketingPlan": "Marketingplan",
+    "metrics": "Metriken",
+    "calendar": "Kalender",
+    "documents": "Dokumente",
+    "users": "Benutzer",
+    "portal": "Portal",
+    "plan": "Strategieplan",
+    "activity": "Aktivität",
+    "collapse": "Einklappen"
+  },
+  "header": {
+    "search": "Suchen...",
+    "notifications": "Benachrichtigungen",
+    "noNotifications": "Keine Benachrichtigungen",
+    "markAllRead": "Alle markieren",
+    "logout": "Abmelden",
+    "lightMode": "Heller Modus",
+    "darkMode": "Dunkler Modus",
+    "markAsRead": "Als gelesen markieren",
+    "profile": "Mein Profil",
+    "changePhoto": "Klicken zum Ändern des Fotos",
+    "name": "Name",
+    "role": "Rolle",
+    "saving": "Speichern..."
+  },
+  "pageTitles": {
+    "dashboard": { "title": "Dashboard", "subtitle": "Willkommen zurück" },
+    "prospects": { "title": "Interessenten", "subtitle": "Neue Geschäftspipeline" },
+    "clients": { "title": "Kunden", "subtitle": "Ihre aktiven Kunden" },
+    "ideas": { "title": "Kreative Ideen", "subtitle": "Das Gehirn der Agentur" },
+    "todo": { "title": "Wochenaufgaben", "subtitle": "Organisieren Sie Ihre Woche" },
+    "approvals": { "title": "Genehmigungen", "subtitle": "Inhalte zur Überprüfung" },
+    "plan": { "title": "Marketingplan", "subtitle": "Strategie und Zeitplan pro Kunde" },
+    "metrics": { "title": "Metriken", "subtitle": "Plattform-Performance" }
+  },
+  "login": {
+    "title": "Willkommen zurück",
+    "subtitle": "Geben Sie Ihre Anmeldedaten ein",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "loading": "Anmeldung...",
+    "error": "Ungültige Anmeldedaten",
+    "fillAll": "Bitte füllen Sie alle Felder aus",
+    "inviteOnly": "Der Zugang ist nur auf Einladung möglich.",
+    "contactAdmin": "Kontaktieren Sie den Administrator für Zugangsdaten.",
+    "copyright": "TheBrandingStudio CRM © 2025 · Private Plattform"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "close": "Schließen",
+    "loading": "Laden...",
+    "noResults": "Keine Ergebnisse",
+    "confirmDelete": "Sind Sie sicher?",
+    "cannotUndo": "Diese Aktion kann nicht rückgängig gemacht werden.",
+    "saveChanges": "Änderungen speichern",
+    "add": "Hinzufügen",
+    "search": "Suchen...",
+    "all": "Alle",
+    "filters": "Filter",
+    "from": "Von",
+    "to": "Bis"
+  },
+  "status": {
+    "pending": "Ausstehend",
+    "inProgress": "In Bearbeitung",
+    "done": "Abgeschlossen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv"
+  },
+  "priority": {
+    "high": "Hoch",
+    "medium": "Mittel",
+    "low": "Niedrig"
+  },
+  "categories": {
+    "content": "Inhalt",
+    "design": "Design",
+    "sales": "Vertrieb",
+    "reports": "Berichte",
+    "strategy": "Strategie",
+    "admin": "Admin",
+    "other": "Sonstiges",
+    "general": "Allgemein"
+  },
+  "days": {
+    "monday": "Montag",
+    "tuesday": "Dienstag",
+    "wednesday": "Mittwoch",
+    "thursday": "Donnerstag",
+    "friday": "Freitag",
+    "saturday": "Samstag",
+    "sunday": "Sonntag"
+  },
+  "language": {
+    "es": "Español",
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "sharing": {
+    "shareWithAdmin": "Mit Admin teilen",
+    "teamWillSee": "Das Team kann dies sehen",
+    "onlyYou": "Nur Sie können dies sehen",
+    "fromTeam": "Vom Team",
+    "fromClient": "von {{clientName}}"
+  },
+  "notes": {
+    "title": "Notizen",
+    "placeholder": "Schreibe eine Notiz...",
+    "send": "Senden",
+    "noNotes": "Noch keine Notizen"
+  },
+  "time": {
+    "justNow": "jetzt",
+    "minutesAgo": "vor {{count}} Min.",
+    "hoursAgo": "vor {{count}} Std.",
+    "daysAgo": "vor {{count}} T.",
+    "weeksAgo": "vor {{count}} Wo."
+  }
+}

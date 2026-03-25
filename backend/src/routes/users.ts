@@ -4,9 +4,73 @@ import { pool } from '../db'
 import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { logActivity } from '../services/activityLogger'
 import { v4 as uuid } from 'uuid'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
 
 const router = Router()
 router.use(verifyToken)
+
+// --- Profile endpoints (any authenticated user) ---
+
+const avatarsDir = path.join(__dirname, '../../../uploads/avatars')
+if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true })
+
+const photoStorage = multer.diskStorage({
+  destination: avatarsDir,
+  filename: (_req, file, cb) => cb(null, `${uuid()}${path.extname(file.originalname)}`)
+})
+const uploadPhoto = multer({
+  storage: photoStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp']
+    cb(null, allowed.includes(path.extname(file.originalname).toLowerCase()))
+  }
+})
+
+// GET /api/users/me
+router.get('/me', async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, email, role, client_id, profile_photo, created_at FROM users WHERE id = $1',
+      [req.user?.userId]
+    )
+    if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return }
+    res.json(result.rows[0])
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// PUT /api/users/me
+router.put('/me', async (req: AuthRequest, res: Response) => {
+  try {
+    const { name } = req.body
+    if (!name?.trim()) { res.status(400).json({ error: 'Name is required' }); return }
+    const result = await pool.query(
+      'UPDATE users SET name = $1 WHERE id = $2 RETURNING id, name, email, role, client_id, profile_photo',
+      [name.trim(), req.user?.userId]
+    )
+    res.json(result.rows[0])
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// POST /api/users/me/photo
+router.post('/me/photo', uploadPhoto.single('photo'), async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.file) { res.status(400).json({ error: 'No file uploaded' }); return }
+    const photoPath = `/uploads/avatars/${req.file.filename}`
+    await pool.query('UPDATE users SET profile_photo = $1 WHERE id = $2', [photoPath, req.user?.userId])
+    res.json({ profilePhoto: photoPath })
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// --- Admin-only endpoints below ---
 router.use(requireAdmin)
 
 // GET /api/users — List all users (no password_hash)

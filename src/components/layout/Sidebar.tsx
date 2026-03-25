@@ -3,30 +3,48 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, UserCheck, Lightbulb,
   CheckSquare, ThumbsUp, Map, ChevronLeft, ChevronRight,
-  BarChart2, LogOut, UserCog, CalendarDays,
+  BarChart2, LogOut, UserCog, CalendarDays, FolderOpen,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '../../store/useStore'
 import { useAuthStore } from '../../store/useAuthStore'
 import { LogoMark } from '../Logo'
 
 const adminNav = [
-  { path: '/',             icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/prospectos',   icon: Users,           label: 'Prospectos' },
-  { path: '/clientes',     icon: UserCheck,       label: 'Clientes' },
-  { path: '/ideas',        icon: Lightbulb,       label: 'Ideas' },
-  { path: '/todo',         icon: CheckSquare,     label: 'To-Do Semanal' },
-  { path: '/aprobaciones', icon: ThumbsUp,        label: 'Aprobaciones' },
-  { path: '/plan',         icon: Map,             label: 'Plan de Marketing' },
-  { path: '/calendario',   icon: CalendarDays,    label: 'Calendario' },
-  { path: '/metricas',     icon: BarChart2,       label: 'Métricas' },
-  { path: '/usuarios',    icon: UserCog,         label: 'Usuarios' },
+  { path: '/',             icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { path: '/prospectos',   icon: Users,           labelKey: 'nav.prospects' },
+  { path: '/clientes',     icon: UserCheck,       labelKey: 'nav.clients' },
+  { path: '/ideas',        icon: Lightbulb,       labelKey: 'nav.ideas' },
+  { path: '/todo',         icon: CheckSquare,     labelKey: 'nav.todoWeekly' },
+  { path: '/aprobaciones', icon: ThumbsUp,        labelKey: 'nav.approvals' },
+  { path: '/plan',         icon: Map,             labelKey: 'nav.marketingPlan' },
+  { path: '/calendario',   icon: CalendarDays,    labelKey: 'nav.calendar' },
+  { path: '/metricas',     icon: BarChart2,       labelKey: 'nav.metrics' },
+  { path: '/usuarios',    icon: UserCog,         labelKey: 'nav.users' },
+  { path: '/documentos',  icon: FolderOpen,      labelKey: 'nav.documents' },
+]
+
+const clientNav = [
+  { path: '/portal',             icon: LayoutDashboard, labelKey: 'nav.dashboard' },
+  { path: '/portal/plan',        icon: Map,             labelKey: 'nav.plan' },
+  { path: '/portal/aprobaciones', icon: ThumbsUp,       labelKey: 'nav.approvals' },
+  { path: '/portal/ideas',       icon: Lightbulb,       labelKey: 'nav.ideas' },
+  { path: '/portal/todo',        icon: CheckSquare,     labelKey: 'nav.todo' },
+  { path: '/portal/actividad',   icon: CalendarDays,    labelKey: 'nav.activity' },
+  { path: '/portal/metricas',    icon: BarChart2,       labelKey: 'nav.metrics' },
+  { path: '/portal/documentos', icon: FolderOpen,      labelKey: 'nav.documents' },
 ]
 
 export default function Sidebar() {
+  const { t } = useTranslation('common')
   const { sidebarCollapsed, toggleSidebar } = useStore()
   const { user, logout } = useAuthStore()
   const location = useLocation()
   const navigate = useNavigate()
+
+  const isClient = user?.role === 'client'
+  const navItems = isClient ? clientNav : adminNav
+  const homePath = isClient ? '/portal' : '/'
 
   const handleLogout = () => {
     logout()
@@ -59,7 +77,7 @@ export default function Sidebar() {
         <motion.div
           whileHover={{ scale: 1.05 }}
           className="flex-shrink-0 cursor-pointer"
-          onClick={() => navigate('/')}
+          onClick={() => navigate(homePath)}
         >
           <LogoMark size="sm" />
         </motion.div>
@@ -71,7 +89,7 @@ export default function Sidebar() {
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden cursor-pointer"
-              onClick={() => navigate('/')}
+              onClick={() => navigate(homePath)}
             >
               <p className="font-black text-sm leading-none tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>
                 The<span className="text-crimson-400">Branding</span>
@@ -86,9 +104,9 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-4 flex flex-col gap-0.5 overflow-y-auto no-scrollbar">
-        {adminNav.map((item) => {
-          const isActive = item.path === '/'
-            ? location.pathname === '/'
+        {navItems.map((item) => {
+          const isActive = item.path === '/' || item.path === '/portal'
+            ? location.pathname === item.path
             : location.pathname.startsWith(item.path)
 
           return (
@@ -96,7 +114,7 @@ export default function Sidebar() {
               <motion.div
                 whileHover={{ x: sidebarCollapsed ? 0 : 3 }}
                 whileTap={{ scale: 0.97 }}
-                title={sidebarCollapsed ? item.label : undefined}
+                title={sidebarCollapsed ? t(item.labelKey) : undefined}
                 className={`
                   relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                   transition-colors duration-150 cursor-pointer
@@ -133,7 +151,7 @@ export default function Sidebar() {
                       transition={{ duration: 0.15 }}
                       className="relative z-10 whitespace-nowrap"
                     >
-                      {item.label}
+                      {t(item.labelKey)}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -174,14 +192,14 @@ export default function Sidebar() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
           onClick={handleLogout}
-          title="Cerrar sesión"
+          title={t('header.logout')}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm ${sidebarCollapsed ? 'justify-center' : ''}`}
         >
           <LogOut size={15} className="flex-shrink-0" />
           <AnimatePresence>
             {!sidebarCollapsed && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs">
-                Cerrar sesión
+                {t('header.logout')}
               </motion.span>
             )}
           </AnimatePresence>
@@ -198,7 +216,7 @@ export default function Sidebar() {
           <AnimatePresence>
             {!sidebarCollapsed && (
               <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-xs">
-                Colapsar
+                {t('nav.collapse')}
               </motion.span>
             )}
           </AnimatePresence>

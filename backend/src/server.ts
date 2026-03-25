@@ -23,6 +23,10 @@ import activityRoutes from './routes/activity'
 import userRoutes     from './routes/users'
 import notificationRoutes from './routes/notifications'
 import calendarRoutes from './routes/calendar'
+import templateRoutes from './routes/templates'
+import documentRoutes from './routes/documents'
+import apiKeyRoutes    from './routes/apiKeys'
+import publicApiRoutes from './routes/publicApi'
 
 import { v4 as uuid } from 'uuid'
 
@@ -54,6 +58,10 @@ app.use('/api/activity',  activityRoutes)
 app.use('/api/users',     userRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/calendar', calendarRoutes)
+app.use('/api/templates', templateRoutes)
+app.use('/api/documents', documentRoutes)
+app.use('/api/api-keys',  apiKeyRoutes)
+app.use('/api/v1',         publicApiRoutes)
 
 // ─── OAuth Initiation ──────────────────────────────────────────────────────────
 // GET /api/oauth/:platform/connect/:clientId — redirige al proveedor OAuth

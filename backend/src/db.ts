@@ -225,6 +225,88 @@ export async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
   `)
+
+  // Migration: add client_note to events
+  await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_note TEXT`)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS post_templates (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      platform TEXT DEFAULT 'linkedin',
+      category TEXT DEFAULT 'general',
+      industry TEXT,
+      tags TEXT DEFAULT '[]',
+      variables TEXT DEFAULT '[]',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      path TEXT NOT NULL,
+      client_id TEXT,
+      uploaded_by TEXT NOT NULL,
+      category TEXT DEFAULT 'general',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+
+  await pool.query(`ALTER TABLE documents ADD COLUMN IF NOT EXISTS shared INTEGER DEFAULT 0`)
+
+  // Migration: add shared and created_by to todos and ideas
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS shared INTEGER DEFAULT 0`)
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS created_by TEXT`)
+  await pool.query(`ALTER TABLE ideas ADD COLUMN IF NOT EXISTS shared INTEGER DEFAULT 0`)
+  await pool.query(`ALTER TABLE ideas ADD COLUMN IF NOT EXISTS created_by TEXT`)
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS note TEXT`)
+  await pool.query(`ALTER TABLE ideas ADD COLUMN IF NOT EXISTS note TEXT`)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS item_notes (
+      id TEXT PRIMARY KEY,
+      item_type TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      author_id TEXT NOT NULL,
+      author_name TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_item_notes_lookup ON item_notes(item_type, item_id);
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id TEXT PRIMARY KEY,
+      key TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      client_id TEXT,
+      scopes TEXT DEFAULT 'read',
+      is_active INTEGER DEFAULT 1,
+      last_used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
+
+  // Migration: add status, start_time, end_time, assigned_to to todos
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'`)
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS start_time TIMESTAMPTZ`)
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS end_time TIMESTAMPTZ`)
+  await pool.query(`ALTER TABLE todos ADD COLUMN IF NOT EXISTS assigned_to TEXT`)
+
+  // Data migration: sync status with done flag
+  await pool.query(`UPDATE todos SET status = CASE WHEN done = 1 THEN 'done' ELSE 'pending' END WHERE status IS NULL OR (status = 'pending' AND done = 1)`)
+
+  // Migration: add profile_photo to users
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT`)
 }
 
 export async function seedDB() {
@@ -469,6 +551,25 @@ export async function seedDB() {
       `INSERT INTO event_participants (id, event_id, user_id, status)
        VALUES ($1,$2,$3,$4) ON CONFLICT (event_id, user_id) DO NOTHING`,
       [ep.id, ep.event_id, ep.user_id, ep.status]
+    )
+  }
+
+  // Seed post templates
+  const templates = [
+    { id: 'tpl1', title: 'Thought Leadership LinkedIn', content: '💡 En {{industria}}, el cambio no espera.\n\nEn {{cliente}} hemos aprendido que {{resultado}}.\n\nTres lecciones clave:\n1. ...\n2. ...\n3. ...\n\n¿Cuál es tu mayor desafío en {{industria}} hoy? Me encantaría escucharte 👇\n\n#{{industria}} #Liderazgo #TransformaciónDigital', platform: 'linkedin', category: 'thought_leadership', industry: 'tecnología', tags: JSON.stringify(['liderazgo', 'opinión', 'B2B']), variables: JSON.stringify(['cliente', 'industria', 'resultado']) },
+    { id: 'tpl2', title: 'Carousel Caption Instagram', content: '📲 Desliza para descubrir cómo {{cliente}} logró {{resultado}} →\n\n✅ Slide 1: El problema\n✅ Slide 2: La estrategia\n✅ Slide 3: Los resultados\n✅ Slide 4: Tu turno\n\n💬 ¿Te identificas? Comenta "INFO" y te contamos más.\n\n#{{industria}} #MarketingDigital #Resultados', platform: 'instagram', category: 'carousel', industry: null, tags: JSON.stringify(['carousel', 'educativo', 'engagement']), variables: JSON.stringify(['cliente', 'resultado', 'industria']) },
+    { id: 'tpl3', title: 'Engagement Post Facebook', content: '🔥 Pregunta del día para {{industria}}:\n\n¿Prefieres {{opcionA}} o {{opcionB}}?\n\nEn {{cliente}} hemos probado ambos caminos y los resultados nos sorprendieron.\n\n👉 Comenta A o B y te cuento qué funcionó mejor.\n\n#{{industria}} #Debate #CommunityManager', platform: 'facebook', category: 'engagement', industry: null, tags: JSON.stringify(['engagement', 'interacción', 'comunidad']), variables: JSON.stringify(['industria', 'opcionA', 'opcionB', 'cliente']) },
+    { id: 'tpl4', title: 'Caso de Éxito LinkedIn', content: '🚀 {{cliente}} logró {{resultado}} en solo {{periodo}}.\n\nEl desafío:\n{{cliente}} enfrentaba un mercado cada vez más competitivo en {{industria}}.\n\nLa solución:\nDiseñamos una estrategia integral enfocada en resultados medibles.\n\nEl resultado:\n📊 {{resultado}}\n\n¿Tu empresa necesita resultados similares? Hablemos.\n\n#{{industria}} #CasoDeÉxito #TransformaciónDigital', platform: 'linkedin', category: 'caso_exito', industry: 'tecnología', tags: JSON.stringify(['caso de éxito', 'resultados', 'B2B']), variables: JSON.stringify(['cliente', 'resultado', 'periodo', 'industria']) },
+    { id: 'tpl5', title: 'Instagram Stories CTA', content: '⚡ {{cliente}} tiene algo INCREÍBLE para ti.\n\n{{producto}} ya está disponible.\n\n🔗 Link en bio para más info\n\n📅 Solo hasta {{fecha}}\n\n¡No te lo pierdas! 🙌', platform: 'instagram', category: 'stories', industry: null, tags: JSON.stringify(['stories', 'CTA', 'promoción']), variables: JSON.stringify(['cliente', 'producto', 'fecha']) },
+    { id: 'tpl6', title: 'Thread Opener Twitter/X', content: '🧵 HILO: Cómo {{cliente}} transformó su {{industria}} en {{periodo}}.\n\nSpoiler: {{resultado}}.\n\nTe cuento paso a paso 👇\n\n(1/7)', platform: 'twitter', category: 'thread', industry: null, tags: JSON.stringify(['thread', 'storytelling', 'viral']), variables: JSON.stringify(['cliente', 'industria', 'periodo', 'resultado']) },
+    { id: 'tpl7', title: 'Company Update LinkedIn', content: '📢 Noticias de {{cliente}}:\n\n{{novedad}}\n\nEsto significa:\n• Mayor {{beneficio1}}\n• Mejor {{beneficio2}}\n• Más {{beneficio3}}\n\nGracias a todo el equipo que hizo esto posible. 💪\n\n#{{industria}} #Crecimiento #Innovación', platform: 'linkedin', category: 'update', industry: null, tags: JSON.stringify(['actualización', 'corporativo', 'noticias']), variables: JSON.stringify(['cliente', 'novedad', 'beneficio1', 'beneficio2', 'beneficio3', 'industria']) },
+    { id: 'tpl8', title: 'Post Promocional General', content: '🎯 {{producto}} de {{cliente}}\n\n¿Sabías que {{dato}}?\n\nPor eso creamos {{producto}}, diseñado para {{beneficio}}.\n\n🔥 Disponible desde {{fecha}}\n💰 {{precio}}\n\n👉 Más info en el link de la bio\n\n#{{industria}} #NuevoProducto #Lanzamiento', platform: 'linkedin', category: 'promocional', industry: null, tags: JSON.stringify(['promoción', 'producto', 'lanzamiento']), variables: JSON.stringify(['producto', 'cliente', 'dato', 'beneficio', 'fecha', 'precio', 'industria']) },
+  ]
+  for (const tpl of templates) {
+    await pool.query(
+      `INSERT INTO post_templates (id, title, content, platform, category, industry, tags, variables)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING`,
+      [tpl.id, tpl.title, tpl.content, tpl.platform, tpl.category, tpl.industry, tpl.tags, tpl.variables]
     )
   }
 

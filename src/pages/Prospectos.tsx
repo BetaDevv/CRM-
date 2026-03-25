@@ -4,14 +4,15 @@ import { Plus, X, Mail, DollarSign, Tag, Pencil, Trash2, Loader2, Sparkles, Tren
 import { prospectStatusConfig, formatCurrency } from '../lib/utils'
 import { api, convertProspect } from '../lib/api'
 import type { Prospect, ProspectStatus } from '../types'
+import { useTranslation } from 'react-i18next'
 
-const columns: { key: ProspectStatus; label: string }[] = [
-  { key: 'new',         label: 'Nuevos' },
-  { key: 'contacted',   label: 'Contactados' },
-  { key: 'proposal',    label: 'Propuesta' },
-  { key: 'negotiation', label: 'Negociación' },
-  { key: 'won',         label: 'Ganados' },
-  { key: 'lost',        label: 'Perdidos' },
+const columns: { key: ProspectStatus; tKey: string }[] = [
+  { key: 'new',         tKey: 'prospects.columns.new' },
+  { key: 'contacted',   tKey: 'prospects.columns.contacted' },
+  { key: 'proposal',    tKey: 'prospects.columns.proposal' },
+  { key: 'negotiation', tKey: 'prospects.columns.negotiation' },
+  { key: 'won',         tKey: 'prospects.columns.won' },
+  { key: 'lost',        tKey: 'prospects.columns.lost' },
 ]
 
 const defaultProbabilityByStatus: Record<ProspectStatus, number> = {
@@ -47,6 +48,7 @@ function ProspectCard({
   onDelete: (id: string) => void
   onConvert: (id: string) => void
 }) {
+  const { t } = useTranslation('admin')
   const cfg = prospectStatusConfig[prospect.status]
   const prob = prospect.probability ?? 0
   const budgetNum = parseBudgetToNumber(prospect.budget)
@@ -123,7 +125,7 @@ function ProspectCard({
           onClick={() => onConvert(prospect.id)}
           className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-crimson-700/20 text-crimson-400 text-xs font-semibold hover:bg-crimson-700/30 transition-colors border border-crimson-700/30"
         >
-          <Sparkles size={12} /> Convertir a Cliente
+          <Sparkles size={12} /> {t('prospects.convertToClient')}
         </motion.button>
       )}
 
@@ -134,7 +136,7 @@ function ProspectCard({
           className="w-full bg-transparent text-xs text-ink-300 outline-none cursor-pointer"
           onClick={e => e.stopPropagation()}
         >
-          {columns.map(c => <option key={c.key} value={c.key} className="bg-ink-800">{c.label}</option>)}
+          {columns.map(c => <option key={c.key} value={c.key} className="bg-ink-800">{t(c.tKey)}</option>)}
         </select>
       </div>
     </motion.div>
@@ -156,6 +158,7 @@ function ProspectModal({
   onClose: () => void
   onSave: (form: ProspectForm) => Promise<void>
 }) {
+  const { t } = useTranslation('admin')
   const [form, setForm] = useState<ProspectForm>(
     initial
       ? { company: initial.company, contact: initial.contact, email: initial.email,
@@ -197,17 +200,17 @@ function ProspectModal({
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-white text-lg">{initial ? 'Editar Prospecto' : 'Nuevo Prospecto'}</h3>
+          <h3 className="font-bold text-white text-lg">{initial ? t('prospects.editProspect') : t('prospects.newProspect')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
           {[
-            { key: 'company',  label: 'Empresa *',   type: 'text' },
-            { key: 'contact',  label: 'Contacto',    type: 'text' },
-            { key: 'email',    label: 'Email *',      type: 'email' },
-            { key: 'phone',    label: 'Teléfono',    type: 'tel' },
-            { key: 'industry', label: 'Industria',   type: 'text' },
-            { key: 'budget',   label: 'Presupuesto', type: 'text' },
+            { key: 'company',  label: t('prospects.form.company'),  type: 'text' },
+            { key: 'contact',  label: t('prospects.form.contact'),  type: 'text' },
+            { key: 'email',    label: t('prospects.form.email'),    type: 'email' },
+            { key: 'phone',    label: t('prospects.form.phone'),    type: 'tel' },
+            { key: 'industry', label: t('prospects.form.industry'), type: 'text' },
+            { key: 'budget',   label: t('prospects.form.budget'),   type: 'text' },
           ].map(f => (
             <input
               key={f.key}
@@ -222,14 +225,14 @@ function ProspectModal({
           {/* Status selector */}
           {initial && (
             <div>
-              <label className="block text-xs text-ink-400 mb-1">Estado</label>
+              <label className="block text-xs text-ink-400 mb-1">{t('prospects.form.status')}</label>
               <select
                 value={status}
                 onChange={e => handleStatusChange(e.target.value as ProspectStatus)}
                 className="input-dark text-sm"
               >
                 {columns.map(c => (
-                  <option key={c.key} value={c.key} className="bg-ink-800">{c.label}</option>
+                  <option key={c.key} value={c.key} className="bg-ink-800">{t(c.tKey)}</option>
                 ))}
               </select>
             </div>
@@ -238,7 +241,7 @@ function ProspectModal({
           {/* Probability slider */}
           <div>
             <label className="block text-xs text-ink-400 mb-1">
-              Probabilidad de cierre
+              {t('prospects.form.closeProbability')}
               <span className="ml-2 text-crimson-400 font-bold">{form.probability}%</span>
             </label>
             <div className="flex items-center gap-3">
@@ -267,12 +270,19 @@ function ProspectModal({
             onChange={e => setForm(prev => ({ ...prev, source: e.target.value }))}
             className="input-dark text-sm"
           >
-            {['Web', 'LinkedIn', 'Referido', 'Instagram', 'Evento', 'Otro'].map(s => (
-              <option key={s} value={s} className="bg-ink-800">{s}</option>
+            {[
+              { value: 'Web', label: t('prospects.sources.web') },
+              { value: 'LinkedIn', label: t('prospects.sources.linkedin') },
+              { value: 'Referido', label: t('prospects.sources.referral') },
+              { value: 'Instagram', label: t('prospects.sources.instagram') },
+              { value: 'Evento', label: t('prospects.sources.event') },
+              { value: 'Otro', label: t('prospects.sources.other') },
+            ].map(s => (
+              <option key={s.value} value={s.value} className="bg-ink-800">{s.label}</option>
             ))}
           </select>
           <textarea
-            placeholder="Notas..."
+            placeholder={t('prospects.form.notes')}
             value={form.notes}
             onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
             rows={2}
@@ -280,9 +290,9 @@ function ProspectModal({
           />
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSubmit} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : initial ? 'Guardar cambios' : 'Agregar'}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : initial ? t('common:common.saveChanges') : t('common:common.add')}
           </button>
         </div>
       </motion.div>
@@ -291,6 +301,7 @@ function ProspectModal({
 }
 
 export default function Prospectos() {
+  const { t } = useTranslation(['admin', 'common'])
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
   const [activeCol, setActiveCol] = useState<ProspectStatus | 'all'>('all')
@@ -335,7 +346,7 @@ export default function Prospectos() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este prospecto?')) return
+    if (!confirm(t('admin:prospects.deleteConfirm'))) return
     await api.delete(`/prospects/${id}`)
     setProspects(p => p.filter(x => x.id !== id))
   }
@@ -345,10 +356,10 @@ export default function Prospectos() {
       const client = await convertProspect(id)
       // Update local prospect to show converted state
       setProspects(p => p.map(x => x.id === id ? { ...x, probability: 100 } : x))
-      setConvertMsg(`${client.company} convertido a cliente exitosamente`)
+      setConvertMsg(t('admin:prospects.convertedSuccess', { company: client.company }))
       setTimeout(() => setConvertMsg(null), 4000)
     } catch (err: any) {
-      const msg = err?.response?.data?.error || 'Error al convertir prospecto'
+      const msg = err?.response?.data?.error || t('admin:prospects.convertError')
       setConvertMsg(msg)
       setTimeout(() => setConvertMsg(null), 4000)
     }
@@ -360,8 +371,8 @@ export default function Prospectos() {
     <div className="space-y-6">
       <div className="page-header">
         <div>
-          <h2 className="section-title">Pipeline de Prospectos</h2>
-          <p className="text-ink-300 text-sm mt-1">{prospects.length} prospectos en total</p>
+          <h2 className="section-title">{t('admin:prospects.title')}</h2>
+          <p className="text-ink-300 text-sm mt-1">{t('admin:prospects.totalCount', { count: prospects.length })}</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -369,7 +380,7 @@ export default function Prospectos() {
           onClick={() => setShowModal(true)}
           className="btn-primary"
         >
-          <Plus size={16} /> Nuevo Prospecto
+          <Plus size={16} /> {t('admin:prospects.newProspect')}
         </motion.button>
       </div>
 
@@ -382,7 +393,7 @@ export default function Prospectos() {
           className="flex-shrink-0 px-4 py-2.5 rounded-xl border border-crimson-700/30 bg-crimson-700/10 text-sm font-medium flex items-center gap-2"
         >
           <TrendingUp size={14} className="text-crimson-400" />
-          <span className="text-ink-300 text-xs">Pipeline Estimado</span>
+          <span className="text-ink-300 text-xs">{t('admin:prospects.estimatedPipeline')}</span>
           <span className="text-white font-bold">{formatCurrency(pipelineEstimado)}</span>
         </motion.div>
 
@@ -402,7 +413,7 @@ export default function Prospectos() {
                 }`}
               style={activeCol === col.key ? { color: cfg.color, borderColor: cfg.color, background: cfg.bg } : {}}
             >
-              {col.label}
+              {t(col.tKey)}
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-current/20 text-current" style={{ color: cfg.color }}>{count}</span>
             </motion.button>
           )
@@ -441,7 +452,7 @@ export default function Prospectos() {
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ background: cfg.color }} />
-                    <span className="text-xs font-semibold text-ink-200">{col.label}</span>
+                    <span className="text-xs font-semibold text-ink-200">{t(col.tKey)}</span>
                   </div>
                   <span className="text-xs text-ink-400">{items.length}</span>
                 </div>

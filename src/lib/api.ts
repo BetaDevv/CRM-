@@ -36,6 +36,10 @@ function mapIdea(raw: any): Idea {
     clientId: raw.client_id ?? undefined,
     createdAt: raw.created_at ?? raw.createdAt ?? '',
     emoji: raw.emoji ?? undefined,
+    shared: Boolean(raw.shared),
+    createdBy: raw.created_by ?? undefined,
+
+    notesCount: raw.notes_count ?? 0,
   }
 }
 
@@ -52,6 +56,7 @@ export async function createIdea(idea: Omit<Idea, 'id'>): Promise<Idea> {
     tags: idea.tags,
     emoji: idea.emoji,
     client_id: idea.clientId,
+    shared: idea.shared ? 1 : 0,
   })
   return mapIdea(data)
 }
@@ -63,6 +68,7 @@ export async function updateIdea(id: string, idea: Partial<Idea>): Promise<Idea>
     status: idea.status,
     tags: idea.tags,
     emoji: idea.emoji,
+    shared: idea.shared ? 1 : 0,
   })
   return mapIdea(data)
 }
@@ -73,6 +79,19 @@ export async function deleteIdea(id: string): Promise<void> {
 
 // --- Todos API ---
 
+function toDatetimeLocal(val: string | null | undefined): string | undefined {
+  if (!val) return undefined
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return undefined
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input compatibility
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  } catch {
+    return undefined
+  }
+}
+
 function mapTodo(raw: any): TodoItem {
   return {
     id: raw.id,
@@ -80,10 +99,17 @@ function mapTodo(raw: any): TodoItem {
     description: raw.description ?? '',
     priority: raw.priority,
     done: Boolean(raw.done),
-    dueDate: raw.due_date ?? raw.dueDate ?? undefined,
     clientId: raw.client_id ?? raw.clientId ?? undefined,
     weekOf: raw.week_of ?? raw.weekOf ?? '',
     category: raw.category ?? '',
+    shared: Boolean(raw.shared),
+    createdBy: raw.created_by ?? undefined,
+    status: raw.status ?? (raw.done ? 'done' : 'pending'),
+    startTime: toDatetimeLocal(raw.start_time ?? raw.startTime),
+    endTime: toDatetimeLocal(raw.end_time ?? raw.endTime),
+    assignedTo: raw.assigned_to ?? raw.assignedTo ?? undefined,
+
+    notesCount: raw.notes_count ?? 0,
   }
 }
 
@@ -100,7 +126,11 @@ export async function createTodo(todo: Omit<TodoItem, 'id'>): Promise<TodoItem> 
     category: todo.category,
     client_id: todo.clientId,
     week_of: todo.weekOf,
-    due_date: todo.dueDate,
+    shared: todo.shared ? 1 : 0,
+    start_time: todo.startTime,
+    end_time: todo.endTime,
+    status: todo.status,
+    assigned_to: todo.assignedTo,
   })
   return mapTodo(data)
 }
@@ -113,7 +143,11 @@ export async function updateTodo(id: string, todo: Partial<TodoItem>): Promise<T
     category: todo.category,
     client_id: todo.clientId,
     done: todo.done,
-    due_date: todo.dueDate,
+    shared: todo.shared ? 1 : 0,
+    start_time: todo.startTime,
+    end_time: todo.endTime,
+    status: todo.status,
+    assigned_to: todo.assignedTo,
   })
   return mapTodo(data)
 }
@@ -123,8 +157,45 @@ export async function toggleTodo(id: string): Promise<TodoItem> {
   return mapTodo(data)
 }
 
+export async function updateTodoStatus(id: string, status: 'pending' | 'in_progress' | 'done'): Promise<TodoItem> {
+  const { data } = await api.patch(`/todos/${id}/status`, { status });
+  return mapTodo(data);
+}
+
 export async function deleteTodo(id: string): Promise<void> {
   await api.delete(`/todos/${id}`)
+}
+
+// --- Item Notes API ---
+
+export interface ItemNote {
+  id: string
+  item_type: string
+  item_id: string
+  author_id: string
+  author_name: string
+  content: string
+  created_at: string
+}
+
+export async function getTodoNotes(todoId: string): Promise<ItemNote[]> {
+  const { data } = await api.get(`/todos/${todoId}/notes`)
+  return data
+}
+
+export async function addTodoNoteMsg(todoId: string, content: string): Promise<ItemNote> {
+  const { data } = await api.post(`/todos/${todoId}/notes`, { content })
+  return data
+}
+
+export async function getIdeaNotes(ideaId: string): Promise<ItemNote[]> {
+  const { data } = await api.get(`/ideas/${ideaId}/notes`)
+  return data
+}
+
+export async function addIdeaNoteMsg(ideaId: string, content: string): Promise<ItemNote> {
+  const { data } = await api.post(`/ideas/${ideaId}/notes`, { content })
+  return data
 }
 
 // --- Posts API ---
@@ -285,6 +356,8 @@ export interface CalendarEvent {
   milestoneId: string | null
   googleEventId: string | null
   isShared: boolean
+  clientNote: string | null
+  milestone: { title: string; category: string; date: string } | null
   participants: { id: string; status: string; name: string; email: string }[]
 }
 
@@ -303,6 +376,8 @@ function mapCalendarEvent(raw: any): CalendarEvent {
     milestoneId: raw.milestone_id ?? raw.milestoneId ?? null,
     googleEventId: raw.google_event_id ?? raw.googleEventId ?? null,
     isShared: Boolean(raw.is_shared ?? raw.isShared),
+    clientNote: raw.client_note ?? raw.clientNote ?? null,
+    milestone: raw.milestone ?? null,
     participants: raw.participants ?? [],
   }
 }
@@ -349,6 +424,11 @@ export async function deleteCalendarEvent(id: string): Promise<void> {
   await api.delete(`/calendar/events/${id}`)
 }
 
+export async function addClientNoteToEvent(eventId: string, note: string): Promise<CalendarEvent> {
+  const { data } = await api.patch(`/calendar/events/${eventId}/client-note`, { note })
+  return mapCalendarEvent(data)
+}
+
 export async function addEventParticipants(eventId: string, userIds: string[]): Promise<void> {
   await api.post(`/calendar/events/${eventId}/participants`, { participants: userIds })
 }
@@ -385,6 +465,110 @@ export async function disconnectGoogleCalendar(): Promise<void> {
 
 export async function syncGoogleCalendar(): Promise<void> {
   await api.post('/calendar/google/sync')
+}
+
+// --- Templates API ---
+
+export interface PostTemplate {
+  id: string
+  title: string
+  content: string
+  platform: string
+  category: string
+  industry: string | null
+  tags: string[]
+  variables: string[]
+  created_at: string
+}
+
+export async function getTemplates(filters?: { platform?: string; category?: string }): Promise<PostTemplate[]> {
+  const params: Record<string, string> = {}
+  if (filters?.platform) params.platform = filters.platform
+  if (filters?.category) params.category = filters.category
+  const { data } = await api.get('/templates', { params })
+  return data
+}
+
+export async function createTemplate(templateData: Partial<PostTemplate>): Promise<PostTemplate> {
+  const { data } = await api.post('/templates', templateData)
+  return data
+}
+
+export async function updateTemplate(id: string, templateData: Partial<PostTemplate>): Promise<PostTemplate> {
+  const { data } = await api.put(`/templates/${id}`, templateData)
+  return data
+}
+
+export async function deleteTemplate(id: string): Promise<void> {
+  await api.delete(`/templates/${id}`)
+}
+
+export async function useTemplate(id: string, variables: Record<string, string>): Promise<{ content: string; title: string; platform: string }> {
+  const { data } = await api.post(`/templates/${id}/use`, { variables })
+  return data
+}
+
+// --- Documents API ---
+
+export interface Document {
+  id: string
+  name: string
+  originalName: string
+  mimeType: string
+  size: number
+  path: string
+  clientId: string | null
+  uploadedBy: string
+  category: string
+  createdAt: string
+  clientName: string | null
+  shared: boolean
+}
+
+function mapDocument(raw: any): Document {
+  return {
+    id: raw.id,
+    name: raw.name,
+    originalName: raw.original_name ?? raw.originalName,
+    mimeType: raw.mime_type ?? raw.mimeType,
+    size: raw.size,
+    path: raw.path,
+    clientId: raw.client_id ?? raw.clientId ?? null,
+    uploadedBy: raw.uploaded_by ?? raw.uploadedBy,
+    category: raw.category ?? 'general',
+    createdAt: raw.created_at ?? raw.createdAt ?? '',
+    clientName: raw.client_name ?? raw.clientName ?? null,
+    shared: Boolean(raw.shared),
+  }
+}
+
+export async function getDocuments(clientId?: string, category?: string): Promise<Document[]> {
+  const params: Record<string, string> = {}
+  if (clientId) params.client_id = clientId
+  if (category) params.category = category
+  const { data } = await api.get('/documents', { params })
+  return data.map(mapDocument)
+}
+
+export async function uploadDocuments(files: File[], clientId?: string, category?: string, shared?: boolean): Promise<Document[]> {
+  const formData = new FormData()
+  files.forEach(f => formData.append('files', f))
+  if (clientId) formData.append('client_id', clientId)
+  if (category) formData.append('category', category)
+  if (shared !== undefined) formData.append('shared', shared ? '1' : '0')
+  const { data } = await api.post('/documents', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  })
+  return data.map(mapDocument)
+}
+
+export async function deleteDocument(id: string): Promise<void> {
+  await api.delete(`/documents/${id}`)
+}
+
+export function getDocumentDownloadUrl(id: string): string {
+  return `/api/documents/${id}/download`
 }
 
 // --- Milestones API ---
@@ -446,4 +630,67 @@ export async function markNotificationRead(id: string): Promise<void> {
 
 export async function markAllNotificationsRead(): Promise<void> {
   await api.patch('/notifications/read-all')
+}
+
+// --- API Keys ---
+
+export interface ApiKey {
+  id: string
+  key: string
+  name: string
+  user_id: string
+  role: 'admin' | 'client'
+  client_id: string | null
+  scopes: string
+  is_active: number
+  last_used_at: string | null
+  created_at: string
+  user_name?: string
+  user_email?: string
+  client_name?: string
+  full_key?: string
+}
+
+export async function getApiKeys(): Promise<ApiKey[]> {
+  const { data } = await api.get('/api-keys')
+  return data
+}
+
+export async function createApiKey(payload: {
+  name: string
+  user_id: string
+  role: string
+  client_id?: string
+  scopes?: string
+}): Promise<ApiKey> {
+  const { data } = await api.post('/api-keys', payload)
+  return data
+}
+
+export async function toggleApiKey(id: string): Promise<ApiKey> {
+  const { data } = await api.patch(`/api-keys/${id}/toggle`)
+  return data
+}
+
+export async function deleteApiKey(id: string): Promise<void> {
+  await api.delete(`/api-keys/${id}`)
+}
+
+// --- Profile API ---
+
+export async function getMyProfile() {
+  const { data } = await api.get('/users/me')
+  return data
+}
+
+export async function updateMyProfile(name: string) {
+  const { data } = await api.put('/users/me', { name })
+  return data
+}
+
+export async function uploadProfilePhoto(file: File) {
+  const form = new FormData()
+  form.append('photo', file)
+  const { data } = await api.post('/users/me/photo', form)
+  return data
 }

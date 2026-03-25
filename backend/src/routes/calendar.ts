@@ -4,9 +4,48 @@ import { verifyToken, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
 import { sendEventInvite } from '../services/emailService'
+import { createNotification } from '../services/notificationService'
 import * as googleCal from '../services/googleCalendarService'
 
 const router = Router()
+
+// ─── GET /oauth/callback — Google OAuth callback (NO auth required) ─────────
+router.get('/oauth/callback', async (req, res: Response) => {
+  const { code, state: userId, error } = req.query as Record<string, string>
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+  if (error) {
+    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=${encodeURIComponent(error)}`)
+    return
+  }
+
+  if (!code || !userId) {
+    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=missing_params`)
+    return
+  }
+
+  try {
+    const tokens = await googleCal.exchangeCode(code)
+    const id = uuid()
+
+    await pool.query(
+      `INSERT INTO google_calendar_connections (id, user_id, access_token, refresh_token, token_expires_at)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (user_id) DO UPDATE SET
+         access_token = EXCLUDED.access_token,
+         refresh_token = EXCLUDED.refresh_token,
+         token_expires_at = EXCLUDED.token_expires_at`,
+      [id, userId, tokens.access_token, tokens.refresh_token, new Date(tokens.expiry_date).toISOString()]
+    )
+
+    res.redirect(`${FRONTEND_URL}/calendario?google=connected`)
+  } catch (err) {
+    console.error('Error in Google OAuth callback:', err)
+    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=token_exchange_failed`)
+  }
+})
+
+// All other routes require auth
 router.use(verifyToken)
 
 // ─── GET /events — list events for current user ─────────────────────────────
@@ -15,6 +54,8 @@ router.get('/events', async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId
     const { start, end } = req.query as { start?: string; end?: string }
 
+    const clientId = req.user!.clientId || null
+
     const { rows } = await pool.query(
       `SELECT e.*,
         COALESCE(
@@ -22,13 +63,19 @@ router.get('/events', async (req: AuthRequest, res: Response) => {
            FROM event_participants ep2
            JOIN users u2 ON ep2.user_id = u2.id
            WHERE ep2.event_id = e.id), '[]'::json
-        ) as participants
+        ) as participants,
+        (SELECT json_build_object('title', ms.title, 'category', ms.category, 'date', ms.date)
+         FROM milestones ms WHERE ms.id = e.milestone_id) as milestone
       FROM events e
-      WHERE (e.creator_id = $1 OR e.id IN (SELECT ep.event_id FROM event_participants ep WHERE ep.user_id = $1))
+      WHERE (
+        e.creator_id = $1
+        OR e.id IN (SELECT ep.event_id FROM event_participants ep WHERE ep.user_id = $1)
+        OR ($4::text IS NOT NULL AND e.client_id = $4)
+      )
         AND ($2::timestamptz IS NULL OR e.end_time > $2)
         AND ($3::timestamptz IS NULL OR e.start_time < $3)
       ORDER BY e.start_time ASC`,
-      [userId, start || null, end || null]
+      [userId, start || null, end || null, clientId]
     )
 
     res.json(rows)
@@ -193,6 +240,61 @@ router.delete('/events/:id', async (req: AuthRequest, res: Response) => {
   }
 })
 
+// ─── PATCH /events/:id/client-note — client adds note to event ───────────────
+router.patch('/events/:id/client-note', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId
+    const eventId = req.params.id
+    const { note } = req.body as { note: string }
+
+    // Fetch event
+    const { rows: existing } = await pool.query('SELECT * FROM events WHERE id = $1', [eventId])
+    if (!existing.length) { res.status(404).json({ error: 'Evento no encontrado' }); return }
+
+    const event = existing[0]
+
+    // Verify: user is participant OR event.client_id matches user's clientId
+    const { rows: userRows } = await pool.query('SELECT client_id FROM users WHERE id = $1', [userId])
+    const userClientId = userRows[0]?.client_id
+
+    const { rows: participantRows } = await pool.query(
+      'SELECT 1 FROM event_participants WHERE event_id = $1 AND user_id = $2',
+      [eventId, userId]
+    )
+
+    const isParticipant = participantRows.length > 0
+    const isClientMatch = userClientId && event.client_id === userClientId
+    const isCreator = event.creator_id === userId
+
+    if (!isParticipant && !isClientMatch && !isCreator) {
+      res.status(403).json({ error: 'No tienes permiso para agregar notas a este evento' }); return
+    }
+
+    // Update client_note
+    const { rows: updated } = await pool.query(
+      `UPDATE events SET client_note = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [note || null, eventId]
+    )
+
+    // Notify event creator (admin) if note was added by someone else
+    if (event.creator_id !== userId && note) {
+      createNotification({
+        userId: event.creator_id,
+        type: 'event_note',
+        title: 'Nota de cliente en evento',
+        description: `El cliente agregó una nota al evento: ${event.title}`,
+        entityType: 'event',
+        entityId: eventId,
+      }).catch(err => console.error('Error creating notification:', err))
+    }
+
+    res.json(updated[0])
+  } catch (err) {
+    console.error('Error adding client note:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
 // ─── POST /events/:id/participants — add participants ────────────────────────
 router.post('/events/:id/participants', async (req: AuthRequest, res: Response) => {
   try {
@@ -260,41 +362,7 @@ router.get('/google/connect', async (req: AuthRequest, res: Response) => {
   }
 })
 
-// ─── GET /oauth/callback — Google OAuth callback ─────────────────────────────
-router.get('/oauth/callback', async (req, res: Response) => {
-  const { code, state: userId, error } = req.query as Record<string, string>
-  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
-
-  if (error) {
-    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=${encodeURIComponent(error)}`)
-    return
-  }
-
-  if (!code || !userId) {
-    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=missing_params`)
-    return
-  }
-
-  try {
-    const tokens = await googleCal.exchangeCode(code)
-    const id = uuid()
-
-    await pool.query(
-      `INSERT INTO google_calendar_connections (id, user_id, access_token, refresh_token, token_expires_at)
-       VALUES ($1,$2,$3,$4,$5)
-       ON CONFLICT (user_id) DO UPDATE SET
-         access_token = EXCLUDED.access_token,
-         refresh_token = EXCLUDED.refresh_token,
-         token_expires_at = EXCLUDED.token_expires_at`,
-      [id, userId, tokens.access_token, tokens.refresh_token, new Date(tokens.expiry_date).toISOString()]
-    )
-
-    res.redirect(`${FRONTEND_URL}/calendario?google=connected`)
-  } catch (err) {
-    console.error('Error in Google OAuth callback:', err)
-    res.redirect(`${FRONTEND_URL}/calendario?google=error&message=token_exchange_failed`)
-  }
-})
+// (OAuth callback moved above verifyToken middleware)
 
 // ─── POST /google/sync — sync events from Google Calendar ───────────────────
 router.post('/google/sync', async (req: AuthRequest, res: Response) => {

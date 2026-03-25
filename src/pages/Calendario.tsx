@@ -21,6 +21,7 @@ import {
   type CalendarEvent, type CalendarUser, type Milestone,
 } from '../lib/api'
 import type { TodoItem } from '../types'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../store/useAuthStore'
 import { useStore } from '../store/useStore'
 
@@ -90,6 +91,7 @@ function EventModal({
   users,
   todos,
   milestones,
+  clients,
   onSave,
   onDelete,
   onClose,
@@ -117,6 +119,7 @@ function EventModal({
   onDelete?: () => Promise<void>
   onClose: () => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [title, setTitle] = useState(initial.title)
   const [description, setDescription] = useState(initial.description)
   const [startTime, setStartTime] = useState(initial.startTime)
@@ -189,23 +192,22 @@ function EventModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="glass-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
-        className="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto no-scrollbar"
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-5 pb-3 border-b border-white/5 bg-[#111] backdrop-blur-xl">
-          <h3 className="text-lg font-bold text-white">
-            {mode === 'create' ? 'Nuevo Evento' : 'Editar Evento'}
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="font-bold text-white text-lg">
+            {mode === 'create' ? t('admin:calendar.createEvent') : t('admin:calendar.editEvent')}
           </h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-ink-400">
+          <button onClick={onClose} className="text-ink-400 hover:text-white">
             <X size={18} />
           </button>
         </div>
@@ -213,7 +215,7 @@ function EventModal({
         <div className="p-5 space-y-4">
           {/* Title */}
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-ink-300">Titulo</label>
+            <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.title')}</label>
             <input
               type="text"
               value={title}
@@ -226,7 +228,7 @@ function EventModal({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-ink-300">Descripcion</label>
+            <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.description')}</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -248,13 +250,13 @@ function EventModal({
                 className="absolute top-0.5 w-4 h-4 bg-white rounded-full"
               />
             </button>
-            <span className="text-sm font-medium text-ink-200">Todo el dia</span>
+            <span className="text-sm font-medium text-ink-200">{t('admin:calendar.form.allDay')}</span>
           </div>
 
           {/* Date/Time pickers */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-ink-300">Inicio</label>
+              <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.start')}</label>
               <input
                 type={allDay ? 'date' : 'datetime-local'}
                 value={allDay ? startTime.split('T')[0] : startTime}
@@ -263,7 +265,7 @@ function EventModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-ink-300">Fin</label>
+              <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.end')}</label>
               <input
                 type={allDay ? 'date' : 'datetime-local'}
                 value={allDay ? endTime.split('T')[0] : endTime}
@@ -275,7 +277,7 @@ function EventModal({
 
           {/* Color Picker */}
           <div>
-            <label className="block text-xs font-medium mb-2 text-ink-300">Color</label>
+            <label className="block text-xs font-medium mb-2 text-ink-300">{t('admin:calendar.form.color')}</label>
             <div className="flex gap-2">
               {COLOR_PRESETS.map(c => (
                 <button
@@ -327,7 +329,7 @@ function EventModal({
                       </label>
                     ))}
                     {users.length === 0 && (
-                      <p className="text-xs py-2 text-center text-ink-400">No hay usuarios disponibles</p>
+                      <p className="text-xs py-2 text-center text-ink-400">{t('admin:calendar.form.noUsers')}</p>
                     )}
                   </div>
                 </motion.div>
@@ -345,7 +347,7 @@ function EventModal({
               onChange={e => { setClientId(e.target.value); setMilestoneId('') }}
               className="input-dark text-sm"
             >
-              <option value="">Sin cliente</option>
+              <option value="">{t('admin:calendar.form.noClient')}</option>
               {clients.map(c => (
                 <option key={c.id} value={c.id}>{c.company}</option>
               ))}
@@ -358,9 +360,9 @@ function EventModal({
               <Link2 size={12} className="inline mr-1" />Vincular a tarea
             </label>
             <select value={todoId} onChange={e => setTodoId(e.target.value)} className="input-dark text-sm">
-              <option value="">Sin tarea vinculada</option>
-              {todos.map(t => (
-                <option key={t.id} value={t.id}>{t.title}</option>
+              <option value="">{t('admin:calendar.form.noLinkedTask')}</option>
+              {todos.map(todo => (
+                <option key={todo.id} value={todo.id}>{todo.title}</option>
               ))}
             </select>
           </div>
@@ -374,7 +376,7 @@ function EventModal({
               {filteredMilestones.length > 0 ? (
                 <>
                   <select value={milestoneId} onChange={e => setMilestoneId(e.target.value)} className="input-dark text-sm">
-                    <option value="">Sin hito vinculado</option>
+                    <option value="">{t('admin:calendar.form.noLinkedMilestone')}</option>
                     {filteredMilestones.map(m => (
                       <option key={m.id} value={m.id}>
                         {m.title} — {m.category} {m.completed ? '✓' : ''}
@@ -399,7 +401,7 @@ function EventModal({
                   })()}
                 </>
               ) : (
-                <p className="text-xs py-2 text-ink-400">Este cliente no tiene hitos en su plan de marketing</p>
+                <p className="text-xs py-2 text-ink-400">{t('admin:calendar.form.noClientMilestones')}</p>
               )}
             </div>
           )}
@@ -416,12 +418,12 @@ function EventModal({
                 className="absolute top-0.5 w-4 h-4 bg-white rounded-full"
               />
             </button>
-            <span className="text-sm font-medium text-ink-200">Evento compartido</span>
+            <span className="text-sm font-medium text-ink-200">{t('admin:calendar.form.sharedEvent')}</span>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="sticky bottom-0 flex items-center gap-3 p-5 pt-3 border-t border-white/5 bg-[#111]">
+        <div className="flex items-center gap-3 mt-5">
           {mode === 'edit' && onDelete && (
             <button
               onClick={handleDelete}
@@ -433,10 +435,10 @@ function EventModal({
             </button>
           )}
           <div className="flex-1" />
-          <button onClick={onClose} className="btn-ghost text-sm">Cancelar</button>
-          <button onClick={handleSave} disabled={saving || !title.trim()} className="btn-primary text-sm disabled:opacity-50">
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={handleSave} disabled={saving || !title.trim()} className="btn-primary flex-1 justify-center disabled:opacity-50">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
-            {mode === 'create' ? 'Crear' : 'Guardar'}
+            {mode === 'create' ? t('admin:calendar.form.create') : t('admin:calendar.form.save')}
           </button>
         </div>
       </motion.div>
@@ -446,6 +448,7 @@ function EventModal({
 
 /* ─── Main Calendar Component ─── */
 export default function Calendario() {
+  const { t } = useTranslation(['admin', 'common'])
   const { user } = useAuthStore()
   const { clients } = useStore()
   const calendarRef = useRef<FullCalendar>(null)
@@ -692,10 +695,10 @@ export default function Calendario() {
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white">
-              Mi Calendario
+              {t('admin:calendar.title')}
             </h1>
             <p className="text-sm mt-0.5 text-ink-400">
-              Eventos, reuniones y deadlines
+              {t('admin:calendar.subtitle')}
             </p>
           </div>
         </div>

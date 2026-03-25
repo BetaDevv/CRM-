@@ -3,8 +3,10 @@ import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
 import { v4 as uuid } from 'uuid'
 
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL environment variable is required')
+
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/tbs_crm',
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 })
 

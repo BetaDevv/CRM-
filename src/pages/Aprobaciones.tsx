@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, ThumbsUp, RotateCcw, Send, Eye, Calendar, Upload, Image, FileText, CheckCircle, MessageSquare, Loader2, LayoutTemplate, Pencil, Trash2, Copy, Variable } from 'lucide-react'
+import { Plus, X, ThumbsUp, RotateCcw, Send, Eye, Calendar, Upload, Image, FileText, CheckCircle, MessageSquare, Loader2, LayoutTemplate, Pencil, Trash2, Copy, Variable, AlertTriangle } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { postStatusConfig, platformConfig, formatDate } from '../lib/utils'
-import { api, getTemplates, createTemplate, updateTemplate, deleteTemplate, useTemplate } from '../lib/api'
+import { api, getTemplates, createTemplate, updateTemplate, deleteTemplate, useTemplate, deletePost } from '../lib/api'
 import type { PostTemplate } from '../lib/api'
 import type { PostStatus } from '../types'
 import { useTranslation } from 'react-i18next'
@@ -190,7 +190,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
 }
 
 // ─── Admin Post Card ─────────────────────────────────────────────────────────
-function AdminPostCard({ post, client, onStatusUpdate }: { post: any; client?: any; onStatusUpdate: (id: string, status: string, feedback?: string) => void }) {
+function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete, onEdit }: { post: any; client?: any; onStatusUpdate: (id: string, status: string, feedback?: string) => void; onDelete: (post: any) => void; onEdit: (post: any) => void }) {
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
   const cfg = postStatusConfig[post.status as PostStatus]
   const hasImages = post.media_urls?.length > 0
@@ -208,7 +208,15 @@ function AdminPostCard({ post, client, onStatusUpdate }: { post: any; client?: a
               <p className="text-xs text-ink-400">{client?.company} · {formatDate(post.scheduled_date)}</p>
             </div>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+            <button onClick={() => onEdit(post)} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-500 hover:text-white transition-colors">
+              <Pencil size={14} />
+            </button>
+            <button onClick={() => onDelete(post)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-ink-500 hover:text-red-400 transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -293,6 +301,7 @@ export default function Aprobaciones() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [editingPost, setEditingPost] = useState<any | null>(null)
 
   const fetchPosts = async () => {
     try {
@@ -311,20 +320,61 @@ export default function Aprobaciones() {
     } catch (e) { console.error(e) }
   }
 
-  const handleCreate = async () => {
+  const openEdit = (post: any) => {
+    setEditingPost(post)
+    setForm({
+      clientId: post.client_id || '',
+      title: post.title || '',
+      content: post.content || '',
+      platform: post.platform || 'linkedin',
+      scheduledDate: post.scheduled_date ? post.scheduled_date.split('T')[0] : '',
+      type: post.type || 'post',
+    })
+    setSelectedFiles([])
+    setShowModal(true)
+  }
+
+  const handleSubmit = async () => {
     if (!form.clientId || !form.content) return
     setSubmitting(true)
     try {
-      const fd = new FormData()
-      Object.entries({ client_id: form.clientId, title: form.title, content: form.content, platform: form.platform, scheduled_date: form.scheduledDate, type: form.type }).forEach(([k, v]) => fd.append(k, v))
-      selectedFiles.forEach(f => fd.append('images', f))
-      const { data } = await api.post('/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      setPosts(p => [data, ...p])
+      if (editingPost) {
+        // Update existing post
+        const { data } = await api.put(`/posts/${editingPost.id}`, {
+          client_id: form.clientId,
+          title: form.title,
+          content: form.content,
+          platform: form.platform,
+          scheduled_date: form.scheduledDate,
+          type: form.type,
+        })
+        setPosts(p => p.map(x => x.id === editingPost.id ? data : x))
+      } else {
+        // Create new post
+        const fd = new FormData()
+        Object.entries({ client_id: form.clientId, title: form.title, content: form.content, platform: form.platform, scheduled_date: form.scheduledDate, type: form.type }).forEach(([k, v]) => fd.append(k, v))
+        selectedFiles.forEach(f => fd.append('images', f))
+        const { data } = await api.post('/posts', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+        setPosts(p => [data, ...p])
+      }
       setForm({ clientId: '', title: '', content: '', platform: 'linkedin', scheduledDate: '', type: 'post' })
       setSelectedFiles([])
+      setEditingPost(null)
       setShowModal(false)
     } catch (e) { console.error(e) }
     finally { setSubmitting(false) }
+  }
+
+  // Delete post with confirmation
+  const [confirmDeletePost, setConfirmDeletePost] = useState<any | null>(null)
+
+  const handleDeletePost = async () => {
+    if (!confirmDeletePost) return
+    try {
+      await deletePost(confirmDeletePost.id)
+      setPosts(p => p.filter(x => x.id !== confirmDeletePost.id))
+    } catch (e) { console.error(e) }
+    finally { setConfirmDeletePost(null) }
   }
 
   const filtered = activeStatus === 'all' ? posts : posts.filter(p => p.status === activeStatus)
@@ -464,7 +514,7 @@ export default function Aprobaciones() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-ink-800/60 border border-white/10 text-ink-200 hover:text-white hover:border-white/20 transition-all text-sm font-medium">
               <LayoutTemplate size={16} /> {t('admin:approvals.templates')}
             </motion.button>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowModal(true)} className="btn-primary">
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { setEditingPost(null); setForm({ clientId: '', title: '', content: '', platform: 'linkedin', scheduledDate: '', type: 'post' }); setSelectedFiles([]); setShowModal(true) }} className="btn-primary">
               <Plus size={16} /> {t('admin:approvals.newPost')}
             </motion.button>
           </div>
@@ -516,7 +566,7 @@ export default function Aprobaciones() {
           <AnimatePresence>
             {filtered.map(post => (
               isAdmin() ? (
-                <AdminPostCard key={post.id} post={post} client={clients.find(c => c.id === post.client_id)} onStatusUpdate={handleStatusUpdate} />
+                <AdminPostCard key={post.id} post={post} client={clients.find(c => c.id === post.client_id)} onStatusUpdate={handleStatusUpdate} onDelete={setConfirmDeletePost} onEdit={openEdit} />
               ) : (
                 <ClientPostCard key={post.id} post={post} client={clients.find(c => c.id === post.client_id)} onStatusUpdate={handleStatusUpdate} />
               )
@@ -793,8 +843,8 @@ export default function Aprobaciones() {
               className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
-                <h3 className="font-bold text-white text-lg">{t('admin:approvals.newPostDesign')}</h3>
-                <button onClick={() => setShowModal(false)} className="text-ink-400 hover:text-white"><X size={18} /></button>
+                <h3 className="font-bold text-white text-lg">{editingPost ? t('admin:approvals.editPost') : t('admin:approvals.newPostDesign')}</h3>
+                <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="text-ink-400 hover:text-white"><X size={18} /></button>
               </div>
               <div className="space-y-3">
                 {/* Type toggle */}
@@ -845,10 +895,48 @@ export default function Aprobaciones() {
                 </div>
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowModal(false)} className="btn-ghost flex-1 justify-center">Cancelar</button>
-                <button onClick={handleCreate} disabled={submitting} className="btn-primary flex-1 justify-center">
-                  {submitting ? <><Loader2 size={15} className="animate-spin" /> Subiendo...</> : <><Send size={15} /> Enviar al cliente</>}
+                <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
+                <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1 justify-center">
+                  {submitting
+                    ? <><Loader2 size={15} className="animate-spin" /> {editingPost ? t('common:common.save') : t('admin:approvals.uploading')}...</>
+                    : editingPost
+                      ? <><Pencil size={15} /> {t('common:common.saveChanges')}</>
+                      : <><Send size={15} /> {t('admin:approvals.sendToClient')}</>
+                  }
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation dialog */}
+      <AnimatePresence>
+        {confirmDeletePost && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setConfirmDeletePost(null)}
+          >
+            <motion.div
+              className="bg-ink-900 border border-ink-700 rounded-2xl p-6 max-w-sm mx-4"
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('admin:approvals.deleteTitle')}</h3>
+                <p className="text-ink-400 text-sm mb-6">{t('admin:approvals.deleteMessage')}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setConfirmDeletePost(null)} className="flex-1 px-4 py-2 bg-ink-700 text-ink-300 rounded-xl hover:bg-ink-600 transition-colors">
+                    {t('common:common.cancel')}
+                  </button>
+                  <button onClick={handleDeletePost} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors">
+                    {t('common:common.delete')}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>

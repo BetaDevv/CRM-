@@ -46,7 +46,11 @@
     "addNote": "Add note",
     "noteForEvent": "Note for event",
     "notePlaceholder": "Write your note here...",
-    "saveNote": "Save note"
+    "saveNote": "Save note",
+    "syncMicrosoft": "Microsoft Calendar",
+    "connectMicrosoft": "Connect Outlook",
+    "microsoftConnected": "Outlook calendar connected",
+    "microsoftDisconnected": "Sync your Outlook events"
   },
   "metrics": {
     "noMetrics": "No metrics available yet",

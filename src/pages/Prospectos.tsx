@@ -216,7 +216,7 @@ function ProspectModal({
               key={f.key}
               type={f.type}
               placeholder={f.label}
-              value={(form as Record<string, string>)[f.key]}
+              value={(form as unknown as Record<string, string>)[f.key]}
               onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
               className="input-dark text-sm"
             />

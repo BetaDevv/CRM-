@@ -17,6 +17,7 @@ import {
   getCalendarEvents, createCalendarEvent, updateCalendarEvent,
   deleteCalendarEvent, getCalendarUsers, getGoogleCalendarStatus,
   connectGoogleCalendar, disconnectGoogleCalendar, syncGoogleCalendar,
+  getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, syncMicrosoftCalendar,
   getTodos, getMilestones,
   type CalendarEvent, type CalendarUser, type Milestone,
 } from '../lib/api'
@@ -449,7 +450,7 @@ function EventModal({
 /* ─── Main Calendar Component ─── */
 export default function Calendario() {
   const { t } = useTranslation(['admin', 'common'])
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const { clients } = useStore()
   const calendarRef = useRef<FullCalendar>(null)
 
@@ -463,15 +464,15 @@ export default function Calendario() {
   // Google Calendar
   const [googleStatus, setGoogleStatus] = useState<{ connected: boolean; email?: string }>({ connected: false })
 
+  // Microsoft Calendar
+  const [microsoftStatus, setMicrosoftStatus] = useState<{ connected: boolean }>({ connected: false })
+  const [microsoftSyncing, setMicrosoftSyncing] = useState(false)
+
   // Modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [modalInitial, setModalInitial] = useState<any>(null)
-
-  // Double-click detection
-  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const lastClickIdRef = useRef<string | null>(null)
 
   // Ref to always have latest events for click handler
   const eventsRef = useRef<CalendarEvent[]>([])
@@ -500,17 +501,23 @@ export default function Calendario() {
       getTodos().catch(() => []),
       getMilestones().catch(() => []),
       getGoogleCalendarStatus().catch(() => ({ connected: false })),
-    ]).then(([usersData, todosData, milestonesData, gStatus]) => {
+      getMicrosoftCalendarStatus().catch(() => ({ connected: false })),
+    ]).then(([usersData, todosData, milestonesData, gStatus, msStatus]) => {
       setUsers(usersData)
       setTodos(todosData)
       setMilestonesList(milestonesData)
       setGoogleStatus(gStatus)
+      setMicrosoftStatus(msStatus)
     }).finally(() => setLoading(false))
 
     // Check for Google OAuth redirect
     const params = new URLSearchParams(window.location.search)
     if (params.get('google') === 'connected') {
       getGoogleCalendarStatus().then(setGoogleStatus).catch(() => {})
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+    if (params.get('microsoft') === 'connected') {
+      setMicrosoftStatus({ connected: true })
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -668,6 +675,36 @@ export default function Calendario() {
     }
   }
 
+  const handleConnectMicrosoft = async () => {
+    try {
+      const url = await connectMicrosoftCalendar()
+      window.open(url, '_blank')
+    } catch {
+      // silently fail
+    }
+  }
+
+  const handleDisconnectMicrosoft = async () => {
+    try {
+      await disconnectMicrosoftCalendar()
+      setMicrosoftStatus({ connected: false })
+    } catch {
+      // silently fail
+    }
+  }
+
+  const handleSyncMicrosoft = async () => {
+    setMicrosoftSyncing(true)
+    try {
+      await syncMicrosoftCalendar()
+      fetchEvents()
+    } catch {
+      // silently fail
+    } finally {
+      setMicrosoftSyncing(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -762,6 +799,40 @@ export default function Calendario() {
                 className="text-xs text-ink-400 hover:text-red-400 transition-colors underline"
               >
                 Desconectar
+              </button>
+            </div>
+          )}
+
+          {/* Microsoft Calendar */}
+          {!microsoftStatus.connected ? (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleConnectMicrosoft}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-white/10 hover:bg-white/5 transition-all text-ink-200"
+            >
+              <CalendarIcon size={14} /> {t('admin:calendar.connectMicrosoft')}
+            </motion.button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
+                Outlook {t('common:status.active')?.toLowerCase() || 'activo'}
+              </span>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSyncMicrosoft}
+                disabled={microsoftSyncing}
+                className="p-2 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50 text-ink-300"
+                title="Sincronizar"
+              >
+                <RefreshCw size={16} className={microsoftSyncing ? 'animate-spin' : ''} />
+              </motion.button>
+              <button
+                onClick={handleDisconnectMicrosoft}
+                className="text-xs text-ink-400 hover:text-red-400 transition-colors underline"
+              >
+                {t('admin:calendar.disconnectMicrosoft')}
               </button>
             </div>
           )}

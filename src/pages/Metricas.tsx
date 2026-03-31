@@ -13,10 +13,10 @@ import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { api } from '../lib/api'
 import { useTranslation } from 'react-i18next'
+import type { JSX } from 'react'
 
 const CRIMSON = '#DC143C'
 const META_COLOR = '#1877F2'
-const TIKTOK_COLOR = '#010101'
 const GA4_COLOR = '#E37400'
 const IG_COLOR = '#E1306C'
 const CHART_COLORS = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA']
@@ -527,7 +527,6 @@ export default function Metricas() {
     }
   }
 
-  const client = clients.find(c => c.id === selectedClientId)
   const conn = data?.connections?.[activePlatform]
   const platformData = data?.platforms?.[activePlatform]
 

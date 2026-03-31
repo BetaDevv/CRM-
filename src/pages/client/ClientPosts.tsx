@@ -9,7 +9,7 @@ import type { PostStatus } from '../../types'
 
 export default function ClientPosts() {
   const { t } = useTranslation(['client', 'common'])
-  const { user } = useAuthStore()
+  const { user: _user } = useAuthStore()
   const [posts, setPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [feedbackState, setFeedbackState] = useState<Record<string, { show: boolean; text: string }>>({})

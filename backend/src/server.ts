@@ -30,7 +30,7 @@ import publicApiRoutes from './routes/publicApi'
 
 import { v4 as uuid } from 'uuid'
 
-const app = express()
+export const app = express()
 const PORT = parseInt(process.env.PORT || '3001', 10)
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
 
@@ -179,7 +179,10 @@ async function start() {
   })
 }
 
-start().catch(err => {
-  console.error('Error iniciando servidor:', err)
-  process.exit(1)
-})
+// Only start the server when running directly (not during tests)
+if (process.env.NODE_ENV !== 'test') {
+  start().catch(err => {
+    console.error('Error iniciando servidor:', err)
+    process.exit(1)
+  })
+}

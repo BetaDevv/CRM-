@@ -5,12 +5,6 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import { useThemeStore } from '../../store/useThemeStore'
 
-const pageVariants = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-  exit:    { opacity: 0, y: -8 },
-}
-
 export default function Layout() {
   const location = useLocation()
   const { theme } = useThemeStore()

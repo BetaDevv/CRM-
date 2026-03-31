@@ -7,7 +7,7 @@ if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL environment variabl
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 })
 
 export async function initDB() {
@@ -76,7 +76,6 @@ export async function initDB() {
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url TEXT`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active INTEGER DEFAULT 1`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ`)
-  await pool.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS probability INTEGER DEFAULT 0`)
   await pool.query(`
 
     CREATE TABLE IF NOT EXISTS prospects (
@@ -226,7 +225,22 @@ export async function initDB() {
       calendar_id TEXT DEFAULT 'primary',
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS microsoft_calendar_connections (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      token_expires_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `)
+
+  // Migration: add probability to prospects
+  await pool.query(`ALTER TABLE prospects ADD COLUMN IF NOT EXISTS probability INTEGER DEFAULT 0`)
+
+  // Migration: add microsoft_event_id to events
+  await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS microsoft_event_id TEXT`)
 
   // Migration: add client_note to events
   await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_note TEXT`)

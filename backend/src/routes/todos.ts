@@ -3,7 +3,9 @@ import { pool } from '../db'
 import { verifyToken, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
-import { sendNoteNotification, sendTodoCompletedNotification } from '../services/emailService'
+import { notifyTodoCompleted, notifyNoteAdded } from '../services/notificationService'
+import { CalendarEventService } from '../services/calendarEventService'
+import { TODO_STATUS, VALID_TODO_STATUSES } from '../constants'
 
 const router = Router()
 router.use(verifyToken)
@@ -55,18 +57,21 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     const { rows } = await pool.query(
       `INSERT INTO todos (id, title, description, priority, category, client_id, week_of, shared, created_by, start_time, end_time, status, assigned_to)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-      [id, title, description || null, priority || 'medium', category || 'General', finalClientId, week_of || null, finalShared, user.userId, start_time || null, end_time || null, status || 'pending', assigned_to || null]
+      [id, title, description || null, priority || 'medium', category || 'General', finalClientId, week_of || null, finalShared, user.userId, start_time || null, end_time || null, status || TODO_STATUS.PENDING, assigned_to || null]
     )
 
     // Auto-create linked calendar event if time range provided
     if (start_time && end_time) {
       try {
-        const eventId = uuid()
-        await pool.query(
-          `INSERT INTO events (id, title, description, start_time, end_time, color, creator_id, client_id, todo_id, is_shared, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
-          [eventId, title, description || null, start_time, end_time, '#3B82F6', user.userId, finalClientId, id, finalClientId ? true : false]
-        )
+        await CalendarEventService.createFromTodo({
+          title,
+          description,
+          startTime: start_time,
+          endTime: end_time,
+          creatorId: user.userId,
+          clientId: finalClientId,
+          todoId: id,
+        })
       } catch (eventErr) {
         console.error('Error creating linked calendar event:', eventErr)
       }
@@ -97,7 +102,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       : (shared ? 1 : 0)
 
     const doneVal = done ? 1 : 0
-    const finalStatus = status || (doneVal ? 'done' : 'pending')
+    const finalStatus = status || (doneVal ? TODO_STATUS.DONE : TODO_STATUS.PENDING)
 
     const { rows } = await pool.query(
       `UPDATE todos SET title=$1, description=$2, priority=$3, category=$4, client_id=$5, done=$6, shared=$7, start_time=$8, end_time=$9, status=$10, assigned_to=$11
@@ -107,11 +112,14 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 
     // Update linked calendar event if time range provided
     if (start_time && end_time) {
-      await pool.query(
-        `UPDATE events SET title = $1, description = $2, start_time = $3, end_time = $4, client_id = $5, is_shared = $6, updated_at = NOW()
-         WHERE todo_id = $7`,
-        [title, description || null, start_time, end_time, finalClientId, finalClientId ? true : false, req.params.id]
-      )
+      await CalendarEventService.updateFromTodo({
+        todoId: req.params.id,
+        title,
+        description,
+        startTime: start_time,
+        endTime: end_time,
+        clientId: finalClientId,
+      })
     }
 
     res.json(rows[0])
@@ -125,28 +133,13 @@ router.patch('/:id/toggle', async (req: AuthRequest, res: Response) => {
     const { rows: cur } = await pool.query('SELECT done, title FROM todos WHERE id = $1', [req.params.id])
     if (!cur.length) { res.status(404).json({ error: 'Not found' }); return }
     const newDone = cur[0].done ? 0 : 1
-    const newStatus = newDone ? 'done' : 'pending'
+    const newStatus = newDone ? TODO_STATUS.DONE : TODO_STATUS.PENDING
     const { rows } = await pool.query('UPDATE todos SET done=$1, status=$2 WHERE id=$3 RETURNING *', [newDone, newStatus, req.params.id])
     logActivity({ type: 'todo_toggled', description: `Tarea ${newDone ? 'completada' : 'reabierta'}: ${cur[0].title}`, entityType: 'todo', entityId: req.params.id })
 
     // Notify client when todo is toggled to done
     if (newDone && rows[0].client_id) {
-      try {
-        const clientUsers = await pool.query(
-          'SELECT id, email, name FROM users WHERE client_id = $1 AND active = 1',
-          [rows[0].client_id]
-        )
-        for (const clientUser of clientUsers.rows) {
-          await pool.query(
-            `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [uuid(), clientUser.id, 'todo_completed', 'Tarea completada', `La tarea "${rows[0].title}" ha sido marcada como completada`, 'todo', req.params.id]
-          )
-          sendTodoCompletedNotification({ to: clientUser.email, clientName: clientUser.name, todoTitle: rows[0].title })
-        }
-      } catch (notifErr) {
-        console.error('Error sending todo completion notification:', notifErr)
-      }
+      notifyTodoCompleted({ id: req.params.id, title: rows[0].title, client_id: rows[0].client_id })
     }
 
     res.json(rows[0])
@@ -160,11 +153,11 @@ router.patch('/:id/status', verifyToken, async (req: AuthRequest, res: Response)
     const { id } = req.params
     const { status } = req.body
 
-    if (!['pending', 'in_progress', 'done'].includes(status)) {
+    if (!VALID_TODO_STATUSES.includes(status)) {
       res.status(400).json({ error: 'Invalid status' }); return
     }
 
-    const done = status === 'done' ? 1 : 0
+    const done = status === TODO_STATUS.DONE ? 1 : 0
     const { rows } = await pool.query(
       'UPDATE todos SET status = $1, done = $2 WHERE id = $3 RETURNING *',
       [status, done, id]
@@ -173,23 +166,8 @@ router.patch('/:id/status', verifyToken, async (req: AuthRequest, res: Response)
     if (rows.length === 0) { res.status(404).json({ error: 'Not found' }); return }
 
     // Notify client when todo is completed
-    if (status === 'done' && rows[0].client_id) {
-      try {
-        const clientUsers = await pool.query(
-          'SELECT id, email, name FROM users WHERE client_id = $1 AND active = 1',
-          [rows[0].client_id]
-        )
-        for (const clientUser of clientUsers.rows) {
-          await pool.query(
-            `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [uuid(), clientUser.id, 'todo_completed', 'Tarea completada', `La tarea "${rows[0].title}" ha sido marcada como completada`, 'todo', id]
-          )
-          sendTodoCompletedNotification({ to: clientUser.email, clientName: clientUser.name, todoTitle: rows[0].title })
-        }
-      } catch (notifErr) {
-        console.error('Error sending todo completion notification:', notifErr)
-      }
+    if (status === TODO_STATUS.DONE && rows[0].client_id) {
+      notifyTodoCompleted({ id, title: rows[0].title, client_id: rows[0].client_id })
     }
 
     res.json(rows[0])
@@ -247,43 +225,15 @@ router.post('/:id/notes', async (req: AuthRequest, res: Response) => {
       [id, 'todo', req.params.id, user.userId, user.name, content.trim()]
     )
 
-    // Create notification for the OTHER party
-    const todo = todoRows[0]
-    if (todo.created_by && todo.created_by !== user.userId) {
-      await pool.query(
-        `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [uuid(), todo.created_by, 'note_added', 'Nueva nota en tu tarea', `${user.name}: ${content.trim().substring(0, 100)}`, 'todo', req.params.id]
-      )
-      const { rows: ownerRows } = await pool.query('SELECT email, name FROM users WHERE id = $1', [todo.created_by])
-      if (ownerRows.length) {
-        sendNoteNotification({
-          to: ownerRows[0].email,
-          recipientName: ownerRows[0].name,
-          senderName: user.name,
-          itemType: 'tarea',
-          itemTitle: todo.title,
-          note: content.trim(),
-        })
-      }
-    } else if (todo.shared && todo.client_id) {
-      const { rows: adminRows } = await pool.query("SELECT id, email, name FROM users WHERE role = 'admin' LIMIT 1")
-      if (adminRows.length) {
-        await pool.query(
-          `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [uuid(), adminRows[0].id, 'note_added', 'Nueva nota en tarea compartida', `${user.name}: ${content.trim().substring(0, 100)}`, 'todo', req.params.id]
-        )
-        sendNoteNotification({
-          to: adminRows[0].email,
-          recipientName: adminRows[0].name,
-          senderName: user.name,
-          itemType: 'tarea',
-          itemTitle: todo.title,
-          note: content.trim(),
-        })
-      }
-    }
+    // Notify the other party
+    notifyNoteAdded({
+      itemType: 'todo',
+      itemId: req.params.id,
+      item: todoRows[0],
+      authorUserId: user.userId,
+      authorName: user.name,
+      content: content.trim(),
+    })
 
     res.status(201).json(rows[0])
   } catch {

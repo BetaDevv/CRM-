@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
 import { notifyClient, notifyAdmins } from '../services/notificationService'
 import { sendPostForApproval, sendPostStatusNotification } from '../services/emailService'
+import { POST_STATUS, NOTIFICATION_TYPE } from '../constants'
 
 const uploadDir = path.resolve(__dirname, '../../../uploads')
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
@@ -60,8 +61,8 @@ router.post('/', requireAdmin, upload.array('images', 4), async (req: AuthReques
     const id = uuid()
     const { rows } = await pool.query(
       `INSERT INTO posts (id, client_id, title, content, platform, scheduled_date, status, media_urls, type)
-       VALUES ($1,$2,$3,$4,$5,$6,'pending',$7,$8) RETURNING *`,
-      [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, JSON.stringify(mediaUrls), type || 'post']
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, POST_STATUS.PENDING, JSON.stringify(mediaUrls), type || 'post']
     )
     logActivity({ type: 'post_created', description: `Nuevo post creado: ${title}`, entityType: 'post', entityId: id })
     notifyClient(client_id, { type: 'post_pending', title: 'Post pendiente de aprobación', description: `Tienes un nuevo post para revisar: ${title}`, entityType: 'post', entityId: id })
@@ -97,8 +98,8 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
     if (req.user!.role === 'client' && post.client_id !== req.user!.clientId) {
       res.status(403).json({ error: 'Sin acceso' }); return
     }
-    const allowed = ['pending', 'approved', 'rejected', 'revision']
-    if (!allowed.includes(status)) { res.status(400).json({ error: 'Status inválido' }); return }
+    const validPostStatuses = Object.values(POST_STATUS)
+    if (!validPostStatuses.includes(status)) { res.status(400).json({ error: 'Status inválido' }); return }
 
     const { rows } = await pool.query(
       'UPDATE posts SET status=$1, feedback=$2 WHERE id=$3 RETURNING *',
@@ -107,14 +108,14 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
     logActivity({ type: `post_${status}`, description: `Post ${status}: ${post.title}`, entityType: 'post', entityId: req.params.id })
 
     // Notify on approval/rejection/revision
-    if (status === 'approved' || status === 'rejected' || status === 'revision') {
+    if (status === POST_STATUS.APPROVED || status === POST_STATUS.REJECTED || status === POST_STATUS.REVISION) {
       const { rows: clientRows } = await pool.query('SELECT company FROM clients WHERE id = $1', [post.client_id])
       const clientName = clientRows[0]?.company || 'Cliente'
 
-      if (status === 'approved' || status === 'rejected') {
-        const notifType = status === 'approved' ? 'post_approved' : 'post_rejected'
-        const notifTitle = status === 'approved' ? 'Post aprobado' : 'Post rechazado'
-        const notifDesc = `${clientName} ${status === 'approved' ? 'aprobó' : 'rechazó'} el post: ${post.title}`
+      if (status === POST_STATUS.APPROVED || status === POST_STATUS.REJECTED) {
+        const notifType = status === POST_STATUS.APPROVED ? NOTIFICATION_TYPE.POST_APPROVED : NOTIFICATION_TYPE.POST_REJECTED
+        const notifTitle = status === POST_STATUS.APPROVED ? 'Post aprobado' : 'Post rechazado'
+        const notifDesc = `${clientName} ${status === POST_STATUS.APPROVED ? 'aprobó' : 'rechazó'} el post: ${post.title}`
         notifyAdmins({ type: notifType, title: notifTitle, description: notifDesc, entityType: 'post', entityId: req.params.id })
       }
 

@@ -1,0 +1,58 @@
+services:
+  backend:
+    image: crm-backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports: 
+    - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET} 
+      PORT: ${PORT}                                                  
+      FRONTEND_URL: ${FRONTEND_URL}                                  
+      SMTP_HOST: ${SMTP_HOST}                                        
+      SMTP_PORT: ${SMTP_PORT}                                     
+      SMTP_USER: ${SMTP_USER}                                        
+      SMTP_PASS: ${SMTP_PASS}   
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID} 
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}                
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}               
+      GA4_CLIENT_ID: ${GA4_CLIENT_ID}                              
+      GA4_CLIENT_SECRET: ${GA4_CLIENT_SECRET}
+      GA4_REDIRECT_URI: ${GA4_REDIRECT_URI}                        
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}               
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}          
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID}                  
+      MICROSOFT_REDIRECT_URI: ${MICROSOFT_REDIRECT_URI} 
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID}                          
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET}                  
+      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI}
+      NODE_ENV: production
+      DB_SSL: false
+    depends_on:
+      - db
+    volumes:
+      - uploads:/usr/src/app/uploads
+  frontend:
+    image: crm-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports: 
+      - "80:80"
+    depends_on:
+      - backend
+  
+  db:                                                              
+    image: postgres:16-alpine                                      
+    environment:                                                
+      POSTGRES_USER: ${DB_USER}               
+      POSTGRES_PASSWORD: ${DB_PASSWORD}                                     
+      POSTGRES_DB: ${DB_NAME}  
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    
+volumes:
+  pgdata: 
+  uploads:

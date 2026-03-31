@@ -3,7 +3,8 @@ import { pool } from '../db'
 import { verifyToken, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
-import { sendNoteNotification } from '../services/emailService'
+import { notifyNoteAdded } from '../services/notificationService'
+import { IDEA_STATUS } from '../constants'
 
 const router = Router()
 router.use(verifyToken)
@@ -58,7 +59,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     const { rows } = await pool.query(
       `INSERT INTO ideas (id, title, description, status, tags, emoji, client_id, shared, created_by)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [id, title, description || null, status || 'brainstorm', JSON.stringify(tags || []), emoji || '💡', finalClientId, finalShared, user.userId]
+      [id, title, description || null, status || IDEA_STATUS.BRAINSTORM, JSON.stringify(tags || []), emoji || '💡', finalClientId, finalShared, user.userId]
     )
     logActivity({ type: 'idea_created', description: `Nueva idea: ${title}`, entityType: 'idea', entityId: id })
     res.status(201).json(parseIdea(rows[0]))
@@ -83,7 +84,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 
     const { rows } = await pool.query(
       `UPDATE ideas SET title=$1, description=$2, status=$3, tags=$4, emoji=$5, shared=$6 WHERE id=$7 RETURNING *`,
-      [title, description || null, status || 'brainstorm', JSON.stringify(tags || []), emoji || '💡', finalShared, req.params.id]
+      [title, description || null, status || IDEA_STATUS.BRAINSTORM, JSON.stringify(tags || []), emoji || '💡', finalShared, req.params.id]
     )
     logActivity({ type: 'idea_updated', description: `Idea actualizada: ${title}`, entityType: 'idea', entityId: req.params.id })
     res.json(parseIdea(rows[0]))
@@ -141,43 +142,15 @@ router.post('/:id/notes', async (req: AuthRequest, res: Response) => {
       [id, 'idea', req.params.id, user.userId, user.name, content.trim()]
     )
 
-    // Create notification for the OTHER party
-    const idea = ideaRows[0]
-    if (idea.created_by && idea.created_by !== user.userId) {
-      await pool.query(
-        `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [uuid(), idea.created_by, 'note_added', 'Nueva nota en tu idea', `${user.name}: ${content.trim().substring(0, 100)}`, 'idea', req.params.id]
-      )
-      const { rows: ownerRows } = await pool.query('SELECT email, name FROM users WHERE id = $1', [idea.created_by])
-      if (ownerRows.length) {
-        sendNoteNotification({
-          to: ownerRows[0].email,
-          recipientName: ownerRows[0].name,
-          senderName: user.name,
-          itemType: 'idea',
-          itemTitle: idea.title,
-          note: content.trim(),
-        })
-      }
-    } else if (idea.shared && idea.client_id) {
-      const { rows: adminRows } = await pool.query("SELECT id, email, name FROM users WHERE role = 'admin' LIMIT 1")
-      if (adminRows.length) {
-        await pool.query(
-          `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [uuid(), adminRows[0].id, 'note_added', 'Nueva nota en idea compartida', `${user.name}: ${content.trim().substring(0, 100)}`, 'idea', req.params.id]
-        )
-        sendNoteNotification({
-          to: adminRows[0].email,
-          recipientName: adminRows[0].name,
-          senderName: user.name,
-          itemType: 'idea',
-          itemTitle: idea.title,
-          note: content.trim(),
-        })
-      }
-    }
+    // Notify the other party
+    notifyNoteAdded({
+      itemType: 'idea',
+      itemId: req.params.id,
+      item: ideaRows[0],
+      authorUserId: user.userId,
+      authorName: user.name,
+      content: content.trim(),
+    })
 
     res.status(201).json(rows[0])
   } catch {

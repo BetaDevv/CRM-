@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Check, Loader2, X, Plus, MessageSquare, Users, User, CheckSquare, Flag } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { getCalendarEvents, addClientNoteToEvent, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, type CalendarEvent } from '../../lib/api'
+import { getCalendarEvents, addClientNoteToEvent, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, type CalendarEvent } from '../../lib/api'
 import { formatDate, categoryColors } from '../../lib/utils'
 
 export default function ClientActividad() {
@@ -15,6 +15,8 @@ export default function ClientActividad() {
   const [noteSaving, setNoteSaving] = useState(false)
   const [googleConnected, setGoogleConnected] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [microsoftConnected, setMicrosoftConnected] = useState(false)
+  const [microsoftLoading, setMicrosoftLoading] = useState(false)
 
   useEffect(() => {
     // Fetch client events (full year range)
@@ -27,6 +29,9 @@ export default function ClientActividad() {
 
     // Check Google Calendar status
     getGoogleCalendarStatus().then(s => setGoogleConnected(s.connected)).catch(() => {})
+
+    // Check Microsoft Calendar status
+    getMicrosoftCalendarStatus().then(s => setMicrosoftConnected(s.connected)).catch(() => {})
   }, [])
 
   const openNoteEditor = (event: CalendarEvent) => {
@@ -62,6 +67,19 @@ export default function ClientActividad() {
     } catch {} finally { setGoogleLoading(false) }
   }
 
+  const handleMicrosoftConnect = async () => {
+    setMicrosoftLoading(true)
+    try {
+      if (microsoftConnected) {
+        await disconnectMicrosoftCalendar()
+        setMicrosoftConnected(false)
+      } else {
+        const url = await connectMicrosoftCalendar()
+        window.location.href = url
+      }
+    } catch {} finally { setMicrosoftLoading(false) }
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center py-32">
       <Loader2 size={28} className="animate-spin text-crimson-400" />
@@ -93,6 +111,29 @@ export default function ClientActividad() {
         </motion.button>
       </div>
 
+      {/* Microsoft Calendar connect */}
+      <div className="glass-card p-4 flex items-center justify-between">
+        <div>
+          <h4 className="font-semibold text-white text-sm">{t('client:activity.syncMicrosoft')}</h4>
+          <p className="text-xs text-ink-400 mt-0.5">
+            {microsoftConnected ? t('client:activity.microsoftConnected') : t('client:activity.microsoftDisconnected')}
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={handleMicrosoftConnect}
+          disabled={microsoftLoading}
+          className={`flex items-center gap-1.5 text-xs py-2 px-3 rounded-xl font-medium transition-all ${
+            microsoftConnected
+              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
+              : 'btn-primary'
+          }`}
+        >
+          {microsoftLoading ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
+          {microsoftConnected ? t('client:activity.disconnect') : t('client:activity.connectMicrosoft')}
+        </motion.button>
+      </div>
+
       {/* Activity timeline */}
       <div className="glass-card p-6">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-6">
@@ -115,7 +156,7 @@ export default function ClientActividad() {
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 transition-all ${isPast ? 'opacity-50' : 'ring-4'}`}
-                      style={{ backgroundColor: event.color || '#DC143C', ringColor: isPast ? 'transparent' : (event.color || '#DC143C') + '20' }}
+                      style={{ backgroundColor: event.color || '#DC143C' }}
                     />
                     {!isLast && <div className="w-0.5 flex-1 mt-1 bg-white/5" />}
                   </div>

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { BarChart2, Linkedin, Users, Globe, Play, Loader2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../../store/useAuthStore'
-import { useStore } from '../../store/useStore'
 import { api } from '../../lib/api'
 
 function formatShort(n: number): string {
@@ -15,11 +13,8 @@ function formatShort(n: number): string {
 export default function ClientMetricas() {
   const { t } = useTranslation(['client', 'common'])
   const { user } = useAuthStore()
-  const { clients } = useStore()
   const [metrics, setMetrics] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-
-  const client = clients.find(c => c.id === user?.clientId)
 
   useEffect(() => {
     if (user?.clientId) {

@@ -225,6 +225,10 @@ export async function updatePostDate(id: string, scheduledDate: string): Promise
   return mapPost(data)
 }
 
+export async function deletePost(id: string): Promise<void> {
+  await api.delete(`/posts/${id}`)
+}
+
 // --- Prospects API ---
 
 export async function convertProspect(id: string): Promise<any> {
@@ -355,6 +359,7 @@ export interface CalendarEvent {
   todoId: string | null
   milestoneId: string | null
   googleEventId: string | null
+  microsoftEventId: string | null
   isShared: boolean
   clientNote: string | null
   milestone: { title: string; category: string; date: string } | null
@@ -375,6 +380,7 @@ function mapCalendarEvent(raw: any): CalendarEvent {
     todoId: raw.todo_id ?? raw.todoId ?? null,
     milestoneId: raw.milestone_id ?? raw.milestoneId ?? null,
     googleEventId: raw.google_event_id ?? raw.googleEventId ?? null,
+    microsoftEventId: raw.microsoft_event_id ?? raw.microsoftEventId ?? null,
     isShared: Boolean(raw.is_shared ?? raw.isShared),
     clientNote: raw.client_note ?? raw.clientNote ?? null,
     milestone: raw.milestone ?? null,
@@ -465,6 +471,25 @@ export async function disconnectGoogleCalendar(): Promise<void> {
 
 export async function syncGoogleCalendar(): Promise<void> {
   await api.post('/calendar/google/sync')
+}
+
+// Microsoft Calendar
+export async function getMicrosoftCalendarStatus(): Promise<{ connected: boolean }> {
+  const { data } = await api.get('/calendar/microsoft/status')
+  return data
+}
+
+export async function connectMicrosoftCalendar(): Promise<string> {
+  const { data } = await api.get('/calendar/microsoft/connect')
+  return data.url
+}
+
+export async function disconnectMicrosoftCalendar(): Promise<void> {
+  await api.delete('/calendar/microsoft/disconnect')
+}
+
+export async function syncMicrosoftCalendar(): Promise<void> {
+  await api.post('/calendar/microsoft/sync')
 }
 
 // --- Templates API ---

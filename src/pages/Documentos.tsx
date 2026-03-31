@@ -382,6 +382,7 @@ function UploadModal({
   onClose: () => void
   onUploaded: () => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [clientId, setClientId] = useState('')
   const [category, setCategory] = useState('general')

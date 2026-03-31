@@ -46,7 +46,11 @@
     "addNote": "Notiz hinzuf\u00fcgen",
     "noteForEvent": "Notiz f\u00fcr Termin",
     "notePlaceholder": "Schreibe deine Notiz hier...",
-    "saveNote": "Notiz speichern"
+    "saveNote": "Notiz speichern",
+    "syncMicrosoft": "Microsoft Kalender",
+    "connectMicrosoft": "Outlook verbinden",
+    "microsoftConnected": "Outlook-Kalender verbunden",
+    "microsoftDisconnected": "Synchronisiere deine Outlook-Termine"
   },
   "metrics": {
     "noMetrics": "Noch keine Metriken verf\u00fcgbar",

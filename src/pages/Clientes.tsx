@@ -97,7 +97,7 @@ function ClientCard({
         )}
         <div className="flex items-center gap-2 text-xs" style={{ color: 'rgb(var(--ink-300))' }}>
           <Calendar size={12} style={{ color: 'rgb(var(--ink-400))' }} />
-          <span>{t('admin:clients.since', { date: formatDate(client.startDate || client.start_date) })}</span>
+          <span>{t('admin:clients.since', { date: formatDate(client.startDate || client.start_date || '') })}</span>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ function ClientModal({
             { key: 'description', label: t('admin:clients.form.description'),            type: 'text' },
           ].map(f => (
             <input key={f.key} type={f.type} placeholder={f.label}
-              value={(form as Record<string, string>)[f.key]}
+              value={(form as unknown as Record<string, string>)[f.key]}
               onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
               className="input-dark text-sm" />
           ))}
@@ -590,7 +590,7 @@ export default function Clientes() {
                           { icon: Mail,        label: t('admin:clients.drawer.email'),              value: selected.email },
                           { icon: Phone,       label: t('admin:clients.drawer.phone'),           value: selected.phone || 'N/A' },
                           { icon: Briefcase,   label: t('admin:clients.drawer.industry'),          value: selected.industry },
-                          { icon: Calendar,    label: t('admin:clients.drawer.clientSince'),      value: formatDate(selected.startDate || selected.start_date) },
+                          { icon: Calendar,    label: t('admin:clients.drawer.clientSince'),      value: formatDate(selected.startDate || selected.start_date || '') },
                           { icon: DollarSign,  label: t('admin:clients.drawer.monthlyRetention'),  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
                         ].map(item => (
                           <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl"

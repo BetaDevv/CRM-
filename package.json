@@ -9,7 +9,9 @@
     "dev:all": "concurrently -n \"frontend,backend\" -c \"cyan,magenta\" \"npm run dev\" \"npm run dev:backend\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "cd backend && npm test",
+    "test:watch": "cd backend && npm run test:watch"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

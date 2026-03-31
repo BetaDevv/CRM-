@@ -6,6 +6,7 @@ import { logActivity } from '../services/activityLogger'
 import { sendEventInvite } from '../services/emailService'
 import { createNotification } from '../services/notificationService'
 import * as googleCal from '../services/googleCalendarService'
+import * as microsoftCal from '../services/microsoftCalendarService'
 
 const router = Router()
 
@@ -42,6 +43,48 @@ router.get('/oauth/callback', async (req, res: Response) => {
   } catch (err) {
     console.error('Error in Google OAuth callback:', err)
     res.redirect(`${FRONTEND_URL}/calendario?google=error&message=token_exchange_failed`)
+  }
+})
+
+// ─── GET /microsoft/callback — Microsoft OAuth callback (NO auth required) ──
+router.get('/microsoft/callback', async (req, res: Response) => {
+  console.log('[MicrosoftOAuth] Callback received, query:', req.query)
+  const { code, state: userId, error, error_description } = req.query as Record<string, string>
+  const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173'
+
+  if (error) {
+    console.error('[MicrosoftOAuth] Error from Microsoft:', error, error_description)
+    res.redirect(`${FRONTEND_URL}/calendario?microsoft=error&message=${encodeURIComponent(error_description || error)}`)
+    return
+  }
+
+  if (!code || !userId) {
+    console.error('[MicrosoftOAuth] Missing code or userId:', { code: !!code, userId })
+    res.redirect(`${FRONTEND_URL}/calendario?microsoft=error&message=missing_params`)
+    return
+  }
+
+  try {
+    console.log('[MicrosoftOAuth] Exchanging code for tokens...')
+    const tokens = await microsoftCal.exchangeCode(code)
+    console.log('[MicrosoftOAuth] Tokens received, refresh_token:', !!tokens.refresh_token)
+    const id = uuid()
+
+    await pool.query(
+      `INSERT INTO microsoft_calendar_connections (id, user_id, access_token, refresh_token, token_expires_at)
+       VALUES ($1,$2,$3,$4,$5)
+       ON CONFLICT (user_id) DO UPDATE SET
+         access_token = EXCLUDED.access_token,
+         refresh_token = EXCLUDED.refresh_token,
+         token_expires_at = EXCLUDED.token_expires_at`,
+      [id, userId, tokens.access_token, tokens.refresh_token, new Date(tokens.expiry_date).toISOString()]
+    )
+
+    console.log('[MicrosoftOAuth] Connection saved for user:', userId)
+    res.redirect(`${FRONTEND_URL}/calendario?microsoft=connected`)
+  } catch (err) {
+    console.error('[MicrosoftOAuth] Error exchanging token:', err)
+    res.redirect(`${FRONTEND_URL}/calendario?microsoft=error&message=token_exchange_failed`)
   }
 })
 
@@ -151,6 +194,29 @@ router.post('/events', async (req: AuthRequest, res: Response) => {
       }
     }).catch(err => console.error('[GoogleCalendar] Error:', err))
 
+    // Create in Microsoft Calendar (non-blocking)
+    console.log('[MicrosoftCalendar] Checking connection for user:', userId)
+    microsoftCal.isConnected(userId).then(async (connected) => {
+      console.log('[MicrosoftCalendar] isConnected:', connected)
+      if (!connected) return
+      const attendeeEmails = participantList.map(p => p.email)
+      console.log('[MicrosoftCalendar] Creating event:', { title, start_time, end_time })
+      const microsoftEventId = await microsoftCal.createMicrosoftEvent(userId, {
+        title,
+        description,
+        startTime: start_time,
+        endTime: end_time,
+        attendees: attendeeEmails.length > 0 ? attendeeEmails : undefined,
+      })
+      console.log('[MicrosoftCalendar] Result:', microsoftEventId)
+      if (microsoftEventId) {
+        await pool.query('UPDATE events SET microsoft_event_id = $1 WHERE id = $2', [microsoftEventId, id])
+        console.log('[MicrosoftCalendar] Event ID saved to DB')
+      } else {
+        console.warn('[MicrosoftCalendar] createMicrosoftEvent returned null — check service logs above')
+      }
+    }).catch(err => console.error('[MicrosoftCalendar] Error:', err))
+
     logActivity({ type: 'event_created', description: `Nuevo evento: ${title}`, entityType: 'event', entityId: id, actor: req.user!.name })
 
     res.status(201).json({ ...event, participants: participantList })
@@ -202,6 +268,13 @@ router.put('/events/:id', async (req: AuthRequest, res: Response) => {
       }).catch(err => console.error('[GoogleCalendar] Update error:', err))
     }
 
+    // Update Microsoft Calendar event (non-blocking)
+    if (existing[0].microsoft_event_id) {
+      microsoftCal.updateMicrosoftEvent(userId, existing[0].microsoft_event_id, {
+        title, description, startTime: start_time, endTime: end_time,
+      }).catch(err => console.error('[MicrosoftCalendar] Update error:', err))
+    }
+
     logActivity({ type: 'event_updated', description: `Evento actualizado: ${rows[0].title}`, entityType: 'event', entityId: eventId, actor: req.user!.name })
 
     res.json(rows[0])
@@ -227,6 +300,12 @@ router.delete('/events/:id', async (req: AuthRequest, res: Response) => {
     if (existing[0].google_event_id) {
       googleCal.deleteGoogleEvent(userId, existing[0].google_event_id)
         .catch(err => console.error('[GoogleCalendar] Delete error:', err))
+    }
+
+    // Delete from Microsoft Calendar (non-blocking)
+    if (existing[0].microsoft_event_id) {
+      microsoftCal.deleteMicrosoftEvent(userId, existing[0].microsoft_event_id)
+        .catch(err => console.error('[MicrosoftCalendar] Delete error:', err))
     }
 
     await pool.query('DELETE FROM events WHERE id = $1', [eventId])
@@ -444,6 +523,104 @@ router.delete('/google/disconnect', async (req: AuthRequest, res: Response) => {
     res.json({ ok: true })
   } catch (err) {
     console.error('Error disconnecting Google:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── GET /microsoft/connect — get Microsoft OAuth URL ───────────────────────
+router.get('/microsoft/connect', async (req: AuthRequest, res: Response) => {
+  try {
+    const url = microsoftCal.getAuthUrl(req.user!.userId)
+    res.json({ url })
+  } catch (err) {
+    console.error('Error getting Microsoft auth URL:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── POST /microsoft/sync — sync events from Microsoft Calendar ─────────────
+router.post('/microsoft/sync', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user!.userId
+    const msEvents = await microsoftCal.syncFromMicrosoft(userId)
+
+    let imported = 0
+    for (const msEvent of msEvents) {
+      if (!msEvent.id || !msEvent.subject) continue
+
+      // Check if already imported
+      const { rows: existing } = await pool.query(
+        'SELECT id FROM events WHERE microsoft_event_id = $1 AND creator_id = $2',
+        [msEvent.id, userId]
+      )
+
+      const startTime = msEvent.start?.dateTime || null
+      const endTime = msEvent.end?.dateTime || null
+
+      if (existing.length > 0) {
+        // Update existing
+        await pool.query(
+          `UPDATE events SET
+            title = $1, description = $2,
+            start_time = $3, end_time = $4,
+            updated_at = NOW()
+          WHERE microsoft_event_id = $5 AND creator_id = $6`,
+          [
+            msEvent.subject,
+            msEvent.bodyPreview || null,
+            startTime,
+            endTime,
+            msEvent.id,
+            userId,
+          ]
+        )
+      } else {
+        // Insert new
+        const id = uuid()
+        const allDay = msEvent.isAllDay || false
+        await pool.query(
+          `INSERT INTO events (id, title, description, start_time, end_time, all_day, creator_id, microsoft_event_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [
+            id,
+            msEvent.subject,
+            msEvent.bodyPreview || null,
+            startTime,
+            endTime,
+            allDay,
+            userId,
+            msEvent.id,
+          ]
+        )
+        imported++
+      }
+    }
+
+    res.json({ ok: true, imported, total: msEvents.length })
+  } catch (err) {
+    console.error('Error syncing from Microsoft:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── GET /microsoft/status — check Microsoft Calendar connection ────────────
+router.get('/microsoft/status', async (req: AuthRequest, res: Response) => {
+  try {
+    const connected = await microsoftCal.isConnected(req.user!.userId)
+    res.json({ connected })
+  } catch (err) {
+    console.error('Error checking Microsoft status:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── DELETE /microsoft/disconnect — remove Microsoft Calendar connection ─────
+router.delete('/microsoft/disconnect', async (req: AuthRequest, res: Response) => {
+  try {
+    await pool.query('DELETE FROM microsoft_calendar_connections WHERE user_id = $1', [req.user!.userId])
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Error disconnecting Microsoft:', err)
     res.status(500).json({ error: 'Error interno del servidor' })
   }
 })

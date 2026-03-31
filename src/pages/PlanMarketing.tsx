@@ -390,7 +390,7 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
           <input type="text" placeholder="Descripción" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
-            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="input-dark text-sm">
+            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
               {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
             </select>
           </div>
@@ -444,7 +444,7 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
           <input type="text" placeholder="Descripción" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
-            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} className="input-dark text-sm">
+            <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
               {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
             </select>
           </div>

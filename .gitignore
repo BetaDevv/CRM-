@@ -12,7 +12,6 @@ dist-ssr
 .env.*.local
 backend/.env
 !backend/.env.example
-
 # Uploads (user-generated content)
 uploads/
 backend/uploads/

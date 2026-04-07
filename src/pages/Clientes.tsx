@@ -16,6 +16,7 @@ import {
 import type { Client } from '../types'
 import type { ClientNote, ActivityLog } from '../lib/api'
 import { useTranslation } from 'react-i18next'
+import { useStore } from '../store/useStore'
 import T from '../components/TranslatedText'
 
 const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']

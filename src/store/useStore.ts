@@ -49,48 +49,6 @@ interface CRMState {
   toggleSidebar: () => void
 }
 
-const sampleClients: Client[] = [
-  {
-    id: 'c1',
-    company: 'TechNova Solutions',
-    contact: 'Alejandro Ruiz',
-    email: 'alejandro@technova.com',
-    phone: '+57 300 123 4567',
-    industry: 'Tecnología',
-    monthlyFee: 2500,
-    services: ['Social Media', 'SEO', 'Pauta Digital'],
-    status: 'active',
-    startDate: '2024-01-15',
-    color: '#DC143C',
-    description: 'Empresa líder en soluciones cloud para PYMES',
-  },
-  {
-    id: 'c2',
-    company: 'Bloom Wellness',
-    contact: 'Valentina Torres',
-    email: 'valen@bloomwellness.co',
-    industry: 'Salud & Bienestar',
-    monthlyFee: 1800,
-    services: ['Contenido', 'Instagram', 'Email Marketing'],
-    status: 'active',
-    startDate: '2024-03-01',
-    color: '#7C3AED',
-    description: 'Centro de bienestar holístico premium',
-  },
-  {
-    id: 'c3',
-    company: 'Urban Bites',
-    contact: 'Sebastián Mora',
-    email: 'sebas@urbanbites.co',
-    industry: 'Gastronomía',
-    monthlyFee: 1200,
-    services: ['Social Media', 'Fotografía'],
-    status: 'active',
-    startDate: '2024-06-10',
-    color: '#F59E0B',
-    description: 'Restaurante urbano con cocina fusión',
-  },
-]
 
 const sampleProspects: Prospect[] = [
   {

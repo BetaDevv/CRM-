@@ -59,7 +59,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
 
 async function flushBatch(
   set: (fn: (s: TranslationState) => Partial<TranslationState>) => void,
-  get: () => TranslationState
+  _get: () => TranslationState
 ) {
   const batch = [...batchQueue]
   batchQueue = []

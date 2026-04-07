@@ -13,23 +13,41 @@ import { ideaStatusConfig } from '../lib/utils'
 import type { Idea, IdeaStatus } from '../types'
 import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
-const statusColumns: { key: IdeaStatus; label: string; icon: ReactNode }[] = [
-  { key: 'brainstorm',  label: 'Brainstorm',    icon: <Zap size={18} /> },
-  { key: 'developing',  label: 'Desarrollando', icon: <Wrench size={18} /> },
-  { key: 'ready',       label: 'Lista',         icon: <CheckCircle size={18} /> },
-  { key: 'implemented', label: 'Implementada',  icon: <Rocket size={18} /> },
+const statusColumnKeys: { key: IdeaStatus; labelKey: string; icon: ReactNode }[] = [
+  { key: 'brainstorm',  labelKey: 'ideas.columns.brainstorm',    icon: <Zap size={18} /> },
+  { key: 'developing',  labelKey: 'ideas.columns.developing', icon: <Wrench size={18} /> },
+  { key: 'ready',       labelKey: 'ideas.columns.ready',         icon: <CheckCircle size={18} /> },
+  { key: 'implemented', labelKey: 'ideas.columns.implemented',  icon: <Rocket size={18} /> },
 ]
 
-const commonTags = ['LinkedIn', 'Instagram', 'Video', 'Diseño', 'SEO', 'Email', 'Contenido', 'Estrategia', 'Branding', 'Campaña']
+const commonTagKeys = ['linkedin', 'instagram', 'video', 'design', 'seo', 'email', 'content', 'strategy', 'branding', 'campaign'] as const
 
-function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartEdit }: {
+function useStatusColumns() {
+  const { t } = useTranslation(['admin'])
+  return statusColumnKeys.map(col => ({
+    ...col,
+    label: t(`admin:${col.labelKey}`),
+  }))
+}
+
+function useCommonTags() {
+  const { t } = useTranslation(['admin'])
+  return commonTagKeys.map(key => ({
+    key,
+    label: t(`admin:ideas.tags.${key}`),
+  }))
+}
+
+function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartEdit, statusColumns }: {
   idea: Idea
   onUpdate: (id: string, data: Partial<Idea>) => void
   onDelete: () => void
   clientLabel?: string
   onOpenNotes?: (idea: Idea) => void
   onStartEdit?: (idea: Idea) => void
+  statusColumns: { key: IdeaStatus; label: string; icon: ReactNode }[]
 }) {
   const { t } = useTranslation(['admin', 'common'])
   const cfg = ideaStatusConfig[idea.status]
@@ -62,11 +80,11 @@ function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartE
           </button>
         </div>
       </div>
-      <h4 className="font-semibold text-white text-sm mb-1.5 leading-snug">{idea.title}</h4>
-      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3">{idea.description}</p>
+      <h4 className="font-semibold text-white text-sm mb-1.5 leading-snug"><T text={idea.title} /></h4>
+      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3"><T text={idea.description} /></p>
       <div className="flex flex-wrap gap-1 mb-3">
-        {idea.tags.map(t => (
-          <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-200">{t}</span>
+        {idea.tags.map(tag => (
+          <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-200"><T text={tag} /></span>
         ))}
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-white/5">
@@ -126,6 +144,8 @@ function DraggableIdeaCard({ idea, children }: { idea: Idea; children: ReactNode
 
 export default function Ideas() {
   const { t } = useTranslation(['admin', 'common'])
+  const statusColumns = useStatusColumns()
+  const commonTags = useCommonTags()
   const { clients } = useStore()
   const { user } = useAuthStore()
   const [ideas, setIdeas] = useState<Idea[]>([])
@@ -360,7 +380,7 @@ export default function Ideas() {
                 <DroppableColumn id={col.key}>
                   {items.map(idea => (
                     <DraggableIdeaCard key={idea.id} idea={idea}>
-                      <IdeaCard idea={idea} onUpdate={handleUpdate} onDelete={() => handleDeleteRequest(idea)} clientLabel={getClientLabel(idea)} onOpenNotes={openNotes} onStartEdit={openEdit} />
+                      <IdeaCard idea={idea} onUpdate={handleUpdate} onDelete={() => handleDeleteRequest(idea)} clientLabel={getClientLabel(idea)} onOpenNotes={openNotes} onStartEdit={openEdit} statusColumns={statusColumns} />
                     </DraggableIdeaCard>
                   ))}
                   {items.length === 0 && (
@@ -377,7 +397,7 @@ export default function Ideas() {
         <DragOverlay>
           {activeIdea ? (
             <div className="opacity-90 pointer-events-none">
-              <IdeaCard idea={activeIdea} onUpdate={() => {}} onDelete={() => {}} />
+              <IdeaCard idea={activeIdea} onUpdate={() => {}} onDelete={() => {}} statusColumns={statusColumns} />
             </div>
           ) : null}
         </DragOverlay>
@@ -437,17 +457,17 @@ export default function Ideas() {
                 <div>
                   <p className="text-xs text-ink-300 mb-2">{t('admin:ideas.form.tags')}</p>
                   <div className="flex flex-wrap gap-2">
-                    {commonTags.map(t => (
+                    {commonTags.map(tag => (
                       <button
-                        key={t}
-                        onClick={() => toggleTag(t)}
+                        key={tag.key}
+                        onClick={() => toggleTag(tag.label)}
                         className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
-                          form.tags.includes(t)
+                          form.tags.includes(tag.label)
                             ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300'
                             : 'border-white/10 text-ink-300 hover:border-white/20'
                         }`}
                       >
-                        {t}
+                        {tag.label}
                       </button>
                     ))}
                   </div>
@@ -500,13 +520,13 @@ export default function Ideas() {
                     onClick={() => setConfirmDelete(null)}
                     className="flex-1 px-4 py-2 bg-ink-700 text-ink-300 rounded-xl hover:bg-ink-600 transition-colors"
                   >
-                    Cancelar
+                    {t('common:common.cancel')}
                   </button>
                   <button
                     onClick={() => { handleDelete(confirmDelete.id); setConfirmDelete(null) }}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors"
                   >
-                    Eliminar
+                    {t('common:common.delete')}
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import { Plus, X, Check, Trash2, Calendar, Loader2, Share2, Users, MessageSquare
 import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg } from '../../lib/api'
 import type { ItemNote } from '../../lib/api'
@@ -44,7 +45,7 @@ function TodoCardContent({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className={`text-sm font-medium ${todo.status === 'done' ? 'line-through text-ink-400' : 'text-white'}`}>
-              {todo.title}
+              <T text={todo.title} />
             </p>
             {!isOwn && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 flex items-center gap-1 flex-shrink-0">
@@ -53,13 +54,13 @@ function TodoCardContent({
             )}
           </div>
           {todo.description && (
-            <p className="text-xs text-ink-400 mt-0.5 line-clamp-2">{todo.description}</p>
+            <p className="text-xs text-ink-400 mt-0.5 line-clamp-2"><T text={todo.description} /></p>
           )}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
               {cfg.label}
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{todo.category}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300"><T text={todo.category} /></span>
             {todo.startTime && (
               <span className="text-xs text-ink-400 flex items-center gap-1">
                 <Clock size={10} />

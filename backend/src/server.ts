@@ -27,6 +27,7 @@ import templateRoutes from './routes/templates'
 import documentRoutes from './routes/documents'
 import apiKeyRoutes    from './routes/apiKeys'
 import publicApiRoutes from './routes/publicApi'
+import translateRoutes from './routes/translate'
 
 import { v4 as uuid } from 'uuid'
 
@@ -62,6 +63,7 @@ app.use('/api/templates', templateRoutes)
 app.use('/api/documents', documentRoutes)
 app.use('/api/api-keys',  apiKeyRoutes)
 app.use('/api/v1',         publicApiRoutes)
+app.use('/api/translate',  translateRoutes)
 
 // ─── OAuth Initiation ──────────────────────────────────────────────────────────
 // GET /api/oauth/:platform/connect/:clientId — redirige al proveedor OAuth

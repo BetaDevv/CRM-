@@ -10,14 +10,18 @@ import { categoryColors, formatDate } from '../lib/utils'
 import { api } from '../lib/api'
 import type { MarketingMilestone } from '../types'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
-const categoryLabels: Record<string, string> = {
-  strategy:  'Estrategia',
-  content:   'Contenido',
-  ads:       'Pauta',
-  seo:       'SEO',
-  analytics: 'Analytics',
-  design:    'Diseño',
+function useCategoryLabels() {
+  const { t } = useTranslation(['admin'])
+  return {
+    strategy:  t('admin:plan.categories.strategy'),
+    content:   t('admin:plan.categories.content'),
+    ads:       t('admin:plan.categories.ads'),
+    seo:       t('admin:plan.categories.seo'),
+    analytics: t('admin:plan.categories.analytics'),
+    design:    t('admin:plan.categories.design'),
+  } as Record<string, string>
 }
 
 function CategoryIcon({ category, size = 14 }: { category: string; size?: number }) {
@@ -37,6 +41,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
   milestone: MarketingMilestone; index: number; total: number
   onToggle: () => void; onDelete: () => void; onEdit: () => void; isAdmin: boolean
 }) {
+  const categoryLabels = useCategoryLabels()
   const color = categoryColors[milestone.category] || '#DC143C'
   const isLast = index === total - 1
 
@@ -83,7 +88,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
                 {categoryLabels[milestone.category]}
               </span>
               <h4 className={`font-semibold text-sm ${milestone.completed ? 'line-through text-ink-400' : 'text-white'}`}>
-                {milestone.title}
+                <T text={milestone.title} />
               </h4>
             </div>
             <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -108,7 +113,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
               )}
             </div>
           </div>
-          <p className="text-xs text-ink-300 leading-relaxed">{milestone.description}</p>
+          <p className="text-xs text-ink-300 leading-relaxed"><T text={milestone.description} /></p>
         </motion.div>
       </motion.div>
     </div>
@@ -124,6 +129,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
   clients: any[]; onClose: () => void; onCreated: (plan: any) => void
 }) {
   const { t } = useTranslation(['admin', 'common'])
+  const categoryLabels = useCategoryLabels()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -148,7 +154,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
     setKpis(p => p.map((k, idx) => idx === i ? { ...k, [field]: val } : k))
 
   const handleCreate = async () => {
-    if (!clientId || !title || !startDate || !endDate) { setError('Completa los campos requeridos'); return }
+    if (!clientId || !title || !startDate || !endDate) { setError(t('admin:plan.newPlanModal.requiredFields')); return }
     setLoading(true); setError('')
     try {
       const { data } = await api.post('/plans', {
@@ -158,7 +164,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
       })
       onCreated(data); onClose()
     } catch (e: any) {
-      setError(e.response?.data?.error || 'Error al crear el plan')
+      setError(e.response?.data?.error || t('admin:plan.newPlanModal.errorCreating'))
     } finally { setLoading(false) }
   }
 
@@ -173,13 +179,13 @@ function NewPlanModal({ clients, onClose, onCreated }: {
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div>
             <h3 className="font-bold text-white text-xl">{t('admin:plan.newPlanModal.title')}</h3>
-            <p className="text-xs text-ink-400 mt-0.5">Paso {step} de 3</p>
+            <p className="text-xs text-ink-400 mt-0.5">{t('admin:plan.newPlanModal.step', { step })}</p>
           </div>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={20} /></button>
         </div>
         <div className="px-6 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">
-            {[{ n: 1, l: 'Información' }, { n: 2, l: 'Hitos' }, { n: 3, l: 'KPIs' }].map(s => (
+            {[{ n: 1, l: t('admin:plan.newPlanModal.steps.info') }, { n: 2, l: t('admin:plan.newPlanModal.steps.milestones') }, { n: 3, l: t('admin:plan.newPlanModal.steps.kpis') }].map(s => (
               <div key={s.n} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? 'bg-crimson-700 border-crimson-700 text-white' : 'border-ink-600 text-ink-500'}`}>
                   {step > s.n ? <Check size={13} /> : s.n}
@@ -195,26 +201,26 @@ function NewPlanModal({ clients, onClose, onCreated }: {
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-ink-300 mb-1.5">Cliente *</label>
+                <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.clientLabel')}</label>
                 <select value={clientId} onChange={e => setClientId(e.target.value)} className="input-dark text-sm">
                   {clients.map(c => <option key={c.id} value={c.id} className="bg-ink-800">{c.company}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-300 mb-1.5">Título del Plan *</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ej: Plan Q3 2025 — TechNova" className="input-dark text-sm" />
+                <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.planTitle')}</label>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder={t('admin:plan.newPlanModal.planTitlePlaceholder')} className="input-dark text-sm" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-300 mb-1.5">Objetivo Principal</label>
-                <textarea value={objective} onChange={e => setObjective(e.target.value)} rows={3} placeholder="¿Qué queremos lograr con este plan?" className="input-dark text-sm resize-none" />
+                <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.mainObjective')}</label>
+                <textarea value={objective} onChange={e => setObjective(e.target.value)} rows={3} placeholder={t('admin:plan.newPlanModal.objectivePlaceholder')} className="input-dark text-sm resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-ink-300 mb-1.5">Fecha de inicio *</label>
+                  <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.startDate')}</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-dark text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-ink-300 mb-1.5">Fecha de cierre *</label>
+                  <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.endDate')}</label>
                   <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-dark text-sm" />
                 </div>
               </div>
@@ -223,19 +229,19 @@ function NewPlanModal({ clients, onClose, onCreated }: {
 
           {step === 2 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-              <p className="text-sm text-ink-300">Define los hitos clave del plan.</p>
+              <p className="text-sm text-ink-300">{t('admin:plan.newPlanModal.defineMilestones')}</p>
               {milestones.map((m, i) => (
                 <div key={i} className="p-4 bg-ink-800/50 rounded-xl border border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ink-300">Hito {i + 1}</span>
+                    <span className="text-xs font-semibold text-ink-300">{t('admin:plan.newPlanModal.milestoneNumber', { number: i + 1 })}</span>
                     {milestones.length > 1 && (
                       <button onClick={() => removeMilestone(i)} className="text-ink-500 hover:text-red-400 transition-colors">
                         <Trash2 size={13} />
                       </button>
                     )}
                   </div>
-                  <input type="text" value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)} placeholder="Título del hito *" className="input-dark text-sm" />
-                  <input type="text" value={m.description} onChange={e => updateMilestone(i, 'description', e.target.value)} placeholder="Descripción" className="input-dark text-sm" />
+                  <input type="text" value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)} placeholder={t('admin:plan.newPlanModal.milestoneTitlePlaceholder')} className="input-dark text-sm" />
+                  <input type="text" value={m.description} onChange={e => updateMilestone(i, 'description', e.target.value)} placeholder={t('admin:plan.newPlanModal.milestoneDescPlaceholder')} className="input-dark text-sm" />
                   <div className="grid grid-cols-2 gap-3">
                     <input type="date" value={m.date} onChange={e => updateMilestone(i, 'date', e.target.value)} className="input-dark text-sm" />
                     <select value={m.category} onChange={e => updateMilestone(i, 'category', e.target.value)} className="input-dark text-sm">
@@ -252,26 +258,26 @@ function NewPlanModal({ clients, onClose, onCreated }: {
 
           {step === 3 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-              <p className="text-sm text-ink-300">Define los indicadores clave de éxito del plan.</p>
+              <p className="text-sm text-ink-300">{t('admin:plan.newPlanModal.defineKpis')}</p>
               {kpis.map((k, i) => (
                 <div key={i} className="p-4 bg-ink-800/50 rounded-xl border border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-ink-300">KPI {i + 1}</span>
+                    <span className="text-xs font-semibold text-ink-300">{t('admin:plan.newPlanModal.kpiNumber', { number: i + 1 })}</span>
                     {kpis.length > 1 && (
                       <button onClick={() => removeKpi(i)} className="text-ink-500 hover:text-red-400 transition-colors">
                         <Trash2 size={13} />
                       </button>
                     )}
                   </div>
-                  <input type="text" value={k.label} onChange={e => updateKpi(i, 'label', e.target.value)} placeholder="Ej: Alcance mensual" className="input-dark text-sm" />
+                  <input type="text" value={k.label} onChange={e => updateKpi(i, 'label', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiLabelPlaceholder')} className="input-dark text-sm" />
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="text" value={k.target} onChange={e => updateKpi(i, 'target', e.target.value)} placeholder="Objetivo (Ej: 50,000)" className="input-dark text-sm" />
-                    <input type="text" value={k.current_value} onChange={e => updateKpi(i, 'current_value', e.target.value)} placeholder="Valor actual (opcional)" className="input-dark text-sm" />
+                    <input type="text" value={k.target} onChange={e => updateKpi(i, 'target', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiTargetPlaceholder')} className="input-dark text-sm" />
+                    <input type="text" value={k.current_value} onChange={e => updateKpi(i, 'current_value', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiCurrentPlaceholder')} className="input-dark text-sm" />
                   </div>
                 </div>
               ))}
               <button onClick={addKpi} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all flex items-center justify-center gap-2">
-                <Plus size={14} /> Agregar KPI
+                <Plus size={14} /> {t('admin:plan.newPlanModal.addKpi')}
               </button>
             </motion.div>
           )}
@@ -283,22 +289,22 @@ function NewPlanModal({ clients, onClose, onCreated }: {
 
         <div className="flex items-center justify-between p-6 border-t border-white/5">
           <button onClick={step > 1 ? () => setStep(s => s - 1) : onClose} className="btn-ghost">
-            {step > 1 ? 'Anterior' : 'Cancelar'}
+            {step > 1 ? t('admin:plan.newPlanModal.previous') : t('common:common.cancel')}
           </button>
           <div className="flex gap-3">
             {step < 3 ? (
               <button
                 onClick={() => {
-                  if (step === 1 && (!clientId || !title || !startDate || !endDate)) { setError('Completa los campos requeridos'); return }
+                  if (step === 1 && (!clientId || !title || !startDate || !endDate)) { setError(t('admin:plan.newPlanModal.requiredFields')); return }
                   setError(''); setStep(s => s + 1)
                 }}
                 className="btn-primary"
               >
-                Siguiente <ChevronRight size={15} />
+                {t('admin:plan.newPlanModal.next')} <ChevronRight size={15} />
               </button>
             ) : (
               <button onClick={handleCreate} disabled={loading} className="btn-primary">
-                {loading ? <><Loader2 size={15} className="animate-spin" /> Creando...</> : <><Zap size={15} /> Crear Plan</>}
+                {loading ? <><Loader2 size={15} className="animate-spin" /> {t('admin:plan.newPlanModal.creating')}</> : <><Zap size={15} /> {t('admin:plan.newPlanModal.createPlan')}</>}
               </button>
             )}
           </div>
@@ -339,17 +345,17 @@ function EditPlanModal({ plan, onClose, onSaved }: {
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
-          <input type="text" placeholder="Título *" value={title} onChange={e => setTitle(e.target.value)} className="input-dark text-sm" />
-          <textarea placeholder="Objetivo principal" value={objective} onChange={e => setObjective(e.target.value)} rows={3} className="input-dark text-sm resize-none" />
+          <input type="text" placeholder={t('admin:plan.editPlanModal.titlePlaceholder')} value={title} onChange={e => setTitle(e.target.value)} className="input-dark text-sm" />
+          <textarea placeholder={t('admin:plan.editPlanModal.objectivePlaceholder')} value={objective} onChange={e => setObjective(e.target.value)} rows={3} className="input-dark text-sm resize-none" />
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-dark text-sm" />
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-dark text-sm" />
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : 'Guardar cambios'}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : t('common:common.saveChanges')}
           </button>
         </div>
       </motion.div>
@@ -361,6 +367,7 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
   planId: string; onClose: () => void; onAdded: (m: any) => void
 }) {
   const { t } = useTranslation(['admin', 'common'])
+  const categoryLabels = useCategoryLabels()
   const categories = ['strategy', 'content', 'ads', 'seo', 'analytics', 'design']
   const [form, setForm] = useState({ title: '', description: '', date: '', category: 'strategy' })
   const [loading, setLoading] = useState(false)
@@ -386,8 +393,8 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
-          <input type="text" placeholder="Título *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
-          <input type="text" placeholder="Descripción" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.addMilestoneModal.titlePlaceholder')} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.addMilestoneModal.descPlaceholder')} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
             <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
@@ -396,9 +403,9 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : <><Plus size={14} /> Agregar</>}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : <><Plus size={14} /> {t('common:common.add')}</>}
           </button>
         </div>
       </motion.div>
@@ -410,6 +417,7 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
   planId: string; milestone: MarketingMilestone; onClose: () => void; onSaved: (m: any) => void
 }) {
   const { t } = useTranslation(['admin', 'common'])
+  const categoryLabels = useCategoryLabels()
   const categories = ['strategy', 'content', 'ads', 'seo', 'analytics', 'design']
   const [form, setForm] = useState({
     title: milestone.title || '',
@@ -440,8 +448,8 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
-          <input type="text" placeholder="Título *" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
-          <input type="text" placeholder="Descripción" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.addMilestoneModal.titlePlaceholder')} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.addMilestoneModal.descPlaceholder')} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
           <div className="grid grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
             <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
@@ -450,9 +458,9 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : 'Guardar cambios'}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : t('common:common.saveChanges')}
           </button>
         </div>
       </motion.div>
@@ -477,7 +485,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
   }
 
   const handleDelete = async () => {
-    if (!confirm('¿Eliminar este KPI?')) return
+    if (!confirm(t('admin:plan.deleteKpiConfirm'))) return
     await api.delete(`/plans/${planId}/kpis/${kpi.id}`)
     onDeleted(kpi.id); onClose()
   }
@@ -494,17 +502,17 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
         <div className="space-y-3">
-          <input type="text" placeholder="Etiqueta *" value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} className="input-dark text-sm" />
-          <input type="text" placeholder="Objetivo (Ej: 50,000)" value={form.target} onChange={e => setForm(p => ({ ...p, target: e.target.value }))} className="input-dark text-sm" />
-          <input type="text" placeholder="Valor actual" value={form.current_value} onChange={e => setForm(p => ({ ...p, current_value: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.editKpiModal.labelPlaceholder')} value={form.label} onChange={e => setForm(p => ({ ...p, label: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.editKpiModal.targetPlaceholder')} value={form.target} onChange={e => setForm(p => ({ ...p, target: e.target.value }))} className="input-dark text-sm" />
+          <input type="text" placeholder={t('admin:plan.editKpiModal.currentPlaceholder')} value={form.current_value} onChange={e => setForm(p => ({ ...p, current_value: e.target.value }))} className="input-dark text-sm" />
         </div>
         <div className="flex gap-2 mt-5">
           <button onClick={handleDelete} className="px-3 py-2 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all text-xs">
             <Trash2 size={13} />
           </button>
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={loading} className="btn-primary flex-1 justify-center">
-            {loading ? <Loader2 size={14} className="animate-spin" /> : 'Guardar'}
+            {loading ? <Loader2 size={14} className="animate-spin" /> : t('common:common.save')}
           </button>
         </div>
       </motion.div>
@@ -516,6 +524,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
 
 export default function PlanMarketing() {
   const { t } = useTranslation(['admin', 'common'])
+  const categoryLabels = useCategoryLabels()
   const { clients } = useStore()
   const { isAdmin } = useAuthStore()
   const [plans, setPlans] = useState<any[]>([])
@@ -541,7 +550,7 @@ export default function PlanMarketing() {
   }
 
   const handleDeletePlan = async () => {
-    if (!plan || !confirm('¿Eliminar este plan de marketing?')) return
+    if (!plan || !confirm(t('admin:plan.deletePlanConfirm'))) return
     await api.delete(`/plans/${plan.id}`)
     const remaining = plans.filter(p => p.id !== plan.id)
     setPlans(remaining)
@@ -557,7 +566,7 @@ export default function PlanMarketing() {
   }
 
   const handleDeleteMilestone = async (planId: string, milestoneId: string) => {
-    if (!confirm('¿Eliminar este hito?')) return
+    if (!confirm(t('admin:plan.deleteMilestoneConfirm'))) return
     await api.delete(`/plans/${planId}/milestones/${milestoneId}`)
     setPlans(prev => prev.map(p => p.id === planId
       ? { ...p, milestones: p.milestones.filter((m: any) => m.id !== milestoneId) }
@@ -610,7 +619,7 @@ export default function PlanMarketing() {
       <div className="page-header">
         <div>
           <h2 className="section-title">{t('admin:plan.title')}</h2>
-          <p className="text-ink-300 text-sm mt-1">Timeline estratégico por cliente · {plans.length} planes activos</p>
+          <p className="text-ink-300 text-sm mt-1">{t('admin:plan.subtitle', { count: plans.length })}</p>
         </div>
         {admin && (
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowNewPlan(true)} className="btn-primary">
@@ -654,7 +663,7 @@ export default function PlanMarketing() {
                     {client.company.slice(0, 2).toUpperCase()}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white text-lg">{plan.title}</h3>
+                    <h3 className="font-bold text-white text-lg"><T text={plan.title} /></h3>
                     <p className="text-xs text-ink-400 mt-0.5">{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</p>
                   </div>
                   {admin && (
@@ -668,12 +677,12 @@ export default function PlanMarketing() {
                     </div>
                   )}
                 </div>
-                {plan.objective && <p className="text-sm text-ink-200 leading-relaxed mb-4">{plan.objective}</p>}
+                {plan.objective && <p className="text-sm text-ink-200 leading-relaxed mb-4"><T text={plan.objective} /></p>}
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs text-ink-400">{t('admin:plan.planProgress')}</span>
-                      <span className="text-xs font-bold text-white">{completedCount}/{totalCount} hitos</span>
+                      <span className="text-xs font-bold text-white">{t('admin:plan.milestonesCount', { completed: completedCount, total: totalCount })}</span>
                     </div>
                     <div className="w-full h-1.5 bg-ink-700 rounded-full overflow-hidden">
                       <motion.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 1, ease: 'easeOut' }}
@@ -699,11 +708,11 @@ export default function PlanMarketing() {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h4 className="font-semibold text-white flex items-center gap-2">
-                  <Zap size={16} className="text-crimson-400" /> Timeline de Hitos
+                  <Zap size={16} className="text-crimson-400" /> {t('admin:plan.timelineTitle')}
                 </h4>
                 {admin && (
                   <button onClick={() => setShowAddMilestone(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink-700 text-ink-300 hover:text-white hover:bg-ink-600 border border-white/10 text-xs transition-all">
-                    <Plus size={12} /> Agregar hito
+                    <Plus size={12} /> {t('admin:plan.addMilestone')}
                   </button>
                 )}
               </div>
@@ -735,9 +744,9 @@ export default function PlanMarketing() {
                   {admin && (
                     <button
                       onClick={async () => {
-                        const label = prompt('Etiqueta del KPI:')
+                        const label = prompt(t('admin:plan.editKpiModal.labelPlaceholder'))
                         if (!label) return
-                        const target = prompt('Objetivo (Ej: 50,000):') || ''
+                        const target = prompt(t('admin:plan.editKpiModal.targetPlaceholder')) || ''
                         const { data } = await api.post(`/plans/${plan.id}/kpis`, { label, target, current_value: '' })
                         setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, kpis: [...(p.kpis || []), data] } : p))
                       }}
@@ -756,7 +765,7 @@ export default function PlanMarketing() {
                       <motion.div key={kpi.id || i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                         className="p-3 rounded-xl bg-ink-800/50 group">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-medium text-ink-200">{kpi.label}</p>
+                          <p className="text-xs font-medium text-ink-200"><T text={kpi.label} /></p>
                           <div className="flex items-center gap-2">
                             <div><span className="text-sm font-bold text-white">{kpi.current_value || '—'}</span><span className="text-xs text-ink-400"> / {kpi.target}</span></div>
                             {admin && (
@@ -781,7 +790,7 @@ export default function PlanMarketing() {
             {/* Category breakdown */}
             <div className="glass-card p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp size={16} className="text-crimson-400" /> Por Categoría
+                <TrendingUp size={16} className="text-crimson-400" /> {t('admin:plan.byCategory')}
               </h4>
               <div className="space-y-2.5">
                 {Object.keys(categoryColors).map(cat => {
@@ -810,7 +819,7 @@ export default function PlanMarketing() {
             {/* Proximos hitos */}
             <div className="glass-card p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar size={16} className="text-crimson-400" /> Proximos Hitos
+                <Calendar size={16} className="text-crimson-400" /> {t('admin:plan.upcomingMilestones')}
               </h4>
               <div className="space-y-2">
                 {plan.milestones?.filter((m: any) => !m.completed).slice(0, 3).map((m: any) => (

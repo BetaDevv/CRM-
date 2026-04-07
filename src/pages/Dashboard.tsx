@@ -6,6 +6,7 @@ import { formatCurrency } from '../lib/utils'
 import { Link } from 'react-router-dom'
 import { getActivity, type ActivityLog } from '../lib/api'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
 const stagger = {
   animate: { transition: { staggerChildren: 0.07 } },
@@ -121,7 +122,7 @@ export default function Dashboard() {
         <div className="relative">
           <div className="flex items-center gap-2 mb-3">
             <Zap size={14} className="text-crimson-400" fill="currentColor" />
-            <span className="text-crimson-400 text-xs font-semibold uppercase tracking-widest">TheBrandingStudio CRM</span>
+            <span className="text-crimson-400 text-xs font-semibold uppercase tracking-widest">NextGenCRM</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">
             {t('dashboard.greeting').split('<1>')[0]}<span className="text-gradient-crimson">{t('dashboard.greeting').split('<1>')[1]?.split('</1>')[0]}</span> 👋
@@ -191,7 +192,7 @@ export default function Dashboard() {
                   {c.company.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-white text-sm truncate">{c.company}</p>
+                  <p className="font-medium text-white text-sm truncate"><T text={c.company} /></p>
                   <p className="text-xs text-ink-300 truncate">{c.services.join(' · ')}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -235,7 +236,7 @@ export default function Dashboard() {
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
                     style={{ background: activityColor(a.type) }} />
                   <div>
-                    <p className="text-sm text-white leading-snug">{a.description}</p>
+                    <p className="text-sm text-white leading-snug"><T text={a.description} /></p>
                     <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>
                   </div>
                 </motion.div>

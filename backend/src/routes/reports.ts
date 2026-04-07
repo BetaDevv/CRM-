@@ -117,7 +117,7 @@ router.get('/:clientId', async (req: AuthRequest, res: Response) => {
       margin: 50,
       info: {
         Title: `Reporte de Métricas — ${client.company}`,
-        Author: 'TheBrandingStudio CRM',
+        Author: 'NextGenCRM',
       },
     })
 
@@ -133,7 +133,7 @@ router.get('/:clientId', async (req: AuthRequest, res: Response) => {
       .fillColor(CRIMSON)
       .text('◆', 50, 40, { continued: true })
       .fontSize(22)
-      .text(' TheBrandingStudio', { baseline: 'alphabetic' })
+      .text(' NextGenCRM', { baseline: 'alphabetic' })
 
     doc
       .font('Helvetica')
@@ -312,7 +312,7 @@ router.get('/:clientId', async (req: AuthRequest, res: Response) => {
       .fontSize(8)
       .fillColor('#999999')
       .text(
-        `Generado por TheBrandingStudio CRM — ${now.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+        `Generado por NextGenCRM — ${now.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}`,
         50,
         footerY,
         { width: doc.page.width - 100, align: 'center' }

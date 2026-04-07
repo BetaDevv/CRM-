@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Mail, Phone, DollarSign, Calendar, Briefcase, ExternalLink,
   CheckCircle, Pencil, Trash2, Loader2, Plus, Upload,
-  Clock, MessageSquare, Send, FileText, UserPlus, Bell,
+  Clock, MessageSquare, Send, FileText, UserPlus, Bell, AlertTriangle,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -16,6 +16,7 @@ import {
 import type { Client } from '../types'
 import type { ClientNote, ActivityLog } from '../lib/api'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
 const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
 
@@ -50,8 +51,8 @@ function ClientAvatar({
 
 // ─── Client Card ───────────────────────────────────────────────────────────────
 function ClientCard({
-  client, onSelect, onEdit,
-}: { client: Client; onSelect: (c: Client) => void; onEdit: (c: Client) => void }) {
+  client, onSelect, onEdit, onDelete,
+}: { client: Client; onSelect: (c: Client) => void; onEdit: (c: Client) => void; onDelete: (c: Client) => void }) {
   const { t } = useTranslation(['admin', 'common'])
   return (
     <motion.div
@@ -60,20 +61,28 @@ function ClientCard({
       className="glass-card p-5 cursor-pointer border border-transparent hover:border-white/10 transition-all duration-300 group relative"
       onClick={() => onSelect(client)}
     >
-      {/* Edit button on hover */}
-      <button
-        onClick={e => { e.stopPropagation(); onEdit(client) }}
-        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all hover:bg-white/10"
-        style={{ color: 'rgb(var(--ink-300))' }}
-      >
-        <Pencil size={13} />
-      </button>
+      {/* Action buttons on hover */}
+      <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+        <button
+          onClick={e => { e.stopPropagation(); onEdit(client) }}
+          className="p-1.5 rounded-lg hover:bg-white/10 transition-all"
+          style={{ color: 'rgb(var(--ink-300))' }}
+        >
+          <Pencil size={13} />
+        </button>
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(client) }}
+          className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all text-ink-400 hover:text-red-400"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
 
       <div className="flex items-start gap-4 mb-4">
         <ClientAvatar client={client} size="md" />
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold truncate" style={{ color: 'rgb(var(--ink-100))' }}>{client.company}</h3>
-          <p className="text-sm truncate" style={{ color: 'rgb(var(--ink-300))' }}>{client.contact}</p>
+          <h3 className="font-bold truncate" style={{ color: 'rgb(var(--ink-100))' }}><T text={client.company} /></h3>
+          <p className="text-sm truncate" style={{ color: 'rgb(var(--ink-300))' }}><T text={client.contact} /></p>
         </div>
         <span className={`badge flex-shrink-0 ${client.status === 'active' ? 'bg-green-500/10 text-green-400' : 'bg-ink-600 text-ink-300'}`}>
           {client.status === 'active' ? t('admin:clients.status.active') : t('admin:clients.status.paused')}
@@ -81,7 +90,7 @@ function ClientCard({
       </div>
 
       {client.description && (
-        <p className="text-xs mb-4 line-clamp-2" style={{ color: 'rgb(var(--ink-300))' }}>{client.description}</p>
+        <p className="text-xs mb-4 line-clamp-2" style={{ color: 'rgb(var(--ink-300))' }}><T text={client.description} /></p>
       )}
 
       <div className="space-y-2 mb-4">
@@ -103,7 +112,7 @@ function ClientCard({
 
       <div className="flex flex-wrap gap-1.5 mb-4">
         {client.services.map(s => (
-          <span key={s} className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgb(var(--ink-700) / 0.6)', color: 'rgb(var(--ink-200))' }}>{s}</span>
+          <span key={s} className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgb(var(--ink-700) / 0.6)', color: 'rgb(var(--ink-200))' }}><T text={s} /></span>
         ))}
       </div>
 
@@ -114,7 +123,7 @@ function ClientCard({
         </div>
         <div className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all"
           style={{ background: client.color + '20', color: client.color }}>
-          <ExternalLink size={11} /> Ver más
+          <ExternalLink size={11} /> {t('admin:clients.viewMore')}
         </div>
       </div>
     </motion.div>
@@ -137,6 +146,7 @@ function ClientModal({
 }) {
   const { t } = useTranslation(['admin', 'common'])
   const fileRef = useRef<HTMLInputElement>(null)
+  const submitting = useRef(false)
   const [loading, setLoading] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initial?.avatar_url || null)
@@ -162,6 +172,8 @@ function ClientModal({
 
   const handleSave = async () => {
     if (!form.company || !form.email) return
+    if (submitting.current) return
+    submitting.current = true
     setLoading(true)
     try {
       const payload = {
@@ -192,6 +204,7 @@ function ClientModal({
       onSaved(saved)
       onClose()
     } finally {
+      submitting.current = false
       setLoading(false)
     }
   }
@@ -208,7 +221,7 @@ function ClientModal({
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'rgb(var(--ink-100))' }}>
-            {initial ? 'Editar Cliente' : t('admin:clients.newClient')}
+            {initial ? t('admin:clients.editClient') : t('admin:clients.newClient')}
           </h3>
           <button onClick={onClose} style={{ color: 'rgb(var(--ink-300))' }} className="hover:text-white"><X size={18} /></button>
         </div>
@@ -254,7 +267,7 @@ function ClientModal({
             {['active', 'paused'].map(s => (
               <button key={s} onClick={() => setForm(p => ({ ...p, status: s }))}
                 className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${form.status === s ? 'bg-crimson-700 text-white border-crimson-700' : 'border-ink-500/30 text-ink-300'}`}>
-                {s === 'active' ? 'Activo' : 'Pausado'}
+                {s === 'active' ? t('admin:clients.status.active') : t('admin:clients.status.paused')}
               </button>
             ))}
           </div>
@@ -336,7 +349,7 @@ function ActivityTimeline({ clientId }: { clientId: string }) {
               <Icon size={9} style={{ color: cfg.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm leading-snug" style={{ color: 'rgb(var(--ink-200))' }}>{a.description}</p>
+              <p className="text-sm leading-snug" style={{ color: 'rgb(var(--ink-200))' }}><T text={a.description} /></p>
               <p className="text-xs mt-0.5" style={{ color: 'rgb(var(--ink-400))' }}>{relativeTime(a.created_at)}</p>
             </div>
           </motion.div>
@@ -397,7 +410,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
             className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-40"
           >
             {saving ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-            Agregar nota
+            {t('admin:clients.addNoteButton')}
           </motion.button>
         </div>
       </div>
@@ -417,10 +430,10 @@ function NotesPanel({ clientId }: { clientId: string }) {
             exit={{ opacity: 0, y: -10, height: 0 }}
             className="glass-card p-4 group relative"
           >
-            <p className="text-sm leading-relaxed pr-6" style={{ color: 'rgb(var(--ink-200))' }}>{note.content}</p>
+            <p className="text-sm leading-relaxed pr-6" style={{ color: 'rgb(var(--ink-200))' }}><T text={note.content} /></p>
             <div className="flex items-center gap-2 mt-2">
               {note.author && (
-                <span className="text-xs font-medium" style={{ color: 'rgb(var(--ink-300))' }}>{note.author}</span>
+                <span className="text-xs font-medium" style={{ color: 'rgb(var(--ink-300))' }}><T text={note.author} /></span>
               )}
               <span className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{relativeTime(note.created_at)}</span>
             </div>
@@ -441,12 +454,14 @@ function NotesPanel({ clientId }: { clientId: string }) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function Clientes() {
   const { t } = useTranslation(['admin', 'common'])
+  const fetchClients = useStore(s => s.fetchClients)
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Client | null>(null)
   const [editClient, setEditClient] = useState<Client | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [drawerTab, setDrawerTab] = useState<'info' | 'historial' | 'notas'>('info')
+  const [confirmDel, setConfirmDel] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
 
   useEffect(() => {
     api.get('/clients').then(r => setClients(r.data)).finally(() => setLoading(false))
@@ -457,15 +472,25 @@ export default function Clientes() {
       const exists = prev.some(x => x.id === c.id)
       return exists ? prev.map(x => x.id === c.id ? c : x) : [c, ...prev]
     })
-    // Also update selected drawer if open
     if (selected?.id === c.id) setSelected(c)
+    fetchClients() // Sync global store
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm(t('admin:clients.deleteConfirm'))) return
-    await api.delete(`/clients/${id}`)
-    setClients(p => p.filter(x => x.id !== id))
-    if (selected?.id === id) setSelected(null)
+  const handleDelete = (client: Client) => {
+    setConfirmDel({ open: true, client })
+  }
+
+  const executeDelete = async () => {
+    if (!confirmDel.client) return
+    try {
+      await api.delete(`/clients/${confirmDel.client.id}`)
+      setClients(p => p.filter(x => x.id !== confirmDel.client!.id))
+      if (selected?.id === confirmDel.client.id) setSelected(null)
+      fetchClients() // Sync global store
+    } catch {
+      // silent — server error
+    }
+    setConfirmDel({ open: false, client: null })
   }
 
   const totalMRR = clients
@@ -478,7 +503,7 @@ export default function Clientes() {
         <div>
           <h2 className="section-title">{t('admin:clients.title')}</h2>
           <p className="text-sm mt-1" style={{ color: 'rgb(var(--ink-300))' }}>
-            {clients.filter(c => c.status === 'active').length} activos · MRR total {formatCurrency(totalMRR)}
+            {t('admin:clients.activeMRR', { count: clients.filter(c => c.status === 'active').length, amount: formatCurrency(totalMRR) })}
           </p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -507,7 +532,7 @@ export default function Clientes() {
             {clients.filter(c => c.status === 'active').map(c => (
               <div key={c.id} className="flex items-center gap-1.5 text-xs" style={{ color: 'rgb(var(--ink-300))' }}>
                 <div className="w-2 h-2 rounded-full" style={{ background: c.color }} />
-                <span>{c.company}</span>
+                <span><T text={c.company} /></span>
               </div>
             ))}
           </div>
@@ -525,7 +550,7 @@ export default function Clientes() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <AnimatePresence>
             {clients.map(c => (
-              <ClientCard key={c.id} client={c} onSelect={(c) => { setDrawerTab('info'); setSelected(c) }} onEdit={setEditClient} />
+              <ClientCard key={c.id} client={c} onSelect={(c) => { setDrawerTab('info'); setSelected(c) }} onEdit={setEditClient} onDelete={handleDelete} />
             ))}
           </AnimatePresence>
         </div>
@@ -544,13 +569,13 @@ export default function Clientes() {
               onClick={e => e.stopPropagation()}>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-xl" style={{ color: 'rgb(var(--ink-100))' }}>{selected.company}</h3>
+                  <h3 className="font-bold text-xl" style={{ color: 'rgb(var(--ink-100))' }}><T text={selected.company} /></h3>
                   <div className="flex items-center gap-2">
                     <button onClick={() => { setEditClient(selected); setSelected(null) }}
                       className="p-2 rounded-xl transition-all" style={{ color: 'rgb(var(--ink-300))' }}>
                       <Pencil size={15} />
                     </button>
-                    <button onClick={() => handleDelete(selected.id)}
+                    <button onClick={() => handleDelete(selected)}
                       className="p-2 rounded-xl text-red-400/60 hover:text-red-400 transition-all">
                       <Trash2 size={15} />
                     </button>
@@ -611,7 +636,7 @@ export default function Clientes() {
                             {selected.services.map(s => (
                               <span key={s} className="px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5"
                                 style={{ backgroundColor: 'rgb(var(--ink-700) / 0.5)', color: 'rgb(var(--ink-100))' }}>
-                                <CheckCircle size={11} className="text-green-400" /> {s}
+                                <CheckCircle size={11} className="text-green-400" /> <T text={s} />
                               </span>
                             ))}
                           </div>
@@ -621,7 +646,7 @@ export default function Clientes() {
                       {selected.description && (
                         <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
                           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>{t('admin:clients.drawer.description')}</p>
-                          <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}>{selected.description}</p>
+                          <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}><T text={selected.description} /></p>
                         </div>
                       )}
                     </motion.div>
@@ -648,6 +673,53 @@ export default function Clientes() {
       <AnimatePresence>
         {showAdd && <ClientModal onClose={() => setShowAdd(false)} onSaved={handleSaved} />}
         {editClient && <ClientModal initial={editClient} onClose={() => setEditClient(null)} onSaved={handleSaved} />}
+      </AnimatePresence>
+
+      {/* ─── Delete Confirmation Dialog ─── */}
+      <AnimatePresence>
+        {confirmDel.open && confirmDel.client && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setConfirmDel({ open: false, client: null })}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="glass-card w-full max-w-sm p-6 space-y-4"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-red-500/10 text-red-400">
+                  <AlertTriangle size={20} />
+                </div>
+                <h3 className="font-bold text-white">{t('admin:clients.deleteConfirmTitle')}</h3>
+              </div>
+              <p className="text-sm text-ink-300">
+                {t('admin:clients.deleteConfirmMessage', { name: confirmDel.client.company })}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmDel({ open: false, client: null })}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-300 hover:text-white hover:bg-white/5 transition-all border border-white/10"
+                >
+                  {t('common:common.cancel')}
+                </button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={executeDelete}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 text-white transition-colors"
+                >
+                  {t('common:common.delete')}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   )

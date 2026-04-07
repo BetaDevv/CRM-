@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Calendar, Target, TrendingUp, CheckCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useStore } from '../../store/useStore'
 import { api } from '../../lib/api'
@@ -40,7 +41,7 @@ export default function ClientPlan() {
           <div className="glass-card p-5">
             <div className="flex items-start justify-between gap-4 mb-4">
               <div>
-                <h3 className="font-bold text-white text-lg">{plan.title}</h3>
+                <h3 className="font-bold text-white text-lg"><T text={plan.title} /></h3>
                 <p className="text-xs text-ink-400 mt-0.5">{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</p>
               </div>
               <div className="text-right flex-shrink-0">
@@ -48,7 +49,7 @@ export default function ClientPlan() {
                 <p className="text-xs text-ink-400">{t('client:plan.completed')}</p>
               </div>
             </div>
-            {plan.objective && <p className="text-sm text-ink-200 leading-relaxed">{plan.objective}</p>}
+            {plan.objective && <p className="text-sm text-ink-200 leading-relaxed"><T text={plan.objective} /></p>}
             <div className="mt-4 w-full h-2 bg-ink-700 rounded-full overflow-hidden">
               <motion.div initial={{ width: 0 }} animate={{ width: `${planProgress}%` }} transition={{ duration: 1.2, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: client?.color || '#DC143C' }} />
             </div>
@@ -66,15 +67,15 @@ export default function ClientPlan() {
                   return (
                     <div key={i} className="bg-ink-800/40 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-ink-200">{kpi.label}</p>
+                        <p className="text-xs font-medium text-ink-200"><T text={kpi.label} /></p>
                         <p className="text-sm font-bold text-white">{pct}%</p>
                       </div>
                       <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden mb-2">
                         <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: i * 0.1 }} className="h-full rounded-full" style={{ background: client?.color || '#DC143C' }} />
                       </div>
                       <div className="flex items-center justify-between text-xs text-ink-400">
-                        <span>{t('client:plan.actual')}: <strong className="text-white">{kpi.current_value || '—'}</strong></span>
-                        <span>{t('client:plan.target')}: <strong className="text-white">{kpi.target}</strong></span>
+                        <span>{t('client:plan.actual')}: <strong className="text-white"><T text={kpi.current_value || '—'} /></strong></span>
+                        <span>{t('client:plan.target')}: <strong className="text-white"><T text={kpi.target} /></strong></span>
                       </div>
                     </div>
                   )
@@ -101,10 +102,10 @@ export default function ClientPlan() {
                     <div className={`flex-1 pb-5 ${isLast ? 'pb-0' : ''}`}>
                       <div className={`p-3.5 rounded-xl border transition-all ${m.completed ? 'bg-ink-800/20 border-white/3 opacity-60' : 'bg-ink-800/40 border-white/5'}`}>
                         <div className="flex items-start justify-between gap-2">
-                          <h5 className={`text-sm font-semibold ${m.completed ? 'line-through text-ink-400' : 'text-white'}`}>{m.title}</h5>
+                          <h5 className={`text-sm font-semibold ${m.completed ? 'line-through text-ink-400' : 'text-white'}`}><T text={m.title} /></h5>
                           <span className="text-xs text-ink-400 flex-shrink-0">{formatDate(m.date)}</span>
                         </div>
-                        {m.description && <p className="text-xs text-ink-300 mt-1 leading-relaxed">{m.description}</p>}
+                        {m.description && <p className="text-xs text-ink-300 mt-1 leading-relaxed"><T text={m.description} /></p>}
                         {m.completed && <div className="flex items-center gap-1 text-green-400 text-xs mt-1.5"><CheckCircle size={11} /> {t('client:plan.milestoneCompleted')}</div>}
                       </div>
                     </div>

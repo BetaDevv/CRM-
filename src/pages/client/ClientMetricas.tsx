@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BarChart2, Linkedin, Users, Globe, Play, Loader2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { api } from '../../lib/api'
 

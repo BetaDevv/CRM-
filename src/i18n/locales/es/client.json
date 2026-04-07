@@ -18,7 +18,7 @@
     "milestonesTimeline": "Timeline de Hitos",
     "milestoneCompleted": "Completado",
     "emptyTitle": "Tu plan estrategico esta siendo preparado.",
-    "emptySubtitle": "El equipo de TheBrandingStudio lo tendra listo pronto."
+    "emptySubtitle": "El equipo de NextGenCRM lo tendra listo pronto."
   },
   "posts": {
     "emptyState": "No hay publicaciones aun. El equipo esta trabajando en ellas.",
@@ -54,7 +54,7 @@
   },
   "metrics": {
     "noMetrics": "Sin metricas disponibles aun",
-    "noMetricsSubtitle": "El equipo de TheBrandingStudio configurara las integraciones contigo.",
+    "noMetricsSubtitle": "El equipo de NextGenCRM configurara las integraciones contigo.",
     "followers": "Seguidores",
     "impressions30d": "Impresiones (30d)",
     "pageViews": "Vistas de pagina",

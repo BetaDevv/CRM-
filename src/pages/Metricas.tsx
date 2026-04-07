@@ -83,6 +83,7 @@ function formatAxisDate(dateStr: string): string {
 function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisconnect }: {
   connected: boolean; name?: string; lastSync?: string; platform: string; clientId: string; onDisconnect: () => void
 }) {
+  const { t } = useTranslation(['admin', 'common'])
   const handleConnect = () => {
     window.location.href = `/api/oauth/${platform}/connect/${clientId}`
   }
@@ -92,15 +93,15 @@ function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisc
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium">
           <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-          {name || 'Conectado'}
+          {name || t('admin:metrics.connected')}
         </div>
         {lastSync && (
           <span className="text-xs text-ink-500">
-            Sync: {new Date(lastSync).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            {t('admin:metrics.syncLabel')} {new Date(lastSync).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
         <button onClick={onDisconnect} className="flex items-center gap-1 text-xs text-ink-500 hover:text-red-400 transition-colors">
-          <Unlink size={12} /> Desconectar
+          <Unlink size={12} /> {t('admin:metrics.disconnect')}
         </button>
       </div>
     )
@@ -108,13 +109,14 @@ function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisc
   return (
     <button onClick={handleConnect}
       className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-crimson-700/20 border border-crimson-700/30 text-crimson-400 text-xs font-medium hover:bg-crimson-700/30 transition-all">
-      <ExternalLink size={12} /> Conectar cuenta real
+      <ExternalLink size={12} /> {t('admin:metrics.connectReal')}
     </button>
   )
 }
 
 // ─── LinkedIn Panel ────────────────────────────────────────────────────────────
 function LinkedInPanel({ data, days }: { data: any; days: number }) {
+  const { t } = useTranslation(['admin', 'common'])
   const followersChart = data.timeSeries?.followers?.filter((_: any, i: number) => i % 2 === 0) || []
   const impressionsChart = data.timeSeries?.impressions?.slice(-14) || []
   const engagementChart = data.timeSeries?.engagement?.slice(-14) || []
@@ -122,18 +124,18 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Seguidores" value={formatShort(data.summary.followers)} sub="Total acumulado" icon={Users} color="#0077B5" trend={data.summary.follower_growth_pct} />
-        <StatCard label={`Impresiones (${days}d)`} value={formatShort(data.summary.total_impressions)} sub={`Últimos ${days} días`} icon={Eye} color={CRIMSON} />
-        <StatCard label="Vistas de Página" value={formatShort(data.summary.total_page_views)} sub={`Últimos ${days} días`} icon={ExternalLink} color="#7C3AED" />
-        <StatCard label="Engagement Rate" value={`${data.summary.avg_engagement_rate}%`} sub="Promedio del periodo" icon={Heart} color="#F59E0B" />
+        <StatCard label={t('admin:metrics.followers')} value={formatShort(data.summary.followers)} sub={t('admin:metrics.totalAccumulated')} icon={Users} color="#0077B5" trend={data.summary.follower_growth_pct} />
+        <StatCard label={t('admin:metrics.impressions', { days })} value={formatShort(data.summary.total_impressions)} sub={t('admin:metrics.lastDays', { days })} icon={Eye} color={CRIMSON} />
+        <StatCard label={t('admin:metrics.pageViews')} value={formatShort(data.summary.total_page_views)} sub={t('admin:metrics.lastDays', { days })} icon={ExternalLink} color="#7C3AED" />
+        <StatCard label={t('admin:metrics.engagementRate')} value={`${data.summary.avg_engagement_rate}%`} sub={t('admin:metrics.periodAverage')} icon={Heart} color="#F59E0B" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h4 className="font-semibold text-white">Crecimiento de Seguidores</h4>
-              <p className="text-xs text-ink-400">Últimos {days} días</p>
+              <h4 className="font-semibold text-white">{t('admin:metrics.followerGrowth')}</h4>
+              <p className="text-xs text-ink-400">{t('admin:metrics.lastDays', { days })}</p>
             </div>
             <p className={`text-sm font-bold ${data.summary.follower_growth_pct >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {data.summary.follower_growth_pct >= 0 ? '+' : ''}{data.summary.follower_growth_pct}%
@@ -157,8 +159,8 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
         </div>
 
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-2">Impresiones Diarias</h4>
-          <p className="text-xs text-ink-400 mb-5">Últimas 2 semanas</p>
+          <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailyImpressions')}</h4>
+          <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={impressionsChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -175,8 +177,8 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
         <div className="glass-card p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h4 className="font-semibold text-white">Engagement Rate</h4>
-              <p className="text-xs text-ink-400">% diario</p>
+              <h4 className="font-semibold text-white">{t('admin:metrics.engagementRate')}</h4>
+              <p className="text-xs text-ink-400">{t('admin:metrics.dailyPercentage')}</p>
             </div>
             <p className="text-lg font-bold text-amber-400">{data.summary.avg_engagement_rate}%</p>
           </div>
@@ -192,7 +194,7 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
         </div>
 
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-5">Seniority de Audiencia</h4>
+          <h4 className="font-semibold text-white mb-5">{t('admin:metrics.audienceSeniority')}</h4>
           <ResponsiveContainer width="100%" height={140}>
             <PieChart>
               <Pie data={data.demographics?.seniority || []} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3}>
@@ -212,7 +214,7 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
         </div>
 
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-4">Industria de Seguidores</h4>
+          <h4 className="font-semibold text-white mb-4">{t('admin:metrics.followerIndustry')}</h4>
           <div className="space-y-2.5">
             {(data.demographics?.industry || []).map((item: any, i: number) => (
               <div key={i}>
@@ -233,7 +235,7 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
       {data.topPosts?.length > 0 && (
         <div className="glass-card p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-5">
-            <TrendingUp size={16} className="text-crimson-400" /> Top Publicaciones del Mes
+            <TrendingUp size={16} className="text-crimson-400" /> {t('admin:metrics.topPosts')}
           </h4>
           <div className="space-y-3">
             {data.topPosts.map((post: any, i: number) => (
@@ -247,11 +249,11 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <div className="text-center">
                     <p className="text-sm font-bold text-white">{formatShort(post.impressions)}</p>
-                    <p className="text-xs text-ink-400 flex items-center gap-1"><Eye size={9} /> Imp.</p>
+                    <p className="text-xs text-ink-400 flex items-center gap-1"><Eye size={9} /> {t('admin:metrics.imp')}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-amber-400">{post.engagement}%</p>
-                    <p className="text-xs text-ink-400">Eng.</p>
+                    <p className="text-xs text-ink-400">{t('admin:metrics.eng')}</p>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-ink-400">
                     <span className="flex items-center gap-1"><Heart size={11} className="text-red-400" /> {post.reactions}</span>
@@ -270,22 +272,23 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
 
 // ─── Meta Panel ────────────────────────────────────────────────────────────────
 function MetaPanel({ data, days }: { data: any; days: number }) {
+  const { t } = useTranslation(['admin', 'common'])
   const igFollowersChart = data.timeSeries?.ig_followers?.filter((_: any, i: number) => i % 2 === 0) || []
   const reachChart = data.timeSeries?.reach?.slice(-14) || []
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Seguidores Facebook" value={formatShort(data.summary.fb_followers)} sub="Total acumulado" icon={Users} color={META_COLOR} />
-        <StatCard label="Seguidores Instagram" value={formatShort(data.summary.ig_followers)} sub="Total acumulado" icon={Users} color={IG_COLOR} trend={data.summary.ig_growth_pct} />
-        <StatCard label={`Alcance (${days}d)`} value={formatShort(data.summary.total_reach)} sub={`Últimos ${days} días`} icon={Eye} color="#7C3AED" />
-        <StatCard label="Engagement Rate" value={`${data.summary.avg_engagement_rate}%`} sub="Promedio del periodo" icon={Heart} color="#F59E0B" />
+        <StatCard label={t('admin:metrics.fbFollowers')} value={formatShort(data.summary.fb_followers)} sub={t('admin:metrics.totalAccumulated')} icon={Users} color={META_COLOR} />
+        <StatCard label={t('admin:metrics.igFollowers')} value={formatShort(data.summary.ig_followers)} sub={t('admin:metrics.totalAccumulated')} icon={Users} color={IG_COLOR} trend={data.summary.ig_growth_pct} />
+        <StatCard label={t('admin:metrics.reach', { days })} value={formatShort(data.summary.total_reach)} sub={t('admin:metrics.lastDays', { days })} icon={Eye} color="#7C3AED" />
+        <StatCard label={t('admin:metrics.engagementRate')} value={`${data.summary.avg_engagement_rate}%`} sub={t('admin:metrics.periodAverage')} icon={Heart} color="#F59E0B" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-2">Crecimiento Instagram</h4>
-          <p className="text-xs text-ink-400 mb-5">Seguidores — últimos {days} días</p>
+          <h4 className="font-semibold text-white mb-2">{t('admin:metrics.igGrowth')}</h4>
+          <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.followersLastDays', { days })}</p>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={igFollowersChart}>
               <defs>
@@ -304,8 +307,8 @@ function MetaPanel({ data, days }: { data: any; days: number }) {
         </div>
 
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-2">Alcance Diario</h4>
-          <p className="text-xs text-ink-400 mb-5">Últimas 2 semanas</p>
+          <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailyReach')}</h4>
+          <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={reachChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -323,20 +326,22 @@ function MetaPanel({ data, days }: { data: any; days: number }) {
 
 // ─── TikTok Panel ──────────────────────────────────────────────────────────────
 function TikTokPanel({ data }: { data: any }) {
+  const { t } = useTranslation(['admin', 'common'])
   const s = data.summary
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-      <StatCard label="Seguidores" value={formatShort(s.followers)} sub="Total acumulado" icon={Users} color="#69C9D0" />
-      <StatCard label="Reproducciones" value={formatShort(s.video_views)} sub="Últimos 30 días" icon={Play} color="#EE1D52" />
-      <StatCard label="Likes totales" value={formatShort(s.likes)} sub="Últimos 30 días" icon={ThumbsUp} color="#F59E0B" />
-      <StatCard label="Comentarios" value={formatShort(s.comments)} sub="Últimos 30 días" icon={MessageSquare} color="#7C3AED" />
-      <StatCard label="Compartidos" value={formatShort(s.shares)} sub="Últimos 30 días" icon={Share2} color="#34D399" />
+      <StatCard label={t('admin:metrics.followers')} value={formatShort(s.followers)} sub={t('admin:metrics.totalAccumulated')} icon={Users} color="#69C9D0" />
+      <StatCard label={t('admin:metrics.tiktokPlays')} value={formatShort(s.video_views)} sub={t('admin:metrics.last30Days')} icon={Play} color="#EE1D52" />
+      <StatCard label={t('admin:metrics.totalLikes')} value={formatShort(s.likes)} sub={t('admin:metrics.last30Days')} icon={ThumbsUp} color="#F59E0B" />
+      <StatCard label={t('admin:metrics.comments')} value={formatShort(s.comments)} sub={t('admin:metrics.last30Days')} icon={MessageSquare} color="#7C3AED" />
+      <StatCard label={t('admin:metrics.shares')} value={formatShort(s.shares)} sub={t('admin:metrics.last30Days')} icon={Share2} color="#34D399" />
     </div>
   )
 }
 
 // ─── GA4 Panel ────────────────────────────────────────────────────────────────
 function GA4Panel({ data, days }: { data: any; days: number }) {
+  const { t } = useTranslation(['admin', 'common'])
   const s = data.summary
   const sessionsChart = data.timeSeries?.sessions?.slice(-14) || []
   const pageViewsChart = data.timeSeries?.page_views?.slice(-14) || []
@@ -344,18 +349,18 @@ function GA4Panel({ data, days }: { data: any; days: number }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatCard label={`Sesiones (${days}d)`} value={formatShort(s.total_sessions)} sub={`Últimos ${days} días`} icon={Globe} color={GA4_COLOR} />
-        <StatCard label="Usuarios activos" value={formatShort(s.total_users)} sub={`Últimos ${days} días`} icon={Users} color="#7C3AED" />
-        <StatCard label="Vistas de página" value={formatShort(s.total_page_views)} sub={`Últimos ${days} días`} icon={Eye} color={CRIMSON} />
-        <StatCard label="Nuevos usuarios" value={formatShort(s.new_users)} sub={`Últimos ${days} días`} icon={ArrowUpRight} color="#34D399" />
-        <StatCard label="Tasa de rebote" value={`${s.avg_bounce_rate.toFixed(1)}%`} sub="Promedio del periodo" icon={TrendingUp} color="#F59E0B" />
-        <StatCard label="Duración media" value={`${Math.round(s.avg_session_duration)}s`} sub="Por sesión" icon={RefreshCw} color="#60A5FA" />
+        <StatCard label={t('admin:metrics.sessions', { days })} value={formatShort(s.total_sessions)} sub={t('admin:metrics.lastDays', { days })} icon={Globe} color={GA4_COLOR} />
+        <StatCard label={t('admin:metrics.activeUsers')} value={formatShort(s.total_users)} sub={t('admin:metrics.lastDays', { days })} icon={Users} color="#7C3AED" />
+        <StatCard label={t('admin:metrics.pageViews')} value={formatShort(s.total_page_views)} sub={t('admin:metrics.lastDays', { days })} icon={Eye} color={CRIMSON} />
+        <StatCard label={t('admin:metrics.newUsers')} value={formatShort(s.new_users)} sub={t('admin:metrics.lastDays', { days })} icon={ArrowUpRight} color="#34D399" />
+        <StatCard label={t('admin:metrics.bounceRate')} value={`${s.avg_bounce_rate.toFixed(1)}%`} sub={t('admin:metrics.periodAverage')} icon={TrendingUp} color="#F59E0B" />
+        <StatCard label={t('admin:metrics.avgDuration')} value={`${Math.round(s.avg_session_duration)}s`} sub={t('admin:metrics.perSession')} icon={RefreshCw} color="#60A5FA" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-2">Sesiones Diarias</h4>
-          <p className="text-xs text-ink-400 mb-5">Últimas 2 semanas</p>
+          <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailySessions')}</h4>
+          <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={sessionsChart}>
               <defs>
@@ -374,8 +379,8 @@ function GA4Panel({ data, days }: { data: any; days: number }) {
         </div>
 
         <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-2">Vistas de Página</h4>
-          <p className="text-xs text-ink-400 mb-5">Últimas 2 semanas</p>
+          <h4 className="font-semibold text-white mb-2">{t('admin:metrics.pageViewsChart')}</h4>
+          <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={pageViewsChart}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
@@ -393,45 +398,17 @@ function GA4Panel({ data, days }: { data: any; days: number }) {
 
 // ─── Connect CTA ──────────────────────────────────────────────────────────────
 function ConnectCTA({ platform, clientId, color, icon }: { platform: string; clientId: string; color: string; icon: JSX.Element }) {
-  const labels: Record<string, { title: string; desc: string; steps: string[] }> = {
-    linkedin: {
-      title: 'Conecta LinkedIn Company Page',
-      desc: 'Activa métricas reales de tu página de empresa: seguidores, impresiones, engagement y demografía de audiencia.',
-      steps: [
-        'Crea tu app en developers.linkedin.com',
-        'Agrega LINKEDIN_CLIENT_ID y LINKEDIN_CLIENT_SECRET al .env',
-        'Conecta la cuenta desde aquí',
-      ],
-    },
-    meta: {
-      title: 'Conecta Facebook + Instagram',
-      desc: 'Activa métricas de tu Facebook Page e Instagram Business: alcance, seguidores, engagement e insights.',
-      steps: [
-        'Crea tu app en developers.facebook.com',
-        'Agrega META_APP_ID y META_APP_SECRET al .env',
-        'Conecta la cuenta desde aquí',
-      ],
-    },
-    tiktok: {
-      title: 'Conecta TikTok Business',
-      desc: 'Activa métricas de TikTok Business Center: seguidores, reproducciones, likes y comentarios.',
-      steps: [
-        'Solicita acceso en business-api.tiktok.com',
-        'Agrega TIKTOK_CLIENT_KEY y TIKTOK_CLIENT_SECRET al .env',
-        'Conecta la cuenta desde aquí',
-      ],
-    },
-    ga4: {
-      title: 'Conecta Google Analytics 4',
-      desc: 'Activa métricas de tráfico web: sesiones, usuarios, páginas vistas, duración y tasa de rebote.',
-      steps: [
-        'Habilita Google Analytics Data API en console.cloud.google.com',
-        'Agrega GA4_CLIENT_ID y GA4_CLIENT_SECRET al .env',
-        'Conecta la cuenta desde aquí',
-      ],
-    },
+  const { t } = useTranslation(['admin', 'common'])
+  const platformKey = platform as 'linkedin' | 'meta' | 'tiktok' | 'ga4'
+  const info = {
+    title: t(`admin:metrics.connect.${platformKey}.title`),
+    desc: t(`admin:metrics.connect.${platformKey}.desc`),
+    steps: [
+      t(`admin:metrics.connect.${platformKey}.step1`),
+      t(`admin:metrics.connect.${platformKey}.step2`),
+      t(`admin:metrics.connect.${platformKey}.step3`),
+    ],
   }
-  const info = labels[platform] || { title: 'Conectar', desc: '', steps: [] }
 
   return (
     <div className="glass-card p-6 border border-white/5">
@@ -453,7 +430,7 @@ function ConnectCTA({ platform, clientId, color, icon }: { platform: string; cli
           <a href={`/api/oauth/${platform}/connect/${clientId}`}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
             style={{ background: color }}>
-            <ExternalLink size={14} /> Conectar cuenta
+            <ExternalLink size={14} /> {t('admin:metrics.connectAccount')}
           </a>
         </div>
       </div>
@@ -495,7 +472,7 @@ export default function Metricas() {
   }, [selectedClientId, days])
 
   const handleDisconnect = async (platform: string) => {
-    if (!confirm(`¿Desconectar ${platform}?`)) return
+    if (!confirm(t('admin:metrics.disconnectConfirm', { platform }))) return
     await api.delete(`/oauth/${platform}/disconnect/${selectedClientId}`)
     setData((d: any) => d ? { ...d, connections: { ...d.connections, [platform]: { connected: false } } } : d)
   }
@@ -654,8 +631,8 @@ export default function Metricas() {
                 ) : (
                   <div className="glass-card p-12 flex flex-col items-center text-center">
                     <AlertCircle size={36} className="text-ink-500 mb-3 opacity-30" />
-                    <p className="text-ink-300 mb-1">Sin datos para {PLATFORMS.find(p => p.key === activePlatform)?.label}</p>
-                    <p className="text-ink-500 text-sm">El equipo de TheBrandingStudio configurará esta integración contigo.</p>
+                    <p className="text-ink-300 mb-1">{t('admin:metrics.noDataFor', { platform: PLATFORMS.find(p => p.key === activePlatform)?.label })}</p>
+                    <p className="text-ink-500 text-sm">{t('admin:metrics.teamWillConfigure')}</p>
                   </div>
                 )
               )}

@@ -25,17 +25,19 @@ const item = {
   show: { opacity: 1, y: 0, scale: 1 },
 }
 
-const categories = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'general', label: 'General' },
-  { value: 'contratos', label: 'Contratos' },
-  { value: 'reportes', label: 'Reportes' },
-  { value: 'disenos', label: 'Disenos' },
-  { value: 'otros', label: 'Otros' },
-]
+const categoryValues = ['todos', 'general', 'contratos', 'reportes', 'disenos', 'otros'] as const
 
 function getExtensionLabel(originalName: string): string {
   return (originalName.split('.').pop() || '').toUpperCase()
+}
+
+const categoryLabelKeys: Record<string, string> = {
+  todos: 'documents.categories.all',
+  general: 'documents.categories.general',
+  contratos: 'documents.categories.contracts',
+  reportes: 'documents.categories.reports',
+  disenos: 'documents.categories.designs',
+  otros: 'documents.categories.other',
 }
 
 export default function Documentos() {
@@ -150,7 +152,7 @@ export default function Documentos() {
         <div className="glass-card px-4 py-3 rounded-xl flex items-center gap-2">
           <HardDrive size={16} className="text-crimson-400" />
           <span className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>
-            {docs.length} documentos
+            {t('admin:documents.documentsCount', { count: docs.length })}
           </span>
           <span className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>
             ({formatFileSize(totalSize)})
@@ -192,18 +194,18 @@ export default function Documentos() {
         </div>
 
         <div className="flex gap-1">
-          {categories.map(cat => (
+          {categoryValues.map(catVal => (
             <button
-              key={cat.value}
-              onClick={() => setFilterCategory(cat.value)}
+              key={catVal}
+              onClick={() => setFilterCategory(catVal)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                filterCategory === cat.value
+                filterCategory === catVal
                   ? 'bg-crimson-700/30 text-crimson-300 border border-crimson-700/40'
                   : 'hover:bg-white/5 border border-transparent'
               }`}
-              style={{ color: filterCategory !== cat.value ? 'rgb(var(--ink-300))' : undefined }}
+              style={{ color: filterCategory !== catVal ? 'rgb(var(--ink-300))' : undefined }}
             >
-              {cat.label}
+              {t(`admin:${categoryLabelKeys[catVal]}`)}
             </button>
           ))}
         </div>
@@ -299,7 +301,7 @@ export default function Documentos() {
 
                 {/* Client */}
                 <p className="text-xs truncate" style={{ color: 'rgb(var(--ink-300))' }}>
-                  {doc.clientName || 'Sin cliente'}
+                  {doc.clientName || t('admin:documents.noClient')}
                 </p>
 
                 {/* Date */}
@@ -352,7 +354,7 @@ export default function Documentos() {
                   className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/5 transition-colors"
                   style={{ color: 'rgb(var(--ink-300))' }}
                 >
-                  Cancelar
+                  {t('common:common.cancel')}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
@@ -360,7 +362,7 @@ export default function Documentos() {
                   onClick={() => handleDelete(confirmDelete)}
                   className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-sm font-medium transition-colors"
                 >
-                  Eliminar
+                  {t('common:common.delete')}
                 </motion.button>
               </div>
             </motion.div>
@@ -400,7 +402,7 @@ function UploadModal({
       return allowedExtensions.includes(ext)
     })
     if (valid.length < arr.length) {
-      setError(`Algunos archivos fueron omitidos. Formatos permitidos: ${allowedExtensions.join(', ')}`)
+      setError(t('admin:documents.uploadModal.someFilesSkipped', { formats: allowedExtensions.join(', ') }))
     } else {
       setError('')
     }
@@ -425,7 +427,7 @@ function UploadModal({
       await uploadDocuments(selectedFiles, clientId || undefined, category)
       onUploaded()
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al subir archivos')
+      setError(err.response?.data?.error || t('admin:documents.uploadModal.errorUploading'))
     } finally {
       setUploading(false)
     }
@@ -480,7 +482,7 @@ function UploadModal({
             {t('admin:documents.uploadModal.dragOrClick')}
           </p>
           <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>
-            PDF, Word, Excel, PowerPoint, SQL, CSV, TXT, ZIP — Max 50MB
+            {t('admin:documents.uploadModal.allowedFormats')}
           </p>
           <input
             ref={fileRef}
@@ -497,7 +499,9 @@ function UploadModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>
-                {selectedFiles.length} archivo{selectedFiles.length > 1 ? 's' : ''} seleccionado{selectedFiles.length > 1 ? 's' : ''}
+                {selectedFiles.length > 1
+                  ? t('admin:documents.uploadModal.filesSelectedPlural', { count: selectedFiles.length })
+                  : t('admin:documents.uploadModal.filesSelected', { count: selectedFiles.length })}
               </p>
               <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>
                 {formatFileSize(totalSize)}
@@ -536,7 +540,7 @@ function UploadModal({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: 'rgb(var(--ink-300))' }}>
-              Cliente (opcional)
+              {t('admin:documents.uploadModal.clientOptional')}
             </label>
             <select
               value={clientId}
@@ -551,15 +555,15 @@ function UploadModal({
           </div>
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: 'rgb(var(--ink-300))' }}>
-              Categoria
+              {t('admin:documents.uploadModal.category')}
             </label>
             <select
               value={category}
               onChange={e => setCategory(e.target.value)}
               className="input-dark w-full px-3 py-2 rounded-xl text-sm"
             >
-              {categories.filter(c => c.value !== 'todos').map(c => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+              {categoryValues.filter(v => v !== 'todos').map(v => (
+                <option key={v} value={v}>{t(`admin:${categoryLabelKeys[v]}`)}</option>
               ))}
             </select>
           </div>
@@ -581,12 +585,16 @@ function UploadModal({
           {uploading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
-              Subiendo...
+              {t('admin:documents.uploadModal.uploading')}
             </>
           ) : (
             <>
               <Upload size={16} />
-              Subir {selectedFiles.length > 0 ? `${selectedFiles.length} archivo${selectedFiles.length > 1 ? 's' : ''}` : ''}
+              {selectedFiles.length > 0
+                ? (selectedFiles.length > 1
+                    ? t('admin:documents.uploadModal.uploadCountPlural', { count: selectedFiles.length })
+                    : t('admin:documents.uploadModal.uploadCount', { count: selectedFiles.length }))
+                : t('admin:documents.uploadModal.upload')}
             </>
           )}
         </motion.button>

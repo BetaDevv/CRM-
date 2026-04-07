@@ -6,6 +6,8 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
 import esLocale from '@fullcalendar/core/locales/es'
+import enLocale from '@fullcalendar/core/locales/en-gb'
+import deLocale from '@fullcalendar/core/locales/de'
 import type { EventInput, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core'
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 import type { DatesSetArg } from '@fullcalendar/core'
@@ -23,8 +25,12 @@ import {
 } from '../lib/api'
 import type { TodoItem } from '../types'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 import { useAuthStore } from '../store/useAuthStore'
 import { useStore } from '../store/useStore'
+
+/* ─── FullCalendar locale map ─── */
+const fcLocales: Record<string, typeof esLocale> = { es: esLocale, en: enLocale, de: deLocale }
 
 /* ─── Color Presets ─── */
 const COLOR_PRESETS = [
@@ -221,7 +227,7 @@ function EventModal({
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="Nombre del evento..."
+              placeholder={t('admin:calendar.form.titlePlaceholder')}
               className="input-dark"
               autoFocus
             />
@@ -233,7 +239,7 @@ function EventModal({
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              placeholder="Detalles del evento..."
+              placeholder={t('admin:calendar.form.descriptionPlaceholder')}
               rows={3}
               className="input-dark resize-none"
             />
@@ -300,7 +306,7 @@ function EventModal({
               className="flex items-center gap-2 text-sm font-medium text-ink-200 transition-colors hover:text-crimson-400"
             >
               <Users size={14} />
-              Participantes {participantIds.length > 0 && `(${participantIds.length})`}
+              {t('admin:calendar.form.participants')} {participantIds.length > 0 && `(${participantIds.length})`}
             </button>
             <AnimatePresence>
               {showParticipants && (
@@ -341,7 +347,7 @@ function EventModal({
           {/* Link to Client */}
           <div>
             <label className="block text-xs font-medium mb-1.5 text-ink-300">
-              <Link2 size={12} className="inline mr-1" />Cliente
+              <Link2 size={12} className="inline mr-1" />{t('admin:calendar.form.client')}
             </label>
             <select
               value={clientId}
@@ -358,7 +364,7 @@ function EventModal({
           {/* Link to Todo */}
           <div>
             <label className="block text-xs font-medium mb-1.5 text-ink-300">
-              <Link2 size={12} className="inline mr-1" />Vincular a tarea
+              <Link2 size={12} className="inline mr-1" />{t('admin:calendar.form.linkToTask')}
             </label>
             <select value={todoId} onChange={e => setTodoId(e.target.value)} className="input-dark text-sm">
               <option value="">{t('admin:calendar.form.noLinkedTask')}</option>
@@ -372,7 +378,7 @@ function EventModal({
           {clientId && (
             <div>
               <label className="block text-xs font-medium mb-1.5 text-ink-300">
-                <Link2 size={12} className="inline mr-1" />Vincular a hito del plan
+                <Link2 size={12} className="inline mr-1" />{t('admin:calendar.form.linkToMilestone')}
               </label>
               {filteredMilestones.length > 0 ? (
                 <>
@@ -392,7 +398,7 @@ function EventModal({
                       <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: hexToRgba(catColor, 0.1), borderLeft: `3px solid ${catColor}` }}>
                         <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catColor }} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate" style={{ color: catColor }}>{m.title}</p>
+                          <p className="text-xs font-medium truncate" style={{ color: catColor }}><T text={m.title} /></p>
                           <p className="text-xs truncate text-ink-400">{m.planTitle} · {m.category}</p>
                         </div>
                         {m.date && <span className="text-xs flex-shrink-0 text-ink-400">{m.date}</span>}
@@ -432,11 +438,11 @@ function EventModal({
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 border border-red-500/20 transition-all disabled:opacity-50"
             >
               {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-              Eliminar
+              {t('common:common.delete')}
             </button>
           )}
           <div className="flex-1" />
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center">Cancelar</button>
+          <button onClick={onClose} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
           <button onClick={handleSave} disabled={saving || !title.trim()} className="btn-primary flex-1 justify-center disabled:opacity-50">
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             {mode === 'create' ? t('admin:calendar.form.create') : t('admin:calendar.form.save')}
@@ -449,7 +455,7 @@ function EventModal({
 
 /* ─── Main Calendar Component ─── */
 export default function Calendario() {
-  const { t } = useTranslation(['admin', 'common'])
+  const { t, i18n } = useTranslation(['admin', 'common'])
   const { user: _user } = useAuthStore()
   const { clients } = useStore()
   const calendarRef = useRef<FullCalendar>(null)
@@ -766,7 +772,7 @@ export default function Calendario() {
             }}
             className="btn-primary text-sm"
           >
-            <Plus size={16} /> Nuevo evento
+            <Plus size={16} /> {t('admin:calendar.newEvent')}
           </motion.button>
 
           {/* Google Calendar */}
@@ -777,12 +783,12 @@ export default function Calendario() {
               onClick={handleConnectGoogle}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-white/10 hover:bg-white/5 transition-all text-ink-200"
             >
-              <ExternalLink size={14} /> Conectar Google Calendar
+              <ExternalLink size={14} /> {t('admin:calendar.connectGoogle')}
             </motion.button>
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-xs px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 font-medium">
-                {googleStatus.email || 'Google conectado'}
+                {googleStatus.email || t('admin:calendar.googleConnected')}
               </span>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -790,7 +796,7 @@ export default function Calendario() {
                 onClick={handleSyncGoogle}
                 disabled={syncing}
                 className="p-2 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50 text-ink-300"
-                title="Sincronizar"
+                title={t('admin:calendar.sync')}
               >
                 <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
               </motion.button>
@@ -798,7 +804,7 @@ export default function Calendario() {
                 onClick={handleDisconnectGoogle}
                 className="text-xs text-ink-400 hover:text-red-400 transition-colors underline"
               >
-                Desconectar
+                {t('admin:calendar.disconnectGoogle')}
               </button>
             </div>
           )}
@@ -816,7 +822,7 @@ export default function Calendario() {
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-xs px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
-                Outlook {t('common:status.active')?.toLowerCase() || 'activo'}
+                Outlook {t('common:status.active').toLowerCase()}
               </span>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -824,7 +830,7 @@ export default function Calendario() {
                 onClick={handleSyncMicrosoft}
                 disabled={microsoftSyncing}
                 className="p-2 rounded-lg hover:bg-white/5 transition-colors disabled:opacity-50 text-ink-300"
-                title="Sincronizar"
+                title={t('admin:calendar.sync')}
               >
                 <RefreshCw size={16} className={microsoftSyncing ? 'animate-spin' : ''} />
               </motion.button>
@@ -850,7 +856,7 @@ export default function Calendario() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek',
           }}
-          locale={esLocale}
+          locale={fcLocales[i18n.language] || esLocale}
           firstDay={1}
           slotMinTime="06:00:00"
           slotMaxTime="22:00:00"

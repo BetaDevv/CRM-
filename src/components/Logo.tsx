@@ -46,10 +46,7 @@ export function LogoFull({ collapsed = false, size = 'md' }: LogoProps) {
           transition={{ duration: 0.2 }}
         >
           <p className="text-white font-black text-sm leading-none tracking-tight">
-            The<span className="text-crimson-400">Branding</span>
-          </p>
-          <p className="text-ink-300 text-xs font-semibold tracking-widest uppercase leading-tight">
-            Studio
+            NextGen<span className="text-crimson-400">CRM</span>
           </p>
         </motion.div>
       )}
@@ -74,9 +71,9 @@ export function LogoLogin() {
         className="text-center"
       >
         <h1 className="text-2xl font-black text-white tracking-tight">
-          The<span className="text-crimson-400">Branding</span>Studio
+          NextGen<span className="text-crimson-400">CRM</span>
         </h1>
-        <p className="text-ink-400 text-xs tracking-widest uppercase mt-0.5">CRM Platform</p>
+        <p className="text-ink-400 text-xs tracking-widest uppercase mt-0.5">Management Platform</p>
       </motion.div>
     </div>
   )

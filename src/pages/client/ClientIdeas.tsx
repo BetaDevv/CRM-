@@ -5,6 +5,7 @@ import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket, Loader2, Shar
 import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi, getIdeaNotes, addIdeaNoteMsg } from '../../lib/api'
 import type { ItemNote } from '../../lib/api'
@@ -50,11 +51,11 @@ function IdeaCardContent({ idea, onUpdate, onDelete, isOwn, onOpenNotes, onStart
           )}
         </div>
       </div>
-      <h4 className="font-semibold text-white text-sm mb-1.5 leading-snug">{idea.title}</h4>
-      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3">{idea.description}</p>
+      <h4 className="font-semibold text-white text-sm mb-1.5 leading-snug"><T text={idea.title} /></h4>
+      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3"><T text={idea.description} /></p>
       <div className="flex flex-wrap gap-1 mb-3">
-        {idea.tags.map(t => (
-          <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-200">{t}</span>
+        {idea.tags.map(tag => (
+          <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-200"><T text={tag} /></span>
         ))}
       </div>
       <div className="flex items-center justify-between pt-2 border-t border-white/5">

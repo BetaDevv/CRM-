@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Prospect, Client, TodoItem, Idea, Post, MarketingPlan } from '../types'
+import { api } from '../lib/api'
 
 interface CRMState {
   prospects: Prospect[]
@@ -10,6 +11,9 @@ interface CRMState {
   posts: Post[]
   marketingPlans: MarketingPlan[]
   sidebarCollapsed: boolean
+
+  // Hydrate from API
+  fetchClients: () => Promise<void>
 
   // Prospects
   addProspect: (p: Prospect) => void
@@ -283,12 +287,21 @@ export const useStore = create<CRMState>()(
   persist(
     (set) => ({
       prospects: sampleProspects,
-      clients: sampleClients,
+      clients: [],
       todos: sampleTodos,
       ideas: sampleIdeas,
       posts: samplePosts,
       marketingPlans: [samplePlan],
       sidebarCollapsed: false,
+
+      fetchClients: async () => {
+        try {
+          const { data } = await api.get('/clients')
+          set({ clients: data })
+        } catch {
+          // If API fails, keep current state
+        }
+      },
 
       addProspect: (p) => set((s) => ({ prospects: [...s.prospects, p] })),
       updateProspect: (id, data) => set((s) => ({ prospects: s.prospects.map(p => p.id === id ? { ...p, ...data } : p) })),
@@ -316,6 +329,13 @@ export const useStore = create<CRMState>()(
 
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     }),
-    { name: 'tbs-crm-store' }
+    {
+      name: 'tbs-crm-store',
+      partialize: (state) => {
+        // Don't persist clients — always fetched fresh from API
+        const { clients, ...rest } = state
+        return rest
+      },
+    }
   )
 )

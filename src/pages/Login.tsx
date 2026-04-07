@@ -159,14 +159,23 @@ export default function Login() {
         </div>
 
         {/* Bottom tagline */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-center text-xs text-ink-500 mt-6"
+          className="text-center text-xs text-ink-500 mt-6 space-y-1"
         >
-          {t('login.copyright')}
-        </motion.p>
+          <p>{t('login.copyright')}</p>
+          <div className="flex items-center justify-center gap-3">
+            <a href="/privacy" className="text-ink-500 hover:text-crimson-400 transition-colors underline underline-offset-2">
+              {t('login.privacyPolicy')}
+            </a>
+            <span className="text-ink-600">·</span>
+            <a href="/terms" className="text-ink-500 hover:text-crimson-400 transition-colors underline underline-offset-2">
+              {t('login.termsOfService')}
+            </a>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
   )

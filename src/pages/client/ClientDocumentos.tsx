@@ -8,6 +8,7 @@ import {
   getDocuments, uploadDocuments, deleteDocument, getDocumentDownloadUrl,
 } from '../../lib/api'
 import type { Document } from '../../lib/api'
+import T from '../../components/TranslatedText'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getFileIcon, formatFileSize, formatDocDate } from '../../lib/documentHelpers'
@@ -290,7 +291,7 @@ export default function ClientDocumentos() {
                   style={{ color: 'rgb(var(--ink-100))' }}
                   title={doc.originalName}
                 >
-                  {doc.originalName}
+                  <T text={doc.originalName} />
                 </p>
 
                 {/* Size */}
@@ -300,7 +301,7 @@ export default function ClientDocumentos() {
 
                 {/* Category */}
                 <p className="text-xs truncate" style={{ color: 'rgb(var(--ink-300))' }}>
-                  {doc.category}
+                  <T text={doc.category} />
                 </p>
 
                 {/* Date */}

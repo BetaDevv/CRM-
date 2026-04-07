@@ -5,6 +5,7 @@ import { prospectStatusConfig, formatCurrency } from '../lib/utils'
 import { api, convertProspect } from '../lib/api'
 import type { Prospect, ProspectStatus } from '../types'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
 const columns: { key: ProspectStatus; tKey: string }[] = [
   { key: 'new',         tKey: 'prospects.columns.new' },
@@ -94,15 +95,15 @@ function ProspectCard({
           </span>
         </div>
       </div>
-      <p className="font-semibold text-white text-sm mb-1">{prospect.company}</p>
-      <p className="text-xs text-ink-300 mb-3">{prospect.contact}</p>
+      <p className="font-semibold text-white text-sm mb-1"><T text={prospect.company} /></p>
+      <p className="text-xs text-ink-300 mb-3"><T text={prospect.contact} /></p>
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5 text-xs text-ink-400">
           <Mail size={11} /> <span>{prospect.email}</span>
         </div>
         {prospect.budget && (
           <div className="flex items-center gap-1.5 text-xs text-ink-400">
-            <DollarSign size={11} /> <span>{prospect.budget}</span>
+            <DollarSign size={11} /> <span><T text={prospect.budget} /></span>
           </div>
         )}
         {estimatedValue > 0 && prospect.status !== 'won' && prospect.status !== 'lost' && (
@@ -111,7 +112,7 @@ function ProspectCard({
           </div>
         )}
         <div className="flex items-center gap-1.5 text-xs text-ink-400">
-          <Tag size={11} /> <span>{prospect.source}</span>
+          <Tag size={11} /> <span><T text={prospect.source} /></span>
         </div>
       </div>
 

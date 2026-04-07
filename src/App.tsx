@@ -22,6 +22,8 @@ import ClientMetricas from './pages/client/ClientMetricas'
 import ClientDocumentos from './pages/client/ClientDocumentos'
 import ClientTodos from './pages/client/ClientTodos'
 import ClientIdeas from './pages/client/ClientIdeas'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, restoreSession, isAdmin } = useAuthStore()
@@ -60,6 +62,8 @@ function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/login" element={<Login />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
 
       {/* Client Portal — Layout-wrapped */}
       <Route path="/portal" element={

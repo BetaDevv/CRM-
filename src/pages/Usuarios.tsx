@@ -39,12 +39,12 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
-function relativeTime(date: string | null) {
-  if (!date) return 'Nunca'
+function relativeTime(date: string | null, neverLabel: string) {
+  if (!date) return neverLabel
   try {
     return formatDistanceToNow(new Date(date), { addSuffix: true, locale: es })
   } catch {
-    return 'Nunca'
+    return neverLabel
   }
 }
 
@@ -118,7 +118,7 @@ export default function Usuarios() {
       setForm({ name: '', email: '', password: '', role: 'client', client_id: '' })
       setShowPassword(false)
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al crear usuario')
+      alert(err.response?.data?.error || t('admin:users.form.errorCreating'))
     } finally {
       setSubmitting(false)
     }
@@ -135,7 +135,7 @@ export default function Usuarios() {
 
   async function handleResetPassword() {
     if (!newPassword || newPassword.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres')
+      alert(t('admin:users.form.passwordMinLength'))
       return
     }
     try {
@@ -150,15 +150,15 @@ export default function Usuarios() {
   async function handleDelete(user: User) {
     setConfirm({
       open: true,
-      title: 'Eliminar usuario',
-      message: `¿Estás seguro de eliminar a "${user.name}"? Esta acción no se puede deshacer.`,
+      title: t('admin:users.confirmDelete.title'),
+      message: t('admin:users.confirmDelete.message', { name: user.name }),
       destructive: true,
       action: async () => {
         try {
           await deleteUser(user.id)
           setUsers(prev => prev.filter(u => u.id !== user.id))
         } catch (err: any) {
-          alert(err.response?.data?.error || 'Error al eliminar usuario')
+          alert(err.response?.data?.error || t('admin:users.confirmDelete.errorDeleting'))
         }
         setConfirm(prev => ({ ...prev, open: false }))
       },
@@ -187,7 +187,7 @@ export default function Usuarios() {
       setCreatedKey(newKey.full_key || null)
       setApiKeyForm({ name: '', user_id: '', role: 'client', client_id: '', scopes: 'read' })
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al crear API key')
+      alert(err.response?.data?.error || t('admin:users.apiKeys.form.errorCreating'))
     } finally {
       setSubmittingKey(false)
     }
@@ -205,15 +205,15 @@ export default function Usuarios() {
   async function handleDeleteApiKey(key: ApiKey) {
     setConfirm({
       open: true,
-      title: 'Eliminar API Key',
-      message: `¿Estás seguro de eliminar la key "${key.name}"? Las integraciones que la usen dejarán de funcionar.`,
+      title: t('admin:users.apiKeys.confirmDelete.title'),
+      message: t('admin:users.apiKeys.confirmDelete.message', { name: key.name }),
       destructive: true,
       action: async () => {
         try {
           await deleteApiKey(key.id)
           setApiKeys(prev => prev.filter(k => k.id !== key.id))
         } catch (err: any) {
-          alert(err.response?.data?.error || 'Error al eliminar API key')
+          alert(err.response?.data?.error || t('admin:users.apiKeys.confirmDelete.errorDeleting'))
         }
         setConfirm(prev => ({ ...prev, open: false }))
       },
@@ -250,10 +250,10 @@ export default function Usuarios() {
   const inactiveCount = users.filter(u => !u.active).length
 
   const stats = [
-    { label: 'Total', value: totalUsers, icon: Users, color: 'text-white' },
-    { label: 'Admins', value: adminCount, icon: Shield, color: 'text-crimson-400' },
-    { label: 'Clientes', value: clientCount, icon: UserCheck, color: 'text-blue-400' },
-    { label: 'Inactivos', value: inactiveCount, icon: UserX, color: 'text-ink-400' },
+    { label: t('admin:users.stats.total'), value: totalUsers, icon: Users, color: 'text-white' },
+    { label: t('admin:users.stats.admins'), value: adminCount, icon: Shield, color: 'text-crimson-400' },
+    { label: t('admin:users.stats.clients'), value: clientCount, icon: UserCheck, color: 'text-blue-400' },
+    { label: t('admin:users.stats.inactive'), value: inactiveCount, icon: UserX, color: 'text-ink-400' },
   ]
 
   if (loading) {
@@ -320,13 +320,13 @@ export default function Usuarios() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Usuario</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Email</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Rol</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Cliente</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Estado</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Último acceso</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Acciones</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.user')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.email')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.role')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.client')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.status')}</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.lastLogin')}</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -375,7 +375,7 @@ export default function Usuarios() {
                         }`}
                       >
                         {user.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}
-                        {user.role === 'admin' ? 'Admin' : 'Cliente'}
+                        {user.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
                       </span>
                     </td>
 
@@ -398,7 +398,7 @@ export default function Usuarios() {
 
                     {/* Last login */}
                     <td className="px-4 py-3 text-ink-400 text-xs">
-                      {relativeTime(user.lastLogin)}
+                      {relativeTime(user.lastLogin, t('admin:users.never'))}
                     </td>
 
                     {/* Actions */}
@@ -408,7 +408,7 @@ export default function Usuarios() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleToggle(user)}
-                          title={user.active ? 'Desactivar' : 'Activar'}
+                          title={user.active ? t('admin:users.deactivate') : t('admin:users.activate')}
                           className={`p-1.5 rounded-lg transition-colors ${
                             user.active
                               ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
@@ -422,7 +422,7 @@ export default function Usuarios() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => setResetDialog({ open: true, userId: user.id, userName: user.name })}
-                          title="Restablecer contraseña"
+                          title={t('admin:users.resetPasswordModal.title')}
                           className="p-1.5 rounded-lg text-ink-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
                         >
                           <Key size={15} />
@@ -432,7 +432,7 @@ export default function Usuarios() {
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleDelete(user)}
-                          title="Eliminar"
+                          title={t('common:common.delete')}
                           className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         >
                           <Trash2 size={15} />
@@ -487,14 +487,14 @@ export default function Usuarios() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/5">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Nombre</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Key</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Rol</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Cliente</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Scopes</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Estado</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Último uso</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">Acciones</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.name')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.key')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.role')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.client')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.scopes')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.status')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.lastUsed')}</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -528,7 +528,7 @@ export default function Usuarios() {
                             : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
                         }`}>
                           {ak.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}
-                          {ak.role === 'admin' ? 'Admin' : 'Cliente'}
+                          {ak.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-ink-300 text-xs">{ak.client_name || '—'}</td>
@@ -544,11 +544,11 @@ export default function Usuarios() {
                             : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${ak.is_active ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                          {ak.is_active ? 'Activa' : 'Inactiva'}
+                          {ak.is_active ? t('admin:users.apiKeys.status.active') : t('admin:users.apiKeys.status.inactive')}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-ink-400 text-xs">
-                        {ak.last_used_at ? relativeTime(ak.last_used_at) : 'Nunca'}
+                        {ak.last_used_at ? relativeTime(ak.last_used_at, t('admin:users.never')) : t('admin:users.never')}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
@@ -556,7 +556,7 @@ export default function Usuarios() {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleToggleApiKey(ak)}
-                            title={ak.is_active ? 'Desactivar' : 'Activar'}
+                            title={ak.is_active ? t('admin:users.deactivate') : t('admin:users.activate')}
                             className={`p-1.5 rounded-lg transition-colors ${
                               ak.is_active
                                 ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
@@ -569,7 +569,7 @@ export default function Usuarios() {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => handleDeleteApiKey(ak)}
-                            title="Eliminar"
+                            title={t('common:common.delete')}
                             className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                           >
                             <Trash2 size={15} />
@@ -616,7 +616,7 @@ export default function Usuarios() {
                     <Zap size={20} />
                   </div>
                   <h3 className="text-lg font-bold text-white">
-                    {createdKey ? 'API Key Generada' : 'Nueva API Key'}
+                    {createdKey ? t('admin:users.apiKeys.generated') : t('admin:users.apiKeys.newKey')}
                   </h3>
                 </div>
                 <button onClick={() => { setShowApiKeyModal(false); setCreatedKey(null) }} className="text-ink-400 hover:text-white transition-colors">
@@ -630,7 +630,7 @@ export default function Usuarios() {
                     <div className="flex items-start gap-2 mb-3">
                       <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-300">
-                        Copia esta key ahora. No se mostrará de nuevo.
+                        {t('admin:users.apiKeys.copyWarning')}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -655,31 +655,31 @@ export default function Usuarios() {
                     onClick={() => { setShowApiKeyModal(false); setCreatedKey(null) }}
                     className="w-full btn-primary"
                   >
-                    Listo
+                    {t('admin:users.apiKeys.done')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">Nombre</label>
+                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.apiKeys.form.name')}</label>
                       <input
                         type="text"
                         value={apiKeyForm.name}
                         onChange={e => setApiKeyForm(f => ({ ...f, name: e.target.value }))}
-                        placeholder="Ej: Integración Zapier"
+                        placeholder={t('admin:users.apiKeys.form.namePlaceholder')}
                         className="input-dark w-full"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">Usuario asociado</label>
+                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.apiKeys.form.associatedUser')}</label>
                       <select
                         value={apiKeyForm.user_id}
                         onChange={e => setApiKeyForm(f => ({ ...f, user_id: e.target.value }))}
                         className="input-dark w-full"
                       >
-                        <option value="">Seleccionar usuario</option>
+                        <option value="">{t('admin:users.apiKeys.form.selectUser')}</option>
                         {users.map(u => (
                           <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                         ))}
@@ -687,14 +687,14 @@ export default function Usuarios() {
                     </div>
 
                     <div>
-                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">Rol de la key</label>
+                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.apiKeys.form.keyRole')}</label>
                       <select
                         value={apiKeyForm.role}
                         onChange={e => setApiKeyForm(f => ({ ...f, role: e.target.value, client_id: '' }))}
                         className="input-dark w-full"
                       >
-                        <option value="client">Cliente (solo lectura de sus datos)</option>
-                        <option value="admin">Admin (CRUD completo)</option>
+                        <option value="client">{t('admin:users.apiKeys.form.clientReadOnly')}</option>
+                        <option value="admin">{t('admin:users.apiKeys.form.adminFullCrud')}</option>
                       </select>
                     </div>
 
@@ -705,13 +705,13 @@ export default function Usuarios() {
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
                         >
-                          <label className="block text-xs text-ink-300 mb-1.5 font-medium">Cliente asignado</label>
+                          <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.apiKeys.form.assignedClient')}</label>
                           <select
                             value={apiKeyForm.client_id}
                             onChange={e => setApiKeyForm(f => ({ ...f, client_id: e.target.value }))}
                             className="input-dark w-full"
                           >
-                            <option value="">Seleccionar cliente</option>
+                            <option value="">{t('admin:users.apiKeys.form.selectClient')}</option>
                             {clients.map(c => (
                               <option key={c.id} value={c.id}>{c.company}</option>
                             ))}
@@ -721,14 +721,14 @@ export default function Usuarios() {
                     </AnimatePresence>
 
                     <div>
-                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">Scopes</label>
+                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.apiKeys.form.scopes')}</label>
                       <select
                         value={apiKeyForm.scopes}
                         onChange={e => setApiKeyForm(f => ({ ...f, scopes: e.target.value }))}
                         className="input-dark w-full"
                       >
-                        <option value="read">read (solo lectura)</option>
-                        <option value="read,write">read,write (lectura y escritura)</option>
+                        <option value="read">{t('admin:users.apiKeys.form.readOnly')}</option>
+                        <option value="read,write">{t('admin:users.apiKeys.form.readWrite')}</option>
                       </select>
                     </div>
                   </div>
@@ -738,7 +738,7 @@ export default function Usuarios() {
                       onClick={() => setShowApiKeyModal(false)}
                       className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-300 hover:text-white hover:bg-white/5 transition-all border border-white/10"
                     >
-                      Cancelar
+                      {t('common:common.cancel')}
                     </button>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -748,7 +748,7 @@ export default function Usuarios() {
                       className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {submittingKey ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-                      Generar
+                      {t('admin:users.apiKeys.form.generate')}
                     </motion.button>
                   </div>
                 </>
@@ -784,35 +784,35 @@ export default function Usuarios() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">Nombre</label>
+                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.form.name')}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    placeholder="Nombre completo"
+                    placeholder={t('admin:users.form.namePlaceholder')}
                     className="input-dark w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">Email</label>
+                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.form.email')}</label>
                   <input
                     type="email"
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    placeholder="usuario@email.com"
+                    placeholder={t('admin:users.form.emailPlaceholder')}
                     className="input-dark w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">Contraseña</label>
+                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.form.password')}</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={form.password}
                       onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder={t('admin:users.form.passwordPlaceholder')}
                       className="input-dark w-full pr-10"
                     />
                     <button
@@ -826,14 +826,14 @@ export default function Usuarios() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">Rol</label>
+                  <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.form.role')}</label>
                   <select
                     value={form.role}
                     onChange={e => setForm(f => ({ ...f, role: e.target.value, client_id: '' }))}
                     className="input-dark w-full"
                   >
-                    <option value="client">Cliente</option>
-                    <option value="admin">Admin</option>
+                    <option value="client">{t('admin:users.role.client')}</option>
+                    <option value="admin">{t('admin:users.role.admin')}</option>
                   </select>
                 </div>
 
@@ -844,13 +844,13 @@ export default function Usuarios() {
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                     >
-                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">Cliente asignado</label>
+                      <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.form.assignedClient')}</label>
                       <select
                         value={form.client_id}
                         onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
                         className="input-dark w-full"
                       >
-                        <option value="">Sin asignar</option>
+                        <option value="">{t('admin:users.form.noAssignment')}</option>
                         {clients.map(c => (
                           <option key={c.id} value={c.id}>{c.company}</option>
                         ))}
@@ -865,7 +865,7 @@ export default function Usuarios() {
                   onClick={() => setShowModal(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-300 hover:text-white hover:bg-white/5 transition-all border border-white/10"
                 >
-                  Cancelar
+                  {t('common:common.cancel')}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -875,7 +875,7 @@ export default function Usuarios() {
                   className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-                  Crear
+                  {t('admin:users.form.create')}
                 </motion.button>
               </div>
             </motion.div>
@@ -911,12 +911,12 @@ export default function Usuarios() {
               </div>
 
               <div>
-                <label className="block text-xs text-ink-300 mb-1.5 font-medium">Nueva contraseña</label>
+                <label className="block text-xs text-ink-300 mb-1.5 font-medium">{t('admin:users.resetPasswordModal.newPassword')}</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t('admin:users.form.passwordPlaceholder')}
                   className="input-dark w-full"
                 />
               </div>
@@ -926,7 +926,7 @@ export default function Usuarios() {
                   onClick={() => { setResetDialog({ open: false, userId: '', userName: '' }); setNewPassword('') }}
                   className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-300 hover:text-white hover:bg-white/5 transition-all border border-white/10"
                 >
-                  Cancelar
+                  {t('common:common.cancel')}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -935,7 +935,7 @@ export default function Usuarios() {
                   disabled={!newPassword || newPassword.length < 6}
                   className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Restablecer
+                  {t('admin:users.resetPasswordModal.reset')}
                 </motion.button>
               </div>
             </motion.div>
@@ -972,7 +972,7 @@ export default function Usuarios() {
                   onClick={() => setConfirm(prev => ({ ...prev, open: false }))}
                   className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-ink-300 hover:text-white hover:bg-white/5 transition-all border border-white/10"
                 >
-                  Cancelar
+                  {t('common:common.cancel')}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -980,7 +980,7 @@ export default function Usuarios() {
                   onClick={confirm.action}
                   className="flex-1 px-4 py-2.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-700 text-white transition-colors"
                 >
-                  Eliminar
+                  {t('common:common.delete')}
                 </motion.button>
               </div>
             </motion.div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ThumbsUp, ThumbsDown, RotateCcw, Send, CheckCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { api } from '../../lib/api'
 import { postStatusConfig, platformConfig, formatDate } from '../../lib/utils'
@@ -55,7 +56,7 @@ export default function ClientPosts() {
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: platformConfig[post.platform]?.color || '#6b7280' }}>{platformConfig[post.platform]?.short || '?'}</div>
                   <div>
-                    <p className="font-semibold text-white text-sm">{post.title}</p>
+                    <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
                     <p className="text-xs text-ink-400">{post.platform} · {formatDate(post.scheduled_date)}</p>
                   </div>
                 </div>
@@ -63,7 +64,7 @@ export default function ClientPosts() {
               </div>
 
               <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-                <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
               </div>
 
               {post.media_urls?.length > 0 && (
@@ -77,7 +78,7 @@ export default function ClientPosts() {
               {post.feedback && (
                 <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
                   <p className="text-amber-400 font-semibold mb-0.5">{t('client:posts.teamNote')}</p>
-                  <p className="text-amber-200">{post.feedback}</p>
+                  <p className="text-amber-200"><T text={post.feedback} /></p>
                 </div>
               )}
 

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { X, MessageSquare, Send, Loader2 } from 'lucide-react'
 import type { ItemNote } from '../lib/api'
+import T from './TranslatedText'
 
 /**
  * Panel de conversación reutilizable para notas en todos/ideas.
@@ -16,6 +18,7 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
   currentUserId: string
   itemTitle: string
 }) {
+  const { t } = useTranslation('common')
   const [text, setText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -33,9 +36,9 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <div>
             <h3 className="font-bold text-white text-lg flex items-center gap-2">
-              <MessageSquare size={18} className="text-crimson-400" /> Notas
+              <MessageSquare size={18} className="text-crimson-400" /> {t('notes.title')}
             </h3>
-            <p className="text-xs text-ink-400 mt-0.5">{itemTitle}</p>
+            <p className="text-xs text-ink-400 mt-0.5"><T text={itemTitle} /></p>
           </div>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
         </div>
@@ -47,8 +50,8 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
           ) : notes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-ink-500">
               <MessageSquare size={28} className="mb-2 opacity-30" />
-              <p className="text-sm">Sin notas aun</p>
-              <p className="text-xs text-ink-500 mt-1">Escribe la primera nota</p>
+              <p className="text-sm">{t('notes.empty')}</p>
+              <p className="text-xs text-ink-500 mt-1">{t('notes.writeFirst')}</p>
             </div>
           ) : notes.map(note => {
             const isMe = note.author_id === currentUserId
@@ -60,9 +63,9 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
                     : 'bg-ink-800/60 border border-white/5'
                 }`}>
                   <p className="text-xs font-semibold mb-1" style={{ color: isMe ? '#DC143C' : '#60A5FA' }}>
-                    {note.author_name}
+                    <T text={note.author_name} />
                   </p>
-                  <p className="text-sm text-white leading-relaxed">{note.content}</p>
+                  <p className="text-sm text-white leading-relaxed"><T text={note.content} /></p>
                   <p className="text-[10px] text-ink-500 mt-1 text-right">
                     {new Date(note.created_at).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -78,7 +81,7 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
               value={text}
               onChange={e => setText(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && text.trim()) { onSend(text.trim()); setText('') } }}
-              placeholder="Escribe una nota..."
+              placeholder={t('notes.placeholder')}
               className="input-dark text-sm flex-1"
               autoFocus
             />

@@ -92,10 +92,7 @@ export default function Sidebar() {
               onClick={() => navigate(homePath)}
             >
               <p className="font-black text-sm leading-none tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>
-                The<span className="text-crimson-400">Branding</span>
-              </p>
-              <p className="text-xs font-semibold tracking-widest uppercase mt-1" style={{ color: 'rgb(var(--ink-300))' }}>
-                Studio
+                NextGen<span className="text-crimson-400">CRM</span>
               </p>
             </motion.div>
           )}

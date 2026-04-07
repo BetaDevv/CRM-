@@ -11,8 +11,18 @@ import { priorityConfig } from '../lib/utils'
 import type { Priority, TodoItem } from '../types'
 import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
+import T from '../components/TranslatedText'
 
-const categories = ['Contenido', 'Diseño', 'Ventas', 'Reportes', 'Estrategia', 'Admin', 'Otro']
+const categoryKeys: Record<string, string> = {
+  'Contenido': 'categories.content',
+  'Diseño': 'categories.design',
+  'Ventas': 'categories.sales',
+  'Reportes': 'categories.reports',
+  'Estrategia': 'categories.strategy',
+  'Admin': 'categories.admin',
+  'Otro': 'categories.other',
+}
+const categories = Object.keys(categoryKeys)
 
 function TodoCard({
   todo,
@@ -56,7 +66,7 @@ function TodoCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className={`text-sm font-medium ${isDone ? 'line-through text-ink-400' : 'text-white'}`}>
-              {todo.title}
+              <T text={todo.title} />
             </p>
             {clientLabel && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-crimson-500/10 text-crimson-400 flex-shrink-0">
@@ -68,7 +78,7 @@ function TodoCard({
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
               {cfg.label}
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{todo.category}</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{categoryKeys[todo.category] ? t(`common:${categoryKeys[todo.category]}`) : todo.category}</span>
             <button
               onClick={(e) => { e.stopPropagation(); onOpenNotes?.(todo) }}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-crimson-400 hover:bg-crimson-700/20 transition-all"
@@ -340,7 +350,7 @@ export default function TodoSemanal() {
         <div>
           <h2 className="section-title">{t('admin:todo.title')}</h2>
           <p className="text-ink-300 text-sm mt-1">
-            {doneCount}/{totalCount} completadas esta semana
+            {t('admin:todo.completedCount', { done: doneCount, total: totalCount })}
           </p>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingTodo(null); setShowModal(true) }} className="btn-primary">
@@ -396,7 +406,7 @@ export default function TodoSemanal() {
           onClick={() => setFilterCat(null)}
           className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!filterCat ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300'}`}
         >
-          Todas
+          {t('admin:todo.allCategories')}
         </button>
         {categories.map(c => (
           <button
@@ -404,7 +414,7 @@ export default function TodoSemanal() {
             onClick={() => setFilterCat(filterCat === c ? null : c)}
             className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filterCat === c ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300'}`}
           >
-            {c}
+            {t(`common:${categoryKeys[c]}`)}
           </button>
         ))}
       </div>
@@ -594,7 +604,7 @@ export default function TodoSemanal() {
                       onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}
                       className="input-dark text-sm"
                     >
-                      {categories.map(c => <option key={c} value={c} className="bg-ink-800">{c}</option>)}
+                      {categories.map(c => <option key={c} value={c} className="bg-ink-800">{t(`common:${categoryKeys[c]}`)}</option>)}
                     </select>
                   </div>
                 </div>
@@ -663,13 +673,13 @@ export default function TodoSemanal() {
                     onClick={() => setConfirmDelete(null)}
                     className="flex-1 px-4 py-2 bg-ink-700 text-ink-300 rounded-xl hover:bg-ink-600 transition-colors"
                   >
-                    Cancelar
+                    {t('common:common.cancel')}
                   </button>
                   <button
                     onClick={() => { handleDelete(confirmDelete.id); setConfirmDelete(null) }}
                     className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors"
                   >
-                    Eliminar
+                    {t('common:common.delete')}
                   </button>
                 </div>
               </div>

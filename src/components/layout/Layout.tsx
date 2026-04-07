@@ -4,14 +4,20 @@ import { motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import { useThemeStore } from '../../store/useThemeStore'
+import { useStore } from '../../store/useStore'
 
 export default function Layout() {
   const location = useLocation()
   const { theme } = useThemeStore()
+  const fetchClients = useStore(s => s.fetchClients)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    fetchClients()
+  }, [fetchClients])
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-ink-900 dot-pattern">

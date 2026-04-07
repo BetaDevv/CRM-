@@ -7,7 +7,8 @@ import { postStatusConfig, platformConfig, formatDate } from '../lib/utils'
 import { api, getTemplates, createTemplate, updateTemplate, deleteTemplate, useTemplate, deletePost } from '../lib/api'
 import type { PostTemplate } from '../lib/api'
 import type { PostStatus } from '../types'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, Trans } from 'react-i18next'
+import T from '../components/TranslatedText'
 
 function PlatformBadge({ platform, size = 'md' }: { platform: string; size?: 'sm' | 'md' }) {
   const cfg = platformConfig[platform] || { label: platform, short: platform.slice(0, 2), color: '#6b7280' }
@@ -19,16 +20,17 @@ function PlatformBadge({ platform, size = 'md' }: { platform: string; size?: 'sm
   )
 }
 
-const statusTabs: { key: PostStatus | 'all'; label: string }[] = [
-  { key: 'all',      label: 'Todos' },
-  { key: 'pending',  label: 'Pendientes' },
-  { key: 'approved', label: 'Aprobados' },
-  { key: 'revision', label: 'En Revisión' },
-  { key: 'rejected', label: 'Rechazados' },
+const statusTabKeys: { key: PostStatus | 'all'; labelKey: string }[] = [
+  { key: 'all',      labelKey: 'approvals.statusTabs.all' },
+  { key: 'pending',  labelKey: 'approvals.statusTabs.pending' },
+  { key: 'approved', labelKey: 'approvals.statusTabs.approved' },
+  { key: 'revision', labelKey: 'approvals.statusTabs.revision' },
+  { key: 'rejected', labelKey: 'approvals.statusTabs.rejected' },
 ]
 
 // ─── Client Post Card ────────────────────────────────────────────────────────
 function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: any; onStatusUpdate: (id: string, status: string, feedback?: string) => void }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [feedback, setFeedback] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
@@ -48,7 +50,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
           <div className="flex items-center gap-3">
             <PlatformBadge platform={post.platform} />
             <div>
-              <p className="font-semibold text-white text-sm">{post.title}</p>
+              <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
               <p className="text-xs text-ink-400 mt-0.5">
                 {platformConfig[post.platform]?.label || post.platform} · {formatDate(post.scheduled_date)}
               </p>
@@ -65,7 +67,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         {/* Post type indicator */}
         <div className="flex items-center gap-2 mb-3">
           {post.type === 'design' ? <Image size={13} className="text-ink-400" /> : <FileText size={13} className="text-ink-400" />}
-          <span className="text-xs text-ink-400">{post.type === 'design' ? 'Diseño / Arte' : 'Publicación de texto'}</span>
+          <span className="text-xs text-ink-400">{post.type === 'design' ? t('admin:approvals.designArt') : t('admin:approvals.textPost')}</span>
         </div>
 
         {/* Social preview */}
@@ -77,10 +79,10 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </div>
               <div>
                 <p className="text-xs font-semibold text-white">{client?.company}</p>
-                <p className="text-xs text-[#9fa6ad]">Publicación programada · {formatDate(post.scheduled_date)}</p>
+                <p className="text-xs text-[#9fa6ad]">{t('admin:approvals.scheduledPost', { date: formatDate(post.scheduled_date) })}</p>
               </div>
             </div>
-            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
           </div>
         )}
 
@@ -94,20 +96,20 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </div>
               <p className="text-xs font-semibold text-white">{client?.company?.toLowerCase().replace(/ /g, '_')}</p>
             </div>
-            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
           </div>
         )}
 
         {(post.platform === 'facebook' || post.platform === 'twitter') && (
           <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
           </div>
         )}
 
         {/* Images */}
         {hasImages && (
           <div className="mb-4">
-            <p className="text-xs font-medium text-ink-300 mb-2">Archivos adjuntos ({post.media_urls.length})</p>
+            <p className="text-xs font-medium text-ink-300 mb-2">{t('admin:approvals.attachments', { count: post.media_urls.length })}</p>
             <div className={`grid gap-2 ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
               {post.media_urls.map((url: string, i: number) => (
                 <motion.div key={i} whileHover={{ scale: 1.02 }} onClick={() => setLightboxImg(url)}
@@ -125,8 +127,8 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         {/* Feedback from admin */}
         {post.feedback && (
           <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1"><MessageSquare size={11} /> Comentario de TheBrandingStudio:</p>
-            <p className="text-sm text-amber-100">{post.feedback}</p>
+            <p className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1"><MessageSquare size={11} /> {t('admin:approvals.tbsFeedback')}</p>
+            <p className="text-sm text-amber-100"><T text={post.feedback} /></p>
           </div>
         )}
 
@@ -137,19 +139,19 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => onStatusUpdate(post.id, 'approved')}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 text-sm font-semibold hover:bg-green-500/20 transition-all">
-                <ThumbsUp size={16} fill="currentColor" /> ¡Aprobar!
+                <ThumbsUp size={16} fill="currentColor" /> {t('admin:approvals.approve')}
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => setShowFeedback(v => !v)}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-sm font-semibold hover:bg-amber-500/20 transition-all">
-                <RotateCcw size={14} /> Pedir cambios
+                <RotateCcw size={14} /> {t('admin:approvals.requestChanges')}
               </motion.button>
             </div>
             <AnimatePresence>
               {showFeedback && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                   <div className="flex gap-2 pt-1">
-                    <input type="text" placeholder="¿Qué cambiamos? Escribe aquí..." value={feedback} onChange={e => setFeedback(e.target.value)} className="input-dark text-sm flex-1" />
+                    <input type="text" placeholder={t('admin:approvals.changeFeedback')} value={feedback} onChange={e => setFeedback(e.target.value)} className="input-dark text-sm flex-1" />
                     <button onClick={() => { onStatusUpdate(post.id, 'revision', feedback); setShowFeedback(false) }}
                       className="px-4 py-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all">
                       <Send size={15} />
@@ -163,13 +165,13 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
 
         {post.status === 'approved' && (
           <div className="flex items-center gap-2 text-green-400 text-sm font-semibold py-2">
-            <CheckCircle size={16} fill="currentColor" /> Publicación aprobada
+            <CheckCircle size={16} fill="currentColor" /> {t('admin:approvals.postApproved')}
           </div>
         )}
 
         {post.status === 'revision' && (
           <div className="flex items-center gap-2 text-amber-400 text-sm py-2">
-            <RotateCcw size={14} /> Cambios solicitados · En revisión por el equipo
+            <RotateCcw size={14} /> {t('admin:approvals.changesRequested')}
           </div>
         )}
       </div>
@@ -191,6 +193,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
 
 // ─── Admin Post Card ─────────────────────────────────────────────────────────
 function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete, onEdit }: { post: any; client?: any; onStatusUpdate: (id: string, status: string, feedback?: string) => void; onDelete: (post: any) => void; onEdit: (post: any) => void }) {
+  const { t } = useTranslation(['admin', 'common'])
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
   const cfg = postStatusConfig[post.status as PostStatus]
   const hasImages = post.media_urls?.length > 0
@@ -204,7 +207,7 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
           <div className="flex items-center gap-3">
             <PlatformBadge platform={post.platform} size="sm" />
             <div>
-              <p className="font-semibold text-white text-sm">{post.title}</p>
+              <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
               <p className="text-xs text-ink-400">{client?.company} · {formatDate(post.scheduled_date)}</p>
             </div>
           </div>
@@ -222,11 +225,11 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
 
       <div className="p-5">
         <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap line-clamp-4">{post.content}</p>
+          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap line-clamp-4"><T text={post.content} /></p>
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-ink-400">
             <span className="flex items-center gap-1 capitalize">{platformConfig[post.platform]?.label || post.platform}</span>
             <span className="flex items-center gap-1"><Calendar size={11} /> {formatDate(post.scheduled_date)}</span>
-            {post.type === 'design' && <span className="flex items-center gap-1"><Image size={11} /> Diseño</span>}
+            {post.type === 'design' && <span className="flex items-center gap-1"><Image size={11} /> {t('admin:approvals.design')}</span>}
           </div>
         </div>
 
@@ -243,30 +246,30 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
 
         {post.feedback && (
           <div className="mb-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-xs">
-            <span className="text-amber-400 font-semibold">Cliente:</span>
-            <span className="text-amber-200 ml-1.5">{post.feedback}</span>
+            <span className="text-amber-400 font-semibold">{t('admin:approvals.clientFeedback')}</span>
+            <span className="text-amber-200 ml-1.5"><T text={post.feedback} /></span>
           </div>
         )}
 
         <div className="flex items-center gap-2 py-1">
           {post.status === 'pending' && (
             <div className="flex items-center gap-1.5 text-amber-400 text-xs font-medium">
-              <Loader2 size={12} className="animate-spin" /> Esperando aprobación del cliente
+              <Loader2 size={12} className="animate-spin" /> {t('admin:approvals.awaitingClientApproval')}
             </div>
           )}
           {post.status === 'approved' && (
             <div className="flex items-center gap-1.5 text-green-400 text-xs font-semibold">
-              <CheckCircle size={14} fill="currentColor" /> Aprobado por el cliente
+              <CheckCircle size={14} fill="currentColor" /> {t('admin:approvals.approvedByClient')}
             </div>
           )}
           {post.status === 'revision' && (
             <div className="flex items-center gap-1.5 text-amber-400 text-xs">
-              <RotateCcw size={12} /> Cliente solicitó cambios
+              <RotateCcw size={12} /> {t('admin:approvals.clientRequestedChanges')}
             </div>
           )}
           {post.status === 'rejected' && (
             <div className="flex items-center gap-1.5 text-red-400 text-xs font-semibold">
-              <X size={14} /> Rechazado por el cliente
+              <X size={14} /> {t('admin:approvals.rejectedByClient')}
             </div>
           )}
         </div>
@@ -491,14 +494,14 @@ export default function Aprobaciones() {
   }
 
   const platformTabs = [
-    { key: 'all', label: 'Todos' },
+    { key: 'all', label: t('admin:approvals.statusTabs.all') },
     { key: 'linkedin', label: 'LinkedIn', color: '#0A66C2' },
     { key: 'instagram', label: 'Instagram', color: '#E4405F' },
     { key: 'facebook', label: 'Facebook', color: '#1877F2' },
     { key: 'twitter', label: 'Twitter', color: '#1DA1F2' },
   ]
 
-  const clientName = clients.find(c => c.id === user?.clientId)?.company || 'tu empresa'
+  const clientName = clients.find(c => c.id === user?.clientId)?.company || t('admin:approvals.yourCompany')
 
   return (
     <div className="space-y-6">
@@ -524,12 +527,12 @@ export default function Aprobaciones() {
           <div className="glass-card p-6 relative overflow-hidden mb-0">
             <div className="absolute top-0 right-0 w-48 h-48 bg-crimson-700/5 rounded-full blur-3xl pointer-events-none" />
             <h2 className="text-2xl font-bold text-white mb-1">{t('admin:approvals.contentApproval')}</h2>
-            <p className="text-ink-300">Aquí puedes revisar y aprobar las publicaciones que preparamos para <strong className="text-white">{clientName}</strong>.</p>
+            <p className="text-ink-300"><Trans i18nKey="approvals.contentApprovalDesc" ns="admin" values={{ clientName }} components={{ 1: <strong className="text-white" /> }} /></p>
             <div className="flex items-center gap-6 mt-4">
               {[
-                { label: 'Pendientes', count: counts.pending, color: '#f59e0b' },
-                { label: 'Aprobados', count: counts.approved, color: '#34d399' },
-                { label: 'En revisión', count: counts.revision, color: '#a78bfa' },
+                { label: t('admin:approvals.pending'), count: counts.pending, color: '#f59e0b' },
+                { label: t('admin:approvals.approved'), count: counts.approved, color: '#34d399' },
+                { label: t('admin:approvals.inReview'), count: counts.revision, color: '#a78bfa' },
               ].map(s => (
                 <div key={s.label}>
                   <p className="text-2xl font-bold" style={{ color: s.color }}>{s.count}</p>
@@ -543,7 +546,7 @@ export default function Aprobaciones() {
 
       {/* Status tabs */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-        {statusTabs.map(tab => {
+        {statusTabKeys.map(tab => {
           const count = counts[tab.key] || 0
           const cfg = tab.key !== 'all' ? postStatusConfig[tab.key as PostStatus] : null
           const isActive = activeStatus === tab.key
@@ -551,7 +554,7 @@ export default function Aprobaciones() {
             <button key={tab.key} onClick={() => setActiveStatus(tab.key)}
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all border ${isActive ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40 hover:text-white hover:border-white/20'}`}
               style={isActive && cfg ? { color: cfg.color, background: cfg.bg, borderColor: cfg.color + '60' } : isActive ? { background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.15)' } : {}}>
-              {tab.label}
+              {t(`admin:${tab.labelKey}`)}
               <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10">{count}</span>
             </button>
           )
@@ -575,7 +578,7 @@ export default function Aprobaciones() {
           {filtered.length === 0 && (
             <div className="col-span-2 flex flex-col items-center justify-center py-16 text-ink-500">
               <ThumbsUp size={40} className="mb-3 opacity-20" />
-              <p className="text-sm">{isAdmin() ? 'Sin publicaciones en esta categoría' : 'No tienes publicaciones pendientes de revisión'}</p>
+              <p className="text-sm">{isAdmin() ? t('admin:approvals.noPostsAdmin') : t('admin:approvals.noPostsClient')}</p>
             </div>
           )}
         </div>
@@ -600,7 +603,7 @@ export default function Aprobaciones() {
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-lg">{t('admin:approvals.templates.title')}</h3>
-                      <p className="text-xs text-ink-400">{templates.length} plantillas disponibles</p>
+                      <p className="text-xs text-ink-400">{t('admin:approvals.templates.available', { count: templates.length })}</p>
                     </div>
                   </div>
                   <button onClick={() => setShowTemplates(false)} className="text-ink-400 hover:text-white transition-colors"><X size={20} /></button>
@@ -635,7 +638,7 @@ export default function Aprobaciones() {
                 ) : templates.length === 0 ? (
                   <div className="text-center py-12 text-ink-500">
                     <LayoutTemplate size={36} className="mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">No hay plantillas{templatePlatformFilter !== 'all' ? ` para ${platformTabs.find(t => t.key === templatePlatformFilter)?.label}` : ''}</p>
+                    <p className="text-sm">{templatePlatformFilter !== 'all' ? t('admin:approvals.templates.noTemplatesFor', { platform: platformTabs.find(pt => pt.key === templatePlatformFilter)?.label }) : t('admin:approvals.templates.noTemplates')}</p>
                   </div>
                 ) : (
                   templates.map(tpl => {
@@ -650,7 +653,7 @@ export default function Aprobaciones() {
                               {pCfg.short}
                             </div>
                             <div>
-                              <p className="font-semibold text-white text-sm">{tpl.title}</p>
+                              <p className="font-semibold text-white text-sm"><T text={tpl.title} /></p>
                               <p className="text-xs text-ink-400 capitalize">{tpl.category.replace(/_/g, ' ')}{tpl.industry ? ` · ${tpl.industry}` : ''}</p>
                             </div>
                           </div>
@@ -658,7 +661,7 @@ export default function Aprobaciones() {
 
                         {/* Content preview */}
                         <div className="bg-ink-900/60 rounded-lg p-3 mb-3 border border-white/5">
-                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap">{tpl.content}</p>
+                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap"><T text={tpl.content} /></p>
                         </div>
 
                         {/* Variable pills */}
@@ -688,7 +691,7 @@ export default function Aprobaciones() {
                           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                             onClick={() => handleUseTemplate(tpl)}
                             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-crimson-700/15 text-crimson-400 border border-crimson-500/20 text-xs font-semibold hover:bg-crimson-700/25 transition-all">
-                            <Copy size={13} /> Usar
+                            <Copy size={13} /> {t('admin:approvals.templates.use')}
                           </motion.button>
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={() => handleEditTemplate(tpl)}
@@ -725,7 +728,7 @@ export default function Aprobaciones() {
                 <button onClick={() => setShowTemplateForm(false)} className="text-ink-400 hover:text-white"><X size={18} /></button>
               </div>
               <div className="space-y-3">
-                <input type="text" placeholder="Título de la plantilla *" value={templateForm.title}
+                <input type="text" placeholder={t('admin:approvals.templates.titlePlaceholder')} value={templateForm.title}
                   onChange={e => setTemplateForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
                 <div className="grid grid-cols-2 gap-3">
                   <select value={templateForm.platform} onChange={e => setTemplateForm(p => ({ ...p, platform: e.target.value }))} className="input-dark text-sm">
@@ -734,17 +737,17 @@ export default function Aprobaciones() {
                     <option value="facebook" className="bg-ink-800">Facebook</option>
                     <option value="twitter" className="bg-ink-800">Twitter / X</option>
                   </select>
-                  <input type="text" placeholder="Categoría" value={templateForm.category}
+                  <input type="text" placeholder={t('admin:approvals.templates.categoryPlaceholder')} value={templateForm.category}
                     onChange={e => setTemplateForm(p => ({ ...p, category: e.target.value }))} className="input-dark text-sm" />
                 </div>
-                <input type="text" placeholder="Industria (opcional)" value={templateForm.industry}
+                <input type="text" placeholder={t('admin:approvals.templates.industryPlaceholder')} value={templateForm.industry}
                   onChange={e => setTemplateForm(p => ({ ...p, industry: e.target.value }))} className="input-dark text-sm" />
                 <div>
-                  <textarea placeholder={'Contenido de la plantilla *\nUsa {{variable}} para campos dinámicos'} value={templateForm.content}
+                  <textarea placeholder={t('admin:approvals.templates.contentPlaceholder')} value={templateForm.content}
                     onChange={e => handleTemplateContentChange(e.target.value)} rows={6} className="input-dark text-sm resize-none font-mono" />
                   {templateForm.variables && (
                     <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span className="text-xs text-ink-400 mr-1">Variables detectadas:</span>
+                      <span className="text-xs text-ink-400 mr-1">{t('admin:approvals.templates.detectedVars')}</span>
                       {templateForm.variables.split(',').filter(Boolean).map(v => (
                         <span key={v.trim()} className="text-xs px-2 py-0.5 rounded-full bg-crimson-700/15 text-crimson-400 border border-crimson-500/20 font-mono">
                           {`{{${v.trim()}}}`}
@@ -753,13 +756,13 @@ export default function Aprobaciones() {
                     </div>
                   )}
                 </div>
-                <input type="text" placeholder="Tags (separados por coma)" value={templateForm.tags}
+                <input type="text" placeholder={t('admin:approvals.templates.tagsPlaceholder')} value={templateForm.tags}
                   onChange={e => setTemplateForm(p => ({ ...p, tags: e.target.value }))} className="input-dark text-sm" />
               </div>
               <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowTemplateForm(false)} className="btn-ghost flex-1 justify-center">Cancelar</button>
+                <button onClick={() => setShowTemplateForm(false)} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
                 <button onClick={handleSaveTemplate} disabled={savingTemplate} className="btn-primary flex-1 justify-center">
-                  {savingTemplate ? <><Loader2 size={15} className="animate-spin" /> Guardando...</> : <><CheckCircle size={15} /> {editingTemplate ? 'Actualizar' : 'Crear'}</>}
+                  {savingTemplate ? <><Loader2 size={15} className="animate-spin" /> {t('admin:approvals.templates.saving')}</> : <><CheckCircle size={15} /> {editingTemplate ? t('admin:approvals.templates.update') : t('admin:approvals.templates.create')}</>}
                 </button>
               </div>
             </motion.div>
@@ -783,7 +786,7 @@ export default function Aprobaciones() {
                     {(platformConfig[useTemplateModal.platform] || { short: '??' }).short}
                   </div>
                   <div>
-                    <h3 className="font-bold text-white">{useTemplateModal.title}</h3>
+                    <h3 className="font-bold text-white"><T text={useTemplateModal.title} /></h3>
                     <p className="text-xs text-ink-400 capitalize">{useTemplateModal.category.replace(/_/g, ' ')}</p>
                   </div>
                 </div>
@@ -807,12 +810,12 @@ export default function Aprobaciones() {
               {useTemplateModal.variables.length > 0 && (
                 <div className="space-y-3 mb-5">
                   <p className="text-xs font-semibold text-ink-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Variable size={13} /> Completa las variables
+                    <Variable size={13} /> {t('admin:approvals.templates.completeVars')}
                   </p>
                   {useTemplateModal.variables.map(v => (
                     <div key={v}>
                       <label className="text-xs text-ink-400 mb-1 block font-mono">{`{{${v}}}`}</label>
-                      <input type="text" placeholder={`Escribe ${v}...`} value={templateVars[v] || ''}
+                      <input type="text" placeholder={t('admin:approvals.templates.writeVar', { var: v })} value={templateVars[v] || ''}
                         onChange={e => setTemplateVars(prev => ({ ...prev, [v]: e.target.value }))}
                         className="input-dark text-sm" />
                     </div>
@@ -821,11 +824,11 @@ export default function Aprobaciones() {
               )}
 
               <div className="flex gap-3">
-                <button onClick={() => setUseTemplateModal(null)} className="btn-ghost flex-1 justify-center">Cancelar</button>
+                <button onClick={() => setUseTemplateModal(null)} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={handleApplyTemplate} disabled={applyingTemplate}
                   className="btn-primary flex-1 justify-center">
-                  {applyingTemplate ? <><Loader2 size={15} className="animate-spin" /> Aplicando...</> : <><Send size={15} /> Aplicar y crear post</>}
+                  {applyingTemplate ? <><Loader2 size={15} className="animate-spin" /> {t('admin:approvals.templates.applying')}</> : <><Send size={15} /> {t('admin:approvals.templates.applyAndCreate')}</>}
                 </motion.button>
               </div>
             </motion.div>
@@ -877,7 +880,7 @@ export default function Aprobaciones() {
                   <input ref={fileRef} type="file" multiple accept="image/*,video/mp4" className="hidden" onChange={e => setSelectedFiles(Array.from(e.target.files || []))} />
                   <button onClick={() => fileRef.current?.click()}
                     className="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all">
-                    <Upload size={16} /> {selectedFiles.length > 0 ? `${selectedFiles.length} archivo(s) seleccionado(s)` : 'Subir imágenes o videos (opcional)'}
+                    <Upload size={16} /> {selectedFiles.length > 0 ? t('admin:approvals.filesSelected', { count: selectedFiles.length }) : t('admin:approvals.uploadMedia')}
                   </button>
                   {selectedFiles.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -898,7 +901,7 @@ export default function Aprobaciones() {
                 <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
                 <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1 justify-center">
                   {submitting
-                    ? <><Loader2 size={15} className="animate-spin" /> {editingPost ? t('common:common.save') : t('admin:approvals.uploading')}...</>
+                    ? <><Loader2 size={15} className="animate-spin" /> {editingPost ? t('common:common.save') : t('admin:approvals.uploading')}</>
                     : editingPost
                       ? <><Pencil size={15} /> {t('common:common.saveChanges')}</>
                       : <><Send size={15} /> {t('admin:approvals.sendToClient')}</>

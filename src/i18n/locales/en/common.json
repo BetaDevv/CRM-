@@ -53,7 +53,9 @@
     "fillAll": "Please fill in all fields",
     "inviteOnly": "Access is by invitation only.",
     "contactAdmin": "Contact the administrator for credentials.",
-    "copyright": "TheBrandingStudio CRM © 2025 · Private platform"
+    "copyright": "NextGenCRM © 2025 · Private platform",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service"
   },
   "common": {
     "save": "Save",

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Check, Loader2, X, Plus, MessageSquare, Users, User, CheckSquare, Flag } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import T from '../../components/TranslatedText'
 import { getCalendarEvents, addClientNoteToEvent, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, type CalendarEvent } from '../../lib/api'
 import { formatDate, categoryColors } from '../../lib/utils'
 
@@ -168,7 +169,7 @@ export default function ClientActividad() {
                       className={`glass-card p-4 cursor-pointer hover:border-ink-600 transition-all border border-white/5 ${isPast ? 'opacity-60' : ''}`}
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
-                        <h5 className="font-semibold text-white text-sm">{event.title}</h5>
+                        <h5 className="font-semibold text-white text-sm"><T text={event.title} /></h5>
                         <span className="text-xs text-ink-400 flex-shrink-0 flex items-center gap-1">
                           <Calendar size={11} />
                           {dateStr}
@@ -178,7 +179,7 @@ export default function ClientActividad() {
                       <p className="text-xs text-ink-400 mb-2">{timeStr}</p>
 
                       {event.description && (
-                        <p className="text-xs text-ink-300 mb-2 leading-relaxed">{event.description}</p>
+                        <p className="text-xs text-ink-300 mb-2 leading-relaxed"><T text={event.description} /></p>
                       )}
 
                       {/* Participants */}
@@ -186,7 +187,7 @@ export default function ClientActividad() {
                         <div className="flex items-center gap-1.5 mb-2">
                           <Users size={11} className="text-ink-500" />
                           <span className="text-xs text-ink-400">
-                            {event.participants.map(p => p.name).join(', ')}
+                            <T text={event.participants.map(p => p.name).join(', ')} />
                           </span>
                         </div>
                       )}
@@ -202,7 +203,7 @@ export default function ClientActividad() {
                         >
                           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: categoryColors[event.milestone.category] || '#DC143C' }} />
                           <span className="text-xs font-medium" style={{ color: categoryColors[event.milestone.category] || '#DC143C' }}>
-                            {event.milestone.title}
+                            <T text={event.milestone.title} />
                           </span>
                           {event.milestone.date && (
                             <span className="text-xs text-ink-400 ml-auto">{formatDate(event.milestone.date)}</span>
@@ -216,7 +217,7 @@ export default function ClientActividad() {
                           <div className="flex items-start gap-2">
                             <MessageSquare size={12} className="text-crimson-400 mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
-                              <p className="text-xs text-ink-200">{event.clientNote}</p>
+                              <p className="text-xs text-ink-200"><T text={event.clientNote} /></p>
                               <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs text-crimson-400 mt-1 hover:underline">{t('client:activity.editNote')}</button>
                             </div>
                           </div>
@@ -257,7 +258,7 @@ export default function ClientActividad() {
               <div className="h-1 rounded-full mb-4" style={{ backgroundColor: selectedEvent.color || '#3B82F6' }} />
 
               {/* Title */}
-              <h3 className="text-xl font-bold text-white mb-2">{selectedEvent.title}</h3>
+              <h3 className="text-xl font-bold text-white mb-2"><T text={selectedEvent.title} /></h3>
 
               {/* Date/Time */}
               <div className="flex items-center gap-2 text-ink-400 text-sm mb-3">
@@ -275,7 +276,7 @@ export default function ClientActividad() {
               {selectedEvent.description && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-ink-300 mb-1">{t('client:activity.description')}</h4>
-                  <p className="text-ink-400 text-sm">{selectedEvent.description}</p>
+                  <p className="text-ink-400 text-sm"><T text={selectedEvent.description} /></p>
                 </div>
               )}
 
@@ -287,7 +288,7 @@ export default function ClientActividad() {
                     {selectedEvent.participants.map(p => (
                       <div key={p.id} className="flex items-center gap-2 text-sm text-ink-400">
                         <User className="w-3 h-3" />
-                        <span>{p.name}</span>
+                        <span><T text={p.name} /></span>
                       </div>
                     ))}
                   </div>
@@ -309,7 +310,7 @@ export default function ClientActividad() {
                 <div className="mb-4 p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
                   <div className="flex items-center gap-2 text-purple-400 text-sm">
                     <Flag className="w-4 h-4" />
-                    <span>{selectedEvent.milestone.title}</span>
+                    <span><T text={selectedEvent.milestone.title} /></span>
                   </div>
                 </div>
               )}
@@ -321,7 +322,7 @@ export default function ClientActividad() {
                     <MessageSquare className="w-4 h-4" />
                     <span className="font-medium">{t('client:activity.yourNote')}</span>
                   </div>
-                  <p className="text-ink-300 text-sm">{selectedEvent.clientNote}</p>
+                  <p className="text-ink-300 text-sm"><T text={selectedEvent.clientNote} /></p>
                 </div>
               )}
 
@@ -355,7 +356,7 @@ export default function ClientActividad() {
                 <h3 className="text-lg font-bold text-white">{t('client:activity.noteForEvent')}</h3>
                 <button onClick={() => setNoteEvent(null)} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-400"><X size={18} /></button>
               </div>
-              <p className="text-sm text-ink-300 mb-3">{noteEvent.title}</p>
+              <p className="text-sm text-ink-300 mb-3"><T text={noteEvent.title} /></p>
               <textarea
                 value={noteText}
                 onChange={e => setNoteText(e.target.value)}

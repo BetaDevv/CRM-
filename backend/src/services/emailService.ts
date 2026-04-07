@@ -26,7 +26,7 @@ export async function sendEventInvite(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">CRM Calendar</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #DC143C;">
@@ -50,7 +50,7 @@ export async function sendEventInvite(params: {
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `Invitacion: ${params.eventTitle}`,
       html,
@@ -82,7 +82,7 @@ export async function sendPostForApproval(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Content Approval</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #DC143C;">
@@ -107,14 +107,14 @@ export async function sendPostForApproval(params: {
         </p>
       </div>
       <p style="color: #666; font-size: 12px; text-align: center; margin-top: 20px;">
-        Este es un mensaje automático de TheBrandingStudio CRM.
+        Este es un mensaje automático de NextGenCRM.
       </p>
     </div>
   `
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `📋 Nuevo post pendiente de aprobación — ${params.postTitle}`,
       html,
@@ -150,7 +150,7 @@ export async function sendPostStatusNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Post Status Update</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid ${cfg.color};">
@@ -183,7 +183,7 @@ export async function sendPostStatusNotification(params: {
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `${cfg.emoji} ${cfg.label} — ${params.postTitle}`,
       html,
@@ -211,7 +211,7 @@ export async function sendNoteNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Nueva nota</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #F59E0B;">
@@ -237,7 +237,7 @@ export async function sendNoteNotification(params: {
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `💬 Nueva nota en tu ${params.itemType} — ${params.itemTitle}`,
       html,
@@ -262,7 +262,7 @@ export async function sendTodoCompletedNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Task Update</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e;">
@@ -280,14 +280,14 @@ export async function sendTodoCompletedNotification(params: {
         </p>
       </div>
       <p style="color: #666; font-size: 12px; text-align: center; margin-top: 20px;">
-        Este es un mensaje automatico de TheBrandingStudio CRM.
+        Este es un mensaje automatico de NextGenCRM.
       </p>
     </div>
   `
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `Tarea completada: ${params.todoTitle}`,
       html,
@@ -366,7 +366,7 @@ export async function sendWeeklyMetricsSummary(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">TheBrandingStudio</h1>
+        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Weekly Metrics Report</p>
       </div>
       <p style="color: #aaa; margin-bottom: 20px;">
@@ -381,7 +381,7 @@ export async function sendWeeklyMetricsSummary(params: {
 
   try {
     await transporter.sendMail({
-      from: `"TheBrandingStudio CRM" <${process.env.SMTP_USER}>`,
+      from: `"NextGenCRM" <${process.env.SMTP_USER}>`,
       to: params.to,
       subject: `📊 Resumen semanal de métricas — ${params.clientName}`,
       html,

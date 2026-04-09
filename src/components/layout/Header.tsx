@@ -310,7 +310,7 @@ export default function Header() {
             ref={bellRef}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowNotifs(!showNotifs)}
+            onClick={() => { if (!showNotifs && unreadCount > 0) handleMarkAllRead(); setShowNotifs(!showNotifs) }}
             className="relative w-9 h-9 flex items-center justify-center rounded-xl border transition-all"
             style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-500) / 0.4)', color: 'rgb(var(--ink-300))' }}
           >

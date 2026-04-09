@@ -12,6 +12,7 @@ import {
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { api } from '../lib/api'
+import { localToday } from '../lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { JSX } from 'react'
 
@@ -494,7 +495,7 @@ export default function Metricas() {
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.download = `reporte-${clientName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
+      link.download = `reporte-${clientName.replace(/\s+/g, '-')}-${localToday()}.pdf`
       link.click()
       window.URL.revokeObjectURL(url)
     } catch (err) {

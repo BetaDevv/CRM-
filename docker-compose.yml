@@ -30,10 +30,11 @@ services:
       LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI}
       NODE_ENV: production
       DB_SSL: false
+      TZ: UTC
     depends_on:
       - db
     volumes:
-      - uploads:/usr/src/app/uploads
+      - ./uploads:/usr/src/app/uploads
   frontend:
     image: crm-frontend
     build:
@@ -49,10 +50,10 @@ services:
     environment:                                                
       POSTGRES_USER: ${DB_USER}               
       POSTGRES_PASSWORD: ${DB_PASSWORD}                                     
-      POSTGRES_DB: ${DB_NAME}  
+      POSTGRES_DB: ${DB_NAME}
+      TZ: UTC
     volumes:
       - pgdata:/var/lib/postgresql/data
     
 volumes:
-  pgdata: 
-  uploads:
+  pgdata:

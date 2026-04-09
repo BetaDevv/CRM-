@@ -17,7 +17,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       const { rows } = await pool.query(
         `SELECT t.*, COALESCE(n.cnt, 0)::int AS notes_count
          FROM todos t
-         LEFT JOIN (SELECT item_id, COUNT(*) AS cnt FROM item_notes WHERE item_type='todo' AND author_id != $1 GROUP BY item_id) n ON n.item_id = t.id
+         LEFT JOIN (
+           SELECT inn.item_id, COUNT(*) AS cnt
+           FROM item_notes inn
+           LEFT JOIN notes_read nr ON nr.user_id = $1 AND nr.item_type = 'todo' AND nr.item_id = inn.item_id
+           WHERE inn.item_type='todo' AND inn.author_id != $1 AND (nr.read_at IS NULL OR inn.created_at > nr.read_at)
+           GROUP BY inn.item_id
+         ) n ON n.item_id = t.id
          WHERE t.created_by IS NULL
             OR t.created_by = $1
             OR (t.shared = 1 AND t.created_by != $1)
@@ -29,7 +35,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       const { rows } = await pool.query(
         `SELECT t.*, COALESCE(n.cnt, 0)::int AS notes_count
          FROM todos t
-         LEFT JOIN (SELECT item_id, COUNT(*) AS cnt FROM item_notes WHERE item_type='todo' AND author_id != $1 GROUP BY item_id) n ON n.item_id = t.id
+         LEFT JOIN (
+           SELECT inn.item_id, COUNT(*) AS cnt
+           FROM item_notes inn
+           LEFT JOIN notes_read nr ON nr.user_id = $1 AND nr.item_type = 'todo' AND nr.item_id = inn.item_id
+           WHERE inn.item_type='todo' AND inn.author_id != $1 AND (nr.read_at IS NULL OR inn.created_at > nr.read_at)
+           GROUP BY inn.item_id
+         ) n ON n.item_id = t.id
          WHERE t.created_by = $1
             OR (t.client_id = $2 AND t.shared = 1 AND (t.created_by IS NULL OR t.created_by != $1))
          ORDER BY t.created_at DESC`,
@@ -202,6 +214,21 @@ router.get('/:id/notes', async (req: AuthRequest, res: Response) => {
       ['todo', req.params.id]
     )
     res.json(rows)
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// PATCH /api/todos/:id/notes/read — Mark notes as read
+router.patch('/:id/notes/read', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!
+    await pool.query(
+      `INSERT INTO notes_read (user_id, item_type, item_id, read_at) VALUES ($1, 'todo', $2, NOW())
+       ON CONFLICT (user_id, item_type, item_id) DO UPDATE SET read_at = NOW()`,
+      [user.userId, req.params.id]
+    )
+    res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

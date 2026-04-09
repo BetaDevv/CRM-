@@ -79,14 +79,26 @@ export async function deleteIdea(id: string): Promise<void> {
 
 // --- Todos API ---
 
+/** Convert a DB timestamp (ISO/UTC) to a `datetime-local` input value in the browser's timezone */
 function toDatetimeLocal(val: string | null | undefined): string | undefined {
   if (!val) return undefined
   try {
     const d = new Date(val)
     if (isNaN(d.getTime())) return undefined
-    // Format as YYYY-MM-DDTHH:MM for datetime-local input compatibility
     const pad = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  } catch {
+    return undefined
+  }
+}
+
+/** Convert a naive `datetime-local` string (YYYY-MM-DDTHH:MM) to a full ISO string with timezone offset */
+function localToISO(val: string | undefined): string | undefined {
+  if (!val) return undefined
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return undefined
+    return d.toISOString()
   } catch {
     return undefined
   }
@@ -127,8 +139,8 @@ export async function createTodo(todo: Omit<TodoItem, 'id'>): Promise<TodoItem> 
     client_id: todo.clientId,
     week_of: todo.weekOf,
     shared: todo.shared ? 1 : 0,
-    start_time: todo.startTime,
-    end_time: todo.endTime,
+    start_time: localToISO(todo.startTime),
+    end_time: localToISO(todo.endTime),
     status: todo.status,
     assigned_to: todo.assignedTo,
   })
@@ -144,8 +156,8 @@ export async function updateTodo(id: string, todo: Partial<TodoItem>): Promise<T
     client_id: todo.clientId,
     done: todo.done,
     shared: todo.shared ? 1 : 0,
-    start_time: todo.startTime,
-    end_time: todo.endTime,
+    start_time: localToISO(todo.startTime),
+    end_time: localToISO(todo.endTime),
     status: todo.status,
     assigned_to: todo.assignedTo,
   })
@@ -188,6 +200,10 @@ export async function addTodoNoteMsg(todoId: string, content: string): Promise<I
   return data
 }
 
+export async function markTodoNotesRead(todoId: string): Promise<void> {
+  await api.patch(`/todos/${todoId}/notes/read`)
+}
+
 export async function getIdeaNotes(ideaId: string): Promise<ItemNote[]> {
   const { data } = await api.get(`/ideas/${ideaId}/notes`)
   return data
@@ -196,6 +212,10 @@ export async function getIdeaNotes(ideaId: string): Promise<ItemNote[]> {
 export async function addIdeaNoteMsg(ideaId: string, content: string): Promise<ItemNote> {
   const { data } = await api.post(`/ideas/${ideaId}/notes`, { content })
   return data
+}
+
+export async function markIdeaNotesRead(ideaId: string): Promise<void> {
+  await api.patch(`/ideas/${ideaId}/notes/read`)
 }
 
 // --- Posts API ---
@@ -397,8 +417,8 @@ export async function createCalendarEvent(eventData: any): Promise<CalendarEvent
   const { data } = await api.post('/calendar/events', {
     title: eventData.title,
     description: eventData.description,
-    start_time: eventData.startTime,
-    end_time: eventData.endTime,
+    start_time: localToISO(eventData.startTime),
+    end_time: localToISO(eventData.endTime),
     all_day: eventData.allDay,
     color: eventData.color,
     client_id: eventData.clientId,
@@ -414,8 +434,8 @@ export async function updateCalendarEvent(id: string, eventData: any): Promise<C
   const { data } = await api.put(`/calendar/events/${id}`, {
     title: eventData.title,
     description: eventData.description,
-    start_time: eventData.startTime,
-    end_time: eventData.endTime,
+    start_time: localToISO(eventData.startTime),
+    end_time: localToISO(eventData.endTime),
     all_day: eventData.allDay,
     color: eventData.color,
     client_id: eventData.clientId,

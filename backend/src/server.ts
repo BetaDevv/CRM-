@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
+import fs from 'fs'
 import { pool, initDB, seedDB } from './db'
 import { verifyToken, requireAdmin, AuthRequest } from './middleware/auth'
 import { startMetricsWorker } from './workers/metrics.worker'
@@ -43,6 +44,10 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 const uploadsDir = path.resolve(__dirname, '../../uploads')
+for (const sub of ['', 'documents']) {
+  const dir = path.join(uploadsDir, sub)
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+}
 app.use('/uploads', express.static(uploadsDir))
 
 // ─── API Routes ────────────────────────────────────────────────────────────────

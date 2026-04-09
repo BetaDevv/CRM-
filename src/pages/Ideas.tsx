@@ -7,9 +7,9 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useDroppable, useDraggable } from '@dnd-kit/core'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi, getIdeaNotes, addIdeaNoteMsg } from '../lib/api'
+import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi, getIdeaNotes, addIdeaNoteMsg, markIdeaNotesRead } from '../lib/api'
 import type { ItemNote } from '../lib/api'
-import { ideaStatusConfig } from '../lib/utils'
+import { ideaStatusConfig, localToday } from '../lib/utils'
 import type { Idea, IdeaStatus } from '../types'
 import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
@@ -236,7 +236,7 @@ export default function Ideas() {
         tags: form.tags,
         emoji: form.emoji,
         clientId: form.clientId || undefined,
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: localToday(),
       })
       setIdeas(prev => [newIdea, ...prev])
       closeModal()
@@ -293,7 +293,7 @@ export default function Ideas() {
     setIdeas(prev => prev.map(i => i.id === item.id ? { ...i, notesCount: 0 } : i))
     setNotesLoading(true)
     try {
-      const data = await getIdeaNotes(item.id)
+      const [data] = await Promise.all([getIdeaNotes(item.id), markIdeaNotesRead(item.id)])
       setNotesData(data)
     } catch (err) {
       console.error('Error fetching notes:', err)

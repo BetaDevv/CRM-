@@ -12,6 +12,11 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
   }).format(amount)
 }
 
+/** Returns today's date as YYYY-MM-DD in the browser's local timezone */
+export function localToday(): string {
+  return new Date().toLocaleDateString('en-CA')
+}
+
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('es-CO', {
     day: 'numeric',

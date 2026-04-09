@@ -6,9 +6,9 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
-import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg } from '../../lib/api'
+import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead } from '../../lib/api'
 import type { ItemNote } from '../../lib/api'
-import { priorityConfig } from '../../lib/utils'
+import { priorityConfig, localToday } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
 import NotesPanel from '../../components/NotesPanel'
 
@@ -169,7 +169,7 @@ export default function ClientTodos() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
-  const weekOf = new Date().toISOString().split('T')[0]
+  const weekOf = localToday()
 
   const resetForm = () => {
     setForm({ title: '', description: '', priority: 'medium', category: 'Contenido', startTime: '', endTime: '' })
@@ -273,7 +273,7 @@ export default function ClientTodos() {
     setTodos(prev => prev.map(t => t.id === item.id ? { ...t, notesCount: 0 } : t))
     setNotesLoading(true)
     try {
-      const data = await getTodoNotes(item.id)
+      const [data] = await Promise.all([getTodoNotes(item.id), markTodoNotesRead(item.id)])
       setNotesData(data)
     } catch (err) {
       console.error('Error fetching notes:', err)

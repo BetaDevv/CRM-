@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { formatCurrency, formatDate } from '../lib/utils'
+import { formatCurrency, formatDate, localToday } from '../lib/utils'
 import {
   api,
   getClientNotes, addClientNote, deleteClientNote,
@@ -165,7 +165,7 @@ function ClientModal({
     description: initial?.description || '',
     color:       initial?.color       || '#DC143C',
     status:      initial?.status      || 'active',
-    start_date:  initial?.startDate || initial?.start_date || new Date().toISOString().split('T')[0],
+    start_date:  initial?.startDate || initial?.start_date || localToday(),
   })
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {

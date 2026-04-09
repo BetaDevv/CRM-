@@ -299,6 +299,16 @@ export async function initDB() {
   `)
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS notes_read (
+      user_id TEXT NOT NULL,
+      item_type TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      read_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, item_type, item_id)
+    );
+  `)
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS api_keys (
       id TEXT PRIMARY KEY,
       key TEXT UNIQUE NOT NULL,

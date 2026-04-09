@@ -20,7 +20,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       const { rows } = await pool.query(
         `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count
          FROM ideas i
-         LEFT JOIN (SELECT item_id, COUNT(*) AS cnt FROM item_notes WHERE item_type='idea' AND author_id != $1 GROUP BY item_id) n ON n.item_id = i.id
+         LEFT JOIN (
+           SELECT inn.item_id, COUNT(*) AS cnt
+           FROM item_notes inn
+           LEFT JOIN notes_read nr ON nr.user_id = $1 AND nr.item_type = 'idea' AND nr.item_id = inn.item_id
+           WHERE inn.item_type='idea' AND inn.author_id != $1 AND (nr.read_at IS NULL OR inn.created_at > nr.read_at)
+           GROUP BY inn.item_id
+         ) n ON n.item_id = i.id
          WHERE i.created_by IS NULL
             OR i.created_by = $1
             OR (i.shared = 1 AND i.created_by != $1)
@@ -32,7 +38,13 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       const { rows } = await pool.query(
         `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count
          FROM ideas i
-         LEFT JOIN (SELECT item_id, COUNT(*) AS cnt FROM item_notes WHERE item_type='idea' AND author_id != $1 GROUP BY item_id) n ON n.item_id = i.id
+         LEFT JOIN (
+           SELECT inn.item_id, COUNT(*) AS cnt
+           FROM item_notes inn
+           LEFT JOIN notes_read nr ON nr.user_id = $1 AND nr.item_type = 'idea' AND nr.item_id = inn.item_id
+           WHERE inn.item_type='idea' AND inn.author_id != $1 AND (nr.read_at IS NULL OR inn.created_at > nr.read_at)
+           GROUP BY inn.item_id
+         ) n ON n.item_id = i.id
          WHERE i.created_by = $1
             OR (i.client_id = $2 AND i.shared = 1 AND (i.created_by IS NULL OR i.created_by != $1))
          ORDER BY i.created_at DESC`,
@@ -119,6 +131,21 @@ router.get('/:id/notes', async (req: AuthRequest, res: Response) => {
       ['idea', req.params.id]
     )
     res.json(rows)
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// PATCH /api/ideas/:id/notes/read — Mark notes as read
+router.patch('/:id/notes/read', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!
+    await pool.query(
+      `INSERT INTO notes_read (user_id, item_type, item_id, read_at) VALUES ($1, 'idea', $2, NOW())
+       ON CONFLICT (user_id, item_type, item_id) DO UPDATE SET read_at = NOW()`,
+      [user.userId, req.params.id]
+    )
+    res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

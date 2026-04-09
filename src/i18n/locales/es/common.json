@@ -70,6 +70,8 @@
     "cannotUndo": "Esta acción no se puede deshacer.",
     "saveChanges": "Guardar cambios",
     "add": "Agregar",
+    "translate": "Traducir",
+    "showOriginal": "Ver original",
     "search": "Buscar...",
     "all": "Todas",
     "filters": "Filtros",

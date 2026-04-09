@@ -51,12 +51,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
 router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
-    const { company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description } = req.body
+    const { company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency } = req.body
     const id = uuid()
     const { rows } = await pool.query(
-      `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
-      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#DC143C', description || null]
+      `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#DC143C', description || null, currency || 'USD']
     )
     logActivity({ type: 'client_created', description: `Nuevo cliente: ${company}`, entityType: 'client', entityId: id })
     res.status(201).json(parseClient(rows[0]))
@@ -68,11 +68,11 @@ router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
 router.put('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params
-    const { company, contact, email, phone, industry, monthly_fee, services, status, color, description, linkedin_connected } = req.body
+    const { company, contact, email, phone, industry, monthly_fee, services, status, color, description, linkedin_connected, start_date, currency } = req.body
     const { rows } = await pool.query(
       `UPDATE clients SET company=$1, contact=$2, email=$3, phone=$4, industry=$5, monthly_fee=$6,
-       services=$7, status=$8, color=$9, description=$10, linkedin_connected=$11 WHERE id=$12 RETURNING *`,
-      [company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', color || '#DC143C', description || null, linkedin_connected ? 1 : 0, id]
+       services=$7, status=$8, color=$9, description=$10, linkedin_connected=$11, start_date=$12, currency=$13 WHERE id=$14 RETURNING *`,
+      [company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', color || '#DC143C', description || null, linkedin_connected ? 1 : 0, start_date || null, currency || 'USD', id]
     )
     if (!rows.length) { res.status(404).json({ error: 'Cliente no encontrado' }); return }
     logActivity({ type: 'client_updated', description: `Cliente actualizado: ${company}`, entityType: 'client', entityId: id })

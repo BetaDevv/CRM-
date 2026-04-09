@@ -70,6 +70,8 @@
     "cannotUndo": "This action cannot be undone.",
     "saveChanges": "Save changes",
     "add": "Add",
+    "translate": "Translate",
+    "showOriginal": "Show original",
     "search": "Search...",
     "all": "All",
     "filters": "Filters",

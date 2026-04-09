@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Languages } from 'lucide-react'
 import { useTranslationStore } from '../lib/translationStore'
 
 interface TranslatedTextProps {
@@ -7,30 +8,54 @@ interface TranslatedTextProps {
 }
 
 /**
- * Renders user-generated text translated to the current app language.
- * Falls back to original text if translation isn't available yet or fails.
+ * Renders user-generated text with an optional "Translate" button.
+ * Shows original text by default. On click, fetches translation.
  *
  * Usage: <T text={todo.title} />
  */
 export default function T({ text }: TranslatedTextProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation('common')
   const lang = i18n.language
-  const getTranslation = useTranslationStore(s => s.getTranslation)
   const requestTranslation = useTranslationStore(s => s.requestTranslation)
-  const requested = useRef(false)
+  const cache = useTranslationStore(s => s.cache)
+  const [showTranslation, setShowTranslation] = useState(false)
 
-  useEffect(() => {
-    if (!text?.trim() || lang === 'es') {
-      requested.current = false
-      return
-    }
-    requested.current = true
-    requestTranslation([text], lang)
-  }, [text, lang, requestTranslation])
-
-  if (!text) return null
+  if (!text?.trim()) return null
   // Default content language is Spanish — no translation needed
   if (lang === 'es') return <>{text}</>
 
-  return <>{getTranslation(text, lang)}</>
+  const cacheKey = `${lang}::${text}`
+  const cached = cache.get(cacheKey)
+  const isTranslated = showTranslation && cached
+
+  const handleTranslate = () => {
+    if (cached) {
+      setShowTranslation(true)
+      return
+    }
+    requestTranslation([text], lang)
+    setShowTranslation(true)
+  }
+
+  return (
+    <span className="inline">
+      {isTranslated ? cached : text}
+      {!showTranslation ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleTranslate() }}
+          className="inline-flex items-center gap-1 ml-1.5 text-[10px] font-medium text-crimson-400/70 hover:text-crimson-400 transition-colors align-middle"
+        >
+          <Languages size={10} />
+          {t('common.translate')}
+        </button>
+      ) : (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowTranslation(false) }}
+          className="inline-flex items-center gap-1 ml-1.5 text-[10px] font-medium text-ink-400 hover:text-ink-200 transition-colors align-middle"
+        >
+          {t('common.showOriginal')}
+        </button>
+      )}
+    </span>
+  )
 }

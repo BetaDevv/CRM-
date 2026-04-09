@@ -120,7 +120,7 @@ function ClientCard({
       <div className="pt-3 flex items-center justify-between" style={{ borderTop: '1px solid rgb(var(--ink-600) / 0.4)' }}>
         <div>
           <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.monthlyRetention')}</p>
-          <p className="font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(client.monthlyFee || client.monthly_fee || 0)}</p>
+          <p className="font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(client.monthlyFee || client.monthly_fee || 0, client.currency || 'USD')}</p>
         </div>
         <div className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all"
           style={{ background: client.color + '20', color: client.color }}>
@@ -134,9 +134,11 @@ function ClientCard({
 // ─── Client Form Modal ─────────────────────────────────────────────────────────
 interface ClientFormData {
   company: string; contact: string; email: string; phone: string;
-  industry: string; monthly_fee: string; services: string;
-  description: string; color: string; status: string;
+  industry: string; monthly_fee: string; currency: string; services: string;
+  description: string; color: string; status: string; start_date: string;
 }
+
+const CURRENCIES = ['USD', 'EUR', 'GBP', 'COP', 'MXN', 'ARS', 'BRL', 'CLP'] as const
 
 function ClientModal({
   initial, onClose, onSaved,
@@ -158,10 +160,12 @@ function ClientModal({
     phone:       initial?.phone       || '',
     industry:    initial?.industry    || '',
     monthly_fee: String(initial?.monthlyFee || initial?.monthly_fee || ''),
+    currency:    initial?.currency || 'USD',
     services:    (initial?.services || []).join(', '),
     description: initial?.description || '',
     color:       initial?.color       || '#DC143C',
     status:      initial?.status      || 'active',
+    start_date:  initial?.startDate || initial?.start_date || new Date().toISOString().split('T')[0],
   })
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +192,7 @@ function ClientModal({
         const { data } = await api.put(`/clients/${initial.id}`, payload)
         saved = data
       } else {
-        const { data } = await api.post('/clients', { ...payload, start_date: new Date().toISOString().split('T')[0] })
+        const { data } = await api.post('/clients', payload)
         saved = data
       }
 
@@ -253,15 +257,28 @@ function ClientModal({
             { key: 'email',       label: t('admin:clients.form.email'),                      type: 'email' },
             { key: 'phone',       label: t('admin:clients.form.phone'),    type: 'tel' },
             { key: 'industry',    label: t('admin:clients.form.industry'),   type: 'text' },
-            { key: 'monthly_fee', label: t('admin:clients.form.monthlyFee'),       type: 'number' },
             { key: 'services',    label: t('admin:clients.form.services'), type: 'text' },
             { key: 'description', label: t('admin:clients.form.description'),            type: 'text' },
+            { key: 'start_date', label: t('admin:clients.form.startDate'),              type: 'date' },
           ].map(f => (
             <input key={f.key} type={f.type} placeholder={f.label}
               value={(form as unknown as Record<string, string>)[f.key]}
               onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
               className="input-dark text-sm" />
           ))}
+
+          {/* Monthly fee + Currency */}
+          <div className="flex gap-2">
+            <input type="number" placeholder={t('admin:clients.form.monthlyFee')}
+              value={form.monthly_fee}
+              onChange={e => setForm(prev => ({ ...prev, monthly_fee: e.target.value }))}
+              className="input-dark text-sm flex-1" />
+            <select value={form.currency}
+              onChange={e => setForm(prev => ({ ...prev, currency: e.target.value }))}
+              className="input-dark text-sm w-24">
+              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
 
           {/* Status toggle */}
           <div className="flex gap-2">
@@ -526,7 +543,7 @@ export default function Clientes() {
                 animate={{ width: `${((c.monthlyFee || c.monthly_fee || 0) / totalMRR) * 100}%` }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="h-full rounded-full" style={{ background: c.color }}
-                title={`${c.company}: ${formatCurrency(c.monthlyFee || c.monthly_fee || 0)}`} />
+                title={`${c.company}: ${formatCurrency(c.monthlyFee || c.monthly_fee || 0, c.currency || 'USD')}`} />
             ))}
           </div>
           <div className="flex flex-wrap gap-3 mt-3">
@@ -617,7 +634,7 @@ export default function Clientes() {
                           { icon: Phone,       label: t('admin:clients.drawer.phone'),           value: selected.phone || 'N/A' },
                           { icon: Briefcase,   label: t('admin:clients.drawer.industry'),          value: selected.industry },
                           { icon: Calendar,    label: t('admin:clients.drawer.clientSince'),      value: formatDate(selected.startDate || selected.start_date || '') },
-                          { icon: DollarSign,  label: t('admin:clients.drawer.monthlyRetention'),  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0) },
+                          { icon: DollarSign,  label: t('admin:clients.drawer.monthlyRetention'),  value: formatCurrency(selected.monthlyFee || selected.monthly_fee || 0, selected.currency || 'USD') },
                         ].map(item => (
                           <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl"
                             style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>

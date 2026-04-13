@@ -44,7 +44,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 const uploadsDir = path.resolve(__dirname, '../../uploads')
-for (const sub of ['', 'documents']) {
+for (const sub of ['', 'avatars', 'documents']) {
   const dir = path.join(uploadsDir, sub)
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
 }

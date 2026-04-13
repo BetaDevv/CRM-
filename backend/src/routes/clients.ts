@@ -7,7 +7,7 @@ import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
 
-const uploadDir = path.resolve(__dirname, '../../../uploads')
+const uploadDir = path.resolve(__dirname, '../../../uploads/avatars')
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
 
 const storage = multer.diskStorage({
@@ -86,7 +86,7 @@ router.patch('/:id/avatar', requireAdmin, upload.single('avatar'), async (req: A
   try {
     const file = req.file
     if (!file) { res.status(400).json({ error: 'No se recibió imagen' }); return }
-    const avatarUrl = `/uploads/${file.filename}`
+    const avatarUrl = `/uploads/avatars/${file.filename}`
     const { rows } = await pool.query(
       'UPDATE clients SET avatar_url=$1 WHERE id=$2 RETURNING *',
       [avatarUrl, req.params.id]

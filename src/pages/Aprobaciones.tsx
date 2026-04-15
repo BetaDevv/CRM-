@@ -82,7 +82,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
                 <p className="text-xs text-[#9fa6ad]">{t('admin:approvals.scheduledPost', { date: formatDate(post.scheduled_date) })}</p>
               </div>
             </div>
-            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
+            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
           </div>
         )}
 
@@ -96,13 +96,13 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </div>
               <p className="text-xs font-semibold text-white">{client?.company?.toLowerCase().replace(/ /g, '_')}</p>
             </div>
-            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
+            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
           </div>
         )}
 
         {(post.platform === 'facebook' || post.platform === 'twitter') && (
           <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
+            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
           </div>
         )}
 
@@ -128,7 +128,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         {post.feedback && (
           <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1"><MessageSquare size={11} /> {t('admin:approvals.tbsFeedback')}</p>
-            <p className="text-sm text-amber-100"><T text={post.feedback} /></p>
+            <p className="text-sm text-amber-100"><T text={post.feedback} translatable /></p>
           </div>
         )}
 
@@ -225,7 +225,7 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
 
       <div className="p-5">
         <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap line-clamp-4"><T text={post.content} /></p>
+          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap line-clamp-4"><T text={post.content} translatable /></p>
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-ink-400">
             <span className="flex items-center gap-1 capitalize">{platformConfig[post.platform]?.label || post.platform}</span>
             <span className="flex items-center gap-1"><Calendar size={11} /> {formatDate(post.scheduled_date)}</span>
@@ -247,7 +247,7 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
         {post.feedback && (
           <div className="mb-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-xs">
             <span className="text-amber-400 font-semibold">{t('admin:approvals.clientFeedback')}</span>
-            <span className="text-amber-200 ml-1.5"><T text={post.feedback} /></span>
+            <span className="text-amber-200 ml-1.5"><T text={post.feedback} translatable /></span>
           </div>
         )}
 
@@ -589,10 +589,10 @@ export default function Aprobaciones() {
         {showTemplates && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex justify-end"
-            onClick={() => setShowTemplates(false)}>
+            onMouseDown={() => setShowTemplates(false)}>
             <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="w-full max-w-xl bg-ink-900 border-l border-white/10 h-full overflow-y-auto"
-              onClick={e => e.stopPropagation()}>
+              onMouseDown={e => e.stopPropagation()}>
 
               {/* Panel header */}
               <div className="sticky top-0 bg-ink-900/95 backdrop-blur-sm z-10 p-5 border-b border-white/10">
@@ -661,7 +661,7 @@ export default function Aprobaciones() {
 
                         {/* Content preview */}
                         <div className="bg-ink-900/60 rounded-lg p-3 mb-3 border border-white/5">
-                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap"><T text={tpl.content} /></p>
+                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap"><T text={tpl.content} translatable /></p>
                         </div>
 
                         {/* Variable pills */}
@@ -719,10 +719,10 @@ export default function Aprobaciones() {
         {showTemplateForm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-            onClick={() => setShowTemplateForm(false)}>
+            onMouseDown={() => setShowTemplateForm(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}>
+              onMouseDown={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingTemplate ? t('admin:approvals.templates.editTemplate') : t('admin:approvals.templates.newTemplate')}</h3>
                 <button onClick={() => setShowTemplateForm(false)} className="text-ink-400 hover:text-white"><X size={18} /></button>
@@ -841,10 +841,10 @@ export default function Aprobaciones() {
         {showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowModal(false)}>
+            onMouseDown={() => setShowModal(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}>
+              onMouseDown={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingPost ? t('admin:approvals.editPost') : t('admin:approvals.newPostDesign')}</h3>
                 <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="text-ink-400 hover:text-white"><X size={18} /></button>

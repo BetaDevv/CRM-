@@ -1,4 +1,5 @@
 import { File, FileText, FileSpreadsheet, Presentation, Database } from 'lucide-react'
+import { getLocale } from './utils'
 
 /**
  * Helpers compartidos para las páginas de documentos (admin + cliente).
@@ -34,7 +35,7 @@ export function formatFileSize(bytes: number): string {
 export function formatDocDate(dateStr: string): string {
   try {
     const d = new Date(dateStr)
-    return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+    return d.toLocaleDateString(getLocale(), { day: '2-digit', month: 'short', year: 'numeric' })
   } catch {
     return ''
   }

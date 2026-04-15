@@ -12,13 +12,20 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
   }).format(amount)
 }
 
+/** Map i18n language code to Intl locale */
+const LOCALE_MAP: Record<string, string> = { es: 'es-CO', en: 'en-US', de: 'de-DE' }
+export function getLocale(): string {
+  const lang = document.documentElement.lang || localStorage.getItem('i18nextLng') || 'es'
+  return LOCALE_MAP[lang] || LOCALE_MAP.es
+}
+
 /** Returns today's date as YYYY-MM-DD in the browser's local timezone */
 export function localToday(): string {
   return new Date().toLocaleDateString('en-CA')
 }
 
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-CO', {
+  return new Date(dateStr).toLocaleDateString(getLocale(), {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

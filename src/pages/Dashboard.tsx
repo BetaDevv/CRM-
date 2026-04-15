@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Users, UserCheck, Lightbulb, CheckSquare, ThumbsUp, ArrowUpRight, Zap, Target } from 'lucide-react'
 import { useStore } from '../store/useStore'
-import { formatCurrency } from '../lib/utils'
+import { formatCurrency, getLocale } from '../lib/utils'
 import { Link } from 'react-router-dom'
 import { getActivity, type ActivityLog } from '../lib/api'
 import { useTranslation } from 'react-i18next'
@@ -81,6 +81,15 @@ export default function Dashboard() {
   const [activity, setActivity] = useState<ActivityLog[]>([])
   const [activityLoading, setActivityLoading] = useState(true)
 
+  function translateActivity(a: ActivityLog): string {
+    // Extract entity name after the last ": " in description
+    const colonIdx = a.description.lastIndexOf(': ')
+    const entityName = colonIdx > -1 ? a.description.slice(colonIdx + 2) : ''
+    const key = `dashboard.activity.${a.type}`
+    const translated = t(key, { name: entityName, defaultValue: '' })
+    return translated || a.description
+  }
+
   useEffect(() => {
     getActivity(10)
       .then(setActivity)
@@ -109,7 +118,7 @@ export default function Dashboard() {
     const days = Math.floor(hours / 24)
     if (days === 1) return t('dashboard.timeAgo.yesterday')
     if (days < 7) return t('dashboard.timeAgo.daysAgo', { count: days })
-    return new Date(dateStr).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+    return new Date(dateStr).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })
   }
 
   return (
@@ -236,7 +245,7 @@ export default function Dashboard() {
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
                     style={{ background: activityColor(a.type) }} />
                   <div>
-                    <p className="text-sm text-white leading-snug"><T text={a.description} /></p>
+                    <p className="text-sm text-white leading-snug">{translateActivity(a)}</p>
                     <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>
                   </div>
                 </motion.div>

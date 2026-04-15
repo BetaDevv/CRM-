@@ -6,6 +6,20 @@ import { logActivity } from '../services/activityLogger'
 import { notifyTodoCompleted, notifyNoteAdded } from '../services/notificationService'
 import { CalendarEventService } from '../services/calendarEventService'
 import { TODO_STATUS, VALID_TODO_STATUSES } from '../constants'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+
+const uploadDir = path.resolve(__dirname, '../../../uploads/todos')
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true })
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase()
+    cb(null, `${uuid()}${ext}`)
+  },
+})
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
 
 const router = Router()
 router.use(verifyToken)
@@ -204,6 +218,48 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }
+})
+
+// GET /api/todos/:id/attachments — Get all attachments for a todo
+router.get('/:id/attachments', async (req: AuthRequest, res: Response) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT * FROM todo_attachments WHERE todo_id = $1 ORDER BY created_at DESC',
+      [req.params.id]
+    )
+    res.json(rows)
+  } catch { res.status(500).json({ error: 'Error interno' }) }
+})
+
+// POST /api/todos/:id/attachments — Upload files
+router.post('/:id/attachments', upload.array('files', 10), async (req: AuthRequest, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[]
+    if (!files?.length) { res.status(400).json({ error: 'No files' }); return }
+    const attachments = []
+    for (const file of files) {
+      const id = uuid()
+      const url = `/uploads/todos/${file.filename}`
+      await pool.query(
+        'INSERT INTO todo_attachments (id, todo_id, filename, original_name, mime_type, size, url) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+        [id, req.params.id, file.filename, file.originalname, file.mimetype, file.size, url]
+      )
+      attachments.push({ id, todo_id: req.params.id, filename: file.filename, original_name: file.originalname, mime_type: file.mimetype, size: file.size, url })
+    }
+    res.json(attachments)
+  } catch { res.status(500).json({ error: 'Error interno' }) }
+})
+
+// DELETE /api/todos/:id/attachments/:attachmentId — Delete an attachment
+router.delete('/:id/attachments/:attachmentId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { rows } = await pool.query('DELETE FROM todo_attachments WHERE id = $1 AND todo_id = $2 RETURNING *', [req.params.attachmentId, req.params.id])
+    if (rows.length) {
+      const filePath = path.resolve(__dirname, '../../../uploads/todos', rows[0].filename)
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+    }
+    res.json({ ok: true })
+  } catch { res.status(500).json({ error: 'Error interno' }) }
 })
 
 // GET /api/todos/:id/notes — Get conversation notes

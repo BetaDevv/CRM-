@@ -601,13 +601,13 @@ export default function Usuarios() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => { setShowApiKeyModal(false); setCreatedKey(null) }}
+            onMouseDown={() => { setShowApiKeyModal(false); setCreatedKey(null) }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
               className="glass-card w-full max-w-md p-6 space-y-5"
             >
               <div className="flex items-center justify-between">
@@ -766,13 +766,13 @@ export default function Usuarios() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowModal(false)}
+            onMouseDown={() => setShowModal(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
               className="glass-card w-full max-w-md p-6 space-y-5"
             >
               <div className="flex items-center justify-between">
@@ -891,13 +891,13 @@ export default function Usuarios() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => { setResetDialog({ open: false, userId: '', userName: '' }); setNewPassword('') }}
+            onMouseDown={() => { setResetDialog({ open: false, userId: '', userName: '' }); setNewPassword('') }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
               className="glass-card w-full max-w-sm p-6 space-y-4"
             >
               <div className="flex items-center gap-3">
@@ -951,13 +951,13 @@ export default function Usuarios() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setConfirm(prev => ({ ...prev, open: false }))}
+            onMouseDown={() => setConfirm(prev => ({ ...prev, open: false }))}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
               className="glass-card w-full max-w-sm p-6 space-y-4"
             >
               <div className="flex items-center gap-3">

@@ -44,7 +44,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 const uploadsDir = path.resolve(__dirname, '../../uploads')
-for (const sub of ['', 'avatars', 'documents']) {
+for (const sub of ['', 'avatars', 'documents', 'todos']) {
   const dir = path.join(uploadsDir, sub)
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
 }
@@ -180,7 +180,7 @@ async function start() {
   await seedDB()
   startMetricsWorker()
   app.listen(PORT, () => {
-    console.log(`\n🚀 TBS CRM Backend → http://localhost:${PORT}`)
+    console.log(`\n🚀 NextGenCRM Backend → http://localhost:${PORT}`)
     console.log(`📊 DB: PostgreSQL`)
     console.log(`📁 Uploads: ${uploadsDir}\n`)
   })

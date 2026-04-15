@@ -204,6 +204,35 @@ export async function markTodoNotesRead(todoId: string): Promise<void> {
   await api.patch(`/todos/${todoId}/notes/read`)
 }
 
+export interface TodoAttachment {
+  id: string
+  todo_id: string
+  filename: string
+  original_name: string
+  mime_type: string
+  size: number
+  url: string
+  created_at?: string
+}
+
+export async function getTodoAttachments(todoId: string): Promise<TodoAttachment[]> {
+  const { data } = await api.get(`/todos/${todoId}/attachments`)
+  return data
+}
+
+export async function uploadTodoAttachments(todoId: string, files: File[]): Promise<TodoAttachment[]> {
+  const fd = new FormData()
+  files.forEach(f => fd.append('files', f))
+  const { data } = await api.post(`/todos/${todoId}/attachments`, fd, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}
+
+export async function deleteTodoAttachment(todoId: string, attachmentId: string): Promise<void> {
+  await api.delete(`/todos/${todoId}/attachments/${attachmentId}`)
+}
+
 export async function getIdeaNotes(ideaId: string): Promise<ItemNote[]> {
   const { data } = await api.get(`/ideas/${ideaId}/notes`)
   return data

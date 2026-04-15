@@ -8,7 +8,7 @@ import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead } from '../../lib/api'
 import type { ItemNote } from '../../lib/api'
-import { priorityConfig, localToday } from '../../lib/utils'
+import { priorityConfig, localToday, getLocale } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
 import NotesPanel from '../../components/NotesPanel'
 
@@ -54,7 +54,7 @@ function TodoCardContent({
             )}
           </div>
           {todo.description && (
-            <p className="text-xs text-ink-400 mt-0.5 line-clamp-2"><T text={todo.description} /></p>
+            <p className="text-xs text-ink-400 mt-0.5 line-clamp-2"><T text={todo.description} translatable /></p>
           )}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
@@ -64,7 +64,7 @@ function TodoCardContent({
             {todo.startTime && (
               <span className="text-xs text-ink-400 flex items-center gap-1">
                 <Clock size={10} />
-                {new Date(todo.startTime).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                {new Date(todo.startTime).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}
               </span>
             )}
             <button
@@ -348,7 +348,7 @@ export default function ClientTodos() {
           <div>
             <p className="font-semibold text-white">{t('client:todos.yourProgress')}</p>
             <p className="text-xs text-ink-300 mt-0.5">
-              {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
           <div className="text-right">
@@ -507,14 +507,14 @@ export default function ClientTodos() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={closeModal}
+            onMouseDown={closeModal}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="glass-card p-6 w-full max-w-md"
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingTodo ? t('client:todos.editTask') : t('client:todos.newTask')}</h3>

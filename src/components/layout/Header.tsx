@@ -19,6 +19,19 @@ const pageKeyMap: Record<string, string> = {
   '/metricas':     'metrics',
 }
 
+const NOTIF_TITLE_KEY: Record<string, string> = {
+  todo_completed: 'header.notif.todoCompleted',
+  note_added: 'header.notif.noteAdded',
+  post_pending: 'header.notif.postPending',
+  post_for_approval: 'header.notif.postPending',
+  post_approved: 'header.notif.postApproved',
+  post_rejected: 'header.notif.postRejected',
+  post_revision: 'header.notif.postRevision',
+  prospect_new: 'header.notif.prospectNew',
+  milestone_upcoming: 'header.notif.milestoneUpcoming',
+  event_note: 'header.notif.eventNote',
+}
+
 function getNotifIcon(type: string) {
   switch (type) {
     case 'post_pending':        return <FileText size={14} className="text-amber-400" />
@@ -405,7 +418,7 @@ export default function Header() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium leading-snug" style={{ color: 'rgb(var(--ink-100))' }}>
-                            {n.title}
+                            {NOTIF_TITLE_KEY[n.type] ? t(NOTIF_TITLE_KEY[n.type]) : n.title}
                           </p>
                           {n.description && (
                             <p className="text-xs mt-0.5 leading-relaxed truncate" style={{ color: 'rgb(var(--ink-300))' }}>
@@ -460,7 +473,7 @@ export default function Header() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setShowProfile(false)}
+            onMouseDown={() => setShowProfile(false)}
           >
             <motion.div
               className="border rounded-2xl p-6 max-w-md w-full mx-4"
@@ -468,7 +481,7 @@ export default function Header() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
             >
               <h3 className="text-xl font-bold mb-6" style={{ color: 'rgb(var(--ink-100))' }}>{t('header.profile')}</h3>
 

@@ -446,14 +446,14 @@ function ClientUploadModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      onMouseDown={onClose}
     >
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         className="glass-card rounded-2xl p-6 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye } from 'lucide-react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { getTodos, createTodo as createTodoApi, toggleTodo as toggleTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus as updateTodoStatusApi, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, getCalendarUsers } from '../lib/api'
-import type { ItemNote, CalendarUser } from '../lib/api'
-import { priorityConfig, localToday } from '../lib/utils'
+import { getTodos, createTodo as createTodoApi, toggleTodo as toggleTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus as updateTodoStatusApi, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, getCalendarUsers, getTodoAttachments, uploadTodoAttachments, deleteTodoAttachment } from '../lib/api'
+import type { ItemNote, CalendarUser, TodoAttachment } from '../lib/api'
+import { priorityConfig, localToday, getLocale } from '../lib/utils'
 import type { Priority, TodoItem } from '../types'
 import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +31,7 @@ function TodoCard({
   clientLabel,
   onOpenNotes,
   onStartEdit,
+  onOpenDetail,
   column,
   isOverlay,
 }: {
@@ -40,6 +41,7 @@ function TodoCard({
   clientLabel?: string
   onOpenNotes?: (todo: TodoItem) => void
   onStartEdit?: (todo: TodoItem) => void
+  onOpenDetail?: (todo: TodoItem) => void
   column: 'pending' | 'in_progress' | 'done'
   isOverlay?: boolean
 }) {
@@ -48,7 +50,8 @@ function TodoCard({
   const isDone = column === 'done'
   return (
     <div
-      className={`group rounded-xl border transition-all duration-200
+      onClick={() => onOpenDetail?.(todo)}
+      className={`group rounded-xl border transition-all duration-200 cursor-pointer
         ${isDone
           ? 'bg-ink-800/20 border-white/5 opacity-50'
           : 'bg-ink-800/50 border-white/5 hover:border-white/10'
@@ -57,7 +60,7 @@ function TodoCard({
     >
       <div className="flex items-start gap-3 p-3.5">
         <button
-          onClick={() => onToggle(todo.id)}
+          onClick={(e) => { e.stopPropagation(); onToggle(todo.id) }}
           className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all
             ${isDone ? 'bg-crimson-700 border-crimson-700' : 'border-ink-500 hover:border-crimson-500'}`}
         >
@@ -95,11 +98,11 @@ function TodoCard({
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {!clientLabel && onStartEdit && (
-            <button onClick={() => onStartEdit(todo)} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(todo) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
               <Pencil size={14} />
             </button>
           )}
-          <button onClick={() => onDelete(todo.id)} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+          <button onClick={(e) => { e.stopPropagation(); onDelete(todo.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
             <Trash2 size={14} />
           </button>
         </div>
@@ -140,20 +143,26 @@ function DraggableTodoCard({ todo, ...cardProps }: { todo: TodoItem } & Omit<Par
 }
 
 export default function TodoSemanal() {
-  const { t } = useTranslation(['admin', 'common'])
+  const { t, i18n } = useTranslation(['admin', 'common'])
   const { clients } = useStore()
-  const { user } = useAuthStore()
+  const { user, isAdmin } = useAuthStore()
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null)
   const [filterCat, setFilterCat] = useState<string | null>(null)
+  const [selectedClientId, setSelectedClientId] = useState('')
   const [notesItem, setNotesItem] = useState<TodoItem | null>(null)
   const [notes, setNotes] = useState<ItemNote[]>([])
   const [notesLoading, setNotesLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<TodoItem | null>(null)
   const [allUsers, setAllUsers] = useState<CalendarUser[]>([])
   const [activeTodo, setActiveTodo] = useState<TodoItem | null>(null)
+  const [detailTodo, setDetailTodo] = useState<TodoItem | null>(null)
+  const [detailAttachments, setDetailAttachments] = useState<TodoAttachment[]>([])
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [formAttachments, setFormAttachments] = useState<TodoAttachment[]>([])
+  const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [form, setForm] = useState({
     title: '', description: '', priority: 'medium' as Priority,
     category: 'Contenido', clientId: '',
@@ -199,9 +208,11 @@ export default function TodoSemanal() {
     setShowModal(false)
     setEditingTodo(null)
     resetForm()
+    setFormAttachments([])
+    setPendingFiles([])
   }
 
-  const openEdit = (todo: TodoItem) => {
+  const openEdit = async (todo: TodoItem) => {
     setForm({
       title: todo.title,
       description: todo.description || '',
@@ -214,6 +225,36 @@ export default function TodoSemanal() {
     })
     setEditingTodo(todo)
     setShowModal(true)
+    try {
+      const atts = await getTodoAttachments(todo.id)
+      setFormAttachments(atts)
+    } catch { setFormAttachments([]) }
+  }
+
+  const openCreate = () => {
+    resetForm()
+    setFormAttachments([])
+    setPendingFiles([])
+    setEditingTodo(null)
+    setShowModal(true)
+  }
+
+  const openDetail = async (todo: TodoItem) => {
+    setDetailTodo(todo)
+    setDetailLoading(true)
+    try {
+      const atts = await getTodoAttachments(todo.id)
+      setDetailAttachments(atts)
+    } catch { setDetailAttachments([]) }
+    finally { setDetailLoading(false) }
+  }
+
+  const handleDeleteAttachment = async (att: TodoAttachment) => {
+    if (!detailTodo) return
+    try {
+      await deleteTodoAttachment(detailTodo.id, att.id)
+      setDetailAttachments(prev => prev.filter(a => a.id !== att.id))
+    } catch { /* silent */ }
   }
 
   useEffect(() => {
@@ -242,6 +283,9 @@ export default function TodoSemanal() {
         endTime: form.endTime || undefined,
         assignedTo: form.assignedTo || undefined,
       })
+      if (pendingFiles.length > 0) {
+        await uploadTodoAttachments(newTodo.id, pendingFiles)
+      }
       setTodos(prev => [newTodo, ...prev])
       closeModal()
     } catch (err) {
@@ -263,10 +307,42 @@ export default function TodoSemanal() {
         endTime: form.endTime || undefined,
         assignedTo: form.assignedTo || undefined,
       })
+      if (pendingFiles.length > 0) {
+        await uploadTodoAttachments(editingTodo.id, pendingFiles)
+      }
       setTodos(prev => prev.map(t => t.id === editingTodo.id ? updated : t))
       closeModal()
     } catch (err) {
       console.error('Error updating todo:', err)
+    }
+  }
+
+  const handleFormDeleteAttachment = async (att: TodoAttachment) => {
+    if (!editingTodo) return
+    try {
+      await deleteTodoAttachment(editingTodo.id, att.id)
+      setFormAttachments(prev => prev.filter(a => a.id !== att.id))
+    } catch { /* silent */ }
+  }
+
+  const handleDescriptionPaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items
+    const imageFiles: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) imageFiles.push(file)
+      }
+    }
+    if (imageFiles.length > 0) {
+      e.preventDefault()
+      if (editingTodo) {
+        uploadTodoAttachments(editingTodo.id, imageFiles)
+          .then(newAtts => setFormAttachments(prev => [...newAtts, ...prev]))
+          .catch(() => {})
+      } else {
+        setPendingFiles(prev => [...prev, ...imageFiles])
+      }
     }
   }
 
@@ -325,7 +401,7 @@ export default function TodoSemanal() {
     return undefined
   }
 
-  const filtered = todos.filter(t => !filterCat || t.category === filterCat)
+  const filtered = todos.filter(t => (!filterCat || t.category === filterCat) && (!selectedClientId || t.clientId === selectedClientId))
   const pending = filtered.filter(t => t.status === 'pending')
   const inProgress = filtered.filter(t => t.status === 'in_progress')
   const done = filtered.filter(t => t.status === 'done')
@@ -353,7 +429,7 @@ export default function TodoSemanal() {
             {t('admin:todo.completedCount', { done: doneCount, total: totalCount })}
           </p>
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingTodo(null); setShowModal(true) }} className="btn-primary">
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={openCreate} className="btn-primary">
           <Plus size={16} /> {t('admin:todo.newTask')}
         </motion.button>
       </div>
@@ -364,7 +440,7 @@ export default function TodoSemanal() {
           <div>
             <p className="font-semibold text-white">{t('admin:todo.weekProgress')}</p>
             <p className="text-xs text-ink-300 mt-0.5">
-              {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
           <div className="text-right">
@@ -399,6 +475,30 @@ export default function TodoSemanal() {
           </div>
         </div>
       </div>
+
+      {/* Client Filter — admin only */}
+      {isAdmin() && (
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setSelectedClientId('')}
+            className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
+              ${!selectedClientId ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}>
+            {t('admin:todo.allClients')}
+          </motion.button>
+          {clients.filter(c => c.status === 'active').map(c => (
+            <motion.button key={c.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={() => setSelectedClientId(c.id)}
+              className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
+                ${selectedClientId === c.id ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
+              style={selectedClientId === c.id ? { background: c.color + '20', borderColor: c.color + '60', color: c.color } : {}}>
+              <div className="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold text-white" style={{ background: c.color }}>
+                {c.company.slice(0, 1)}
+              </div>
+              {c.company}
+            </motion.button>
+          ))}
+        </div>
+      )}
 
       {/* Category Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -437,7 +537,7 @@ export default function TodoSemanal() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} column="pending" />
+                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="pending" />
                   ))}
                 {pending.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -464,7 +564,7 @@ export default function TodoSemanal() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} column="in_progress" />
+                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="in_progress" />
                   ))}
                 {inProgress.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -486,7 +586,7 @@ export default function TodoSemanal() {
             <div className="max-h-[360px] overflow-y-auto pr-1 thin-scrollbar">
               <DroppableColumn id="done">
                 {done.map(todo => (
-                  <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} column="done" />
+                  <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="done" />
                 ))}
                 {done.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -522,14 +622,14 @@ export default function TodoSemanal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={closeModal}
+            onMouseDown={closeModal}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingTodo ? t('admin:todo.editTask') : t('admin:todo.newTask')}</h3>
@@ -551,9 +651,24 @@ export default function TodoSemanal() {
                     placeholder={t('admin:todo.form.descriptionPlaceholder')}
                     value={form.description}
                     onChange={e => setForm(prev => ({ ...prev, description: e.target.value }))}
+                    onPaste={handleDescriptionPaste}
                     rows={3}
                     className="input-dark text-sm resize-none"
                   />
+                  {/* Pasted image previews (pending upload for new todos) */}
+                  {pendingFiles.length > 0 && !editingTodo && (
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {pendingFiles.map((f, i) => (
+                        <div key={i} className="relative group/pf">
+                          <img src={URL.createObjectURL(f)} alt="" className="w-16 h-16 rounded-lg object-cover border border-white/10" />
+                          <button onClick={() => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))}
+                            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/pf:opacity-100 transition-all">
+                            <X size={10} className="text-white" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {/* Start/End time */}
                 <div className="grid grid-cols-2 gap-3">
@@ -637,6 +752,68 @@ export default function TodoSemanal() {
                   </select>
                 </div>
               </div>
+
+              {/* Attachments (edit mode: show existing + upload) */}
+              <div className="border-t border-white/5 pt-3 mt-1">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-ink-300 flex items-center gap-1.5"><Paperclip size={12} /> {t('admin:todo.attachments')}</p>
+                  <label className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-ink-700/50 text-ink-300 hover:text-white transition-all cursor-pointer">
+                    <Plus size={11} /> {t('admin:todo.addFiles')}
+                    <input type="file" multiple className="hidden" onChange={e => {
+                      const files = Array.from(e.target.files || [])
+                      if (!files.length) return
+                      if (editingTodo) {
+                        uploadTodoAttachments(editingTodo.id, files)
+                          .then(newAtts => setFormAttachments(prev => [...newAtts, ...prev]))
+                          .catch(() => {})
+                      } else {
+                        setPendingFiles(prev => [...prev, ...files])
+                      }
+                      e.target.value = ''
+                    }} />
+                  </label>
+                </div>
+                {/* Existing attachments (edit mode) */}
+                {formAttachments.length > 0 && (
+                  <div className="space-y-1.5">
+                    {formAttachments.filter(a => a.mime_type.startsWith('image/')).length > 0 && (
+                      <div className="flex gap-2 flex-wrap">
+                        {formAttachments.filter(a => a.mime_type.startsWith('image/')).map(att => (
+                          <div key={att.id} className="relative group/fa">
+                            <img src={att.url} alt={att.original_name} className="w-16 h-16 rounded-lg object-cover border border-white/10" />
+                            <button onClick={() => handleFormDeleteAttachment(att)}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/fa:opacity-100 transition-all">
+                              <X size={10} className="text-white" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {formAttachments.filter(a => !a.mime_type.startsWith('image/')).map(att => (
+                      <div key={att.id} className="flex items-center gap-2 p-2 rounded-lg bg-ink-800/50 text-xs group/fa">
+                        <FileText size={13} className="text-ink-400" />
+                        <span className="text-ink-200 truncate flex-1">{att.original_name}</span>
+                        <button onClick={() => handleFormDeleteAttachment(att)}
+                          className="text-ink-400 hover:text-red-400 opacity-0 group-hover/fa:opacity-100 transition-all"><Trash2 size={12} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Pending files (create mode) */}
+                {pendingFiles.filter(f => !f.type.startsWith('image/')).length > 0 && !editingTodo && (
+                  <div className="space-y-1.5 mt-1.5">
+                    {pendingFiles.filter(f => !f.type.startsWith('image/')).map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-ink-800/50 text-xs group/pf">
+                        <FileText size={13} className="text-ink-400" />
+                        <span className="text-ink-200 truncate flex-1">{f.name}</span>
+                        <button onClick={() => setPendingFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-ink-400 hover:text-red-400 opacity-0 group-hover/pf:opacity-100 transition-all"><Trash2 size={12} /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-3 mt-5">
                 <button onClick={closeModal} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
                 <button onClick={editingTodo ? handleEditSubmit : handleAdd} className="btn-primary flex-1 justify-center">
@@ -682,6 +859,102 @@ export default function TodoSemanal() {
                     {t('common:common.delete')}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailTodo && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onMouseDown={() => setDetailTodo(null)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="glass-card p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto thin-scrollbar"
+              onMouseDown={e => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { openEdit(detailTodo); setDetailTodo(null) }}
+                    className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
+                  <button onClick={() => setDetailTodo(null)} className="text-ink-400 hover:text-white"><X size={18} /></button>
+                </div>
+              </div>
+
+              {/* Description */}
+              {detailTodo.description && (
+                <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailTodo.description}</p>
+              )}
+
+              {/* Meta info */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ color: priorityConfig[detailTodo.priority].color, background: priorityConfig[detailTodo.priority].bg }}>
+                  {priorityConfig[detailTodo.priority].label}
+                </span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-ink-300">
+                  {categoryKeys[detailTodo.category] ? t(`common:${categoryKeys[detailTodo.category]}`) : detailTodo.category}
+                </span>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  detailTodo.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' :
+                  detailTodo.status === 'in_progress' ? 'bg-blue-500/10 text-blue-400' :
+                  'bg-amber-500/10 text-amber-400'
+                }`}>
+                  {t(`admin:todo.columns.${detailTodo.status === 'in_progress' ? 'inProgress' : detailTodo.status}`)}
+                </span>
+              </div>
+
+              {/* Time info */}
+              {detailTodo.startTime && (
+                <div className="flex items-center gap-2 text-xs text-ink-300 mb-5">
+                  <Calendar size={13} />
+                  {new Date(detailTodo.startTime).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {detailTodo.endTime && <> — {new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</>}
+                </div>
+              )}
+
+              {/* Attachments section (read-only) */}
+              <div className="border-t border-white/5 pt-4">
+                <p className="text-sm font-medium text-white flex items-center gap-2 mb-3">
+                  <Paperclip size={14} /> {t('admin:todo.attachments')} ({detailAttachments.length})
+                </p>
+
+                {detailLoading ? (
+                  <div className="flex justify-center py-4"><Loader2 size={18} className="animate-spin text-ink-400" /></div>
+                ) : detailAttachments.length === 0 ? (
+                  <p className="text-xs text-ink-400 text-center py-4">{t('admin:todo.noAttachments')}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {/* Image previews */}
+                    {detailAttachments.filter(a => a.mime_type.startsWith('image/')).length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {detailAttachments.filter(a => a.mime_type.startsWith('image/')).map(att => (
+                          <div key={att.id} className="group/att relative rounded-xl overflow-hidden border border-white/5">
+                            <img src={att.url} alt={att.original_name} className="w-full h-28 object-cover" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/att:opacity-100 transition-all flex items-center justify-center">
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20"><Eye size={14} /></a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Non-image files */}
+                    {detailAttachments.filter(a => !a.mime_type.startsWith('image/')).map(att => (
+                      <div key={att.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-ink-800/50 border border-white/5 group/att">
+                        <FileText size={16} className="text-ink-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white truncate">{att.original_name}</p>
+                          <p className="text-[10px] text-ink-400">{(att.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-ink-400 hover:text-white transition-all"><Download size={14} /></a>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>

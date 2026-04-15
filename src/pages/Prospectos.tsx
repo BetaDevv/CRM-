@@ -190,7 +190,7 @@ function ProspectModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}
+      onMouseDown={onClose}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -198,7 +198,7 @@ function ProspectModal({
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
         className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{initial ? t('prospects.editProspect') : t('prospects.newProspect')}</h3>

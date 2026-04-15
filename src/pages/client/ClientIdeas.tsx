@@ -52,7 +52,7 @@ function IdeaCardContent({ idea, onUpdate, onDelete, isOwn, onOpenNotes, onStart
         </div>
       </div>
       <h4 className="font-semibold text-white text-sm mb-1.5 leading-snug"><T text={idea.title} /></h4>
-      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3"><T text={idea.description} /></p>
+      <p className="text-xs text-ink-300 mb-3 leading-relaxed line-clamp-3"><T text={idea.description} translatable /></p>
       <div className="flex flex-wrap gap-1 mb-3">
         {idea.tags.map(tag => (
           <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-200"><T text={tag} /></span>
@@ -398,14 +398,14 @@ export default function ClientIdeas() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={closeModal}
+            onMouseDown={closeModal}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="glass-card p-6 w-full max-w-md"
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingIdea ? t('client:ideas.editIdea') : t('client:ideas.newIdea')}</h3>

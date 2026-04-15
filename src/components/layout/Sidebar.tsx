@@ -79,7 +79,7 @@ export default function Sidebar() {
           className="flex-shrink-0 cursor-pointer"
           onClick={() => navigate(homePath)}
         >
-          <LogoMark size="sm" />
+          <LogoMark size="sm" animate />
         </motion.div>
         <AnimatePresence>
           {!sidebarCollapsed && (

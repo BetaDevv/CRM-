@@ -64,7 +64,7 @@ export default function ClientPosts() {
               </div>
 
               <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-                <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} /></p>
+                <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
               </div>
 
               {post.media_urls?.length > 0 && (
@@ -78,7 +78,7 @@ export default function ClientPosts() {
               {post.feedback && (
                 <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
                   <p className="text-amber-400 font-semibold mb-0.5">{t('client:posts.teamNote')}</p>
-                  <p className="text-amber-200"><T text={post.feedback} /></p>
+                  <p className="text-amber-200"><T text={post.feedback} translatable /></p>
                 </div>
               )}
 

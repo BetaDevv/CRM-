@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useThemeStore } from '../store/useThemeStore'
 
 interface LogoProps {
   collapsed?: boolean
@@ -7,29 +8,19 @@ interface LogoProps {
 }
 
 export function LogoMark({ size = 'md', animate = false }: { size?: 'sm' | 'md' | 'lg'; animate?: boolean }) {
-  const dim = size === 'sm' ? 28 : size === 'lg' ? 48 : 36
+  const dim = size === 'sm' ? 28 : size === 'lg' ? 52 : 36
+  const { theme } = useThemeStore()
+  const src = theme === 'light' ? '/logo-n-black.png' : '/logo-n-white.png'
 
   const Wrapper = animate ? motion.div : 'div'
   const animProps = animate ? {
-    whileHover: { rotate: 360, scale: 1.05 },
-    transition: { duration: 0.6, ease: 'backOut' as const },
+    whileHover: { scale: 1.08 },
+    transition: { duration: 0.3, ease: 'easeOut' as const },
   } : {}
 
   return (
     <Wrapper {...animProps} style={{ display: 'inline-block' }}>
-      <svg width={dim} height={dim} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Outer diamond */}
-        <path d="M18 1 L35 18 L18 35 L1 18 Z" fill="#DC143C" />
-        {/* Inner glow */}
-        <path d="M18 4 L32 18 L18 32 L4 18 Z" fill="#A50E2D" />
-        {/* Lightning bolt */}
-        <path
-          d="M21 8 L14 20 L19.5 20 L15 28 L24 16 L18.5 16 Z"
-          fill="white"
-        />
-        {/* Top highlight */}
-        <path d="M18 1 L35 18 L18 4 L1 18 Z" fill="rgba(255,255,255,0.12)" />
-      </svg>
+      <img src={src} alt="NextGenCRM" width={dim} height={dim} className="object-contain" />
     </Wrapper>
   )
 }
@@ -55,14 +46,17 @@ export function LogoFull({ collapsed = false, size = 'md' }: LogoProps) {
 }
 
 export function LogoLogin() {
+  const { theme } = useThemeStore()
+  const fullSrc = theme === 'light' ? '/logo-full-black.png' : '/logo-full-white.png'
+
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-5">
       <motion.div
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: 'spring', damping: 12, stiffness: 100, delay: 0.2 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', damping: 14, stiffness: 100, delay: 0.2 }}
       >
-        <LogoMark size="lg" />
+        <img src={fullSrc} alt="Nextgenbrand" className="h-8 object-contain" />
       </motion.div>
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -70,10 +64,10 @@ export function LogoLogin() {
         transition={{ delay: 0.5 }}
         className="text-center"
       >
-        <h1 className="text-2xl font-black text-white tracking-tight">
+        <h1 className="text-3xl font-black text-white tracking-tight">
           NextGen<span className="text-crimson-400">CRM</span>
         </h1>
-        <p className="text-ink-400 text-xs tracking-widest uppercase mt-0.5">Management Platform</p>
+        <p className="text-ink-400 text-[11px] tracking-[0.2em] uppercase mt-1.5">by Nextgenbrand</p>
       </motion.div>
     </div>
   )

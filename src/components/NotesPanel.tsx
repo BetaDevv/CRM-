@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { X, MessageSquare, Send, Loader2 } from 'lucide-react'
 import type { ItemNote } from '../lib/api'
+import { getLocale } from '../lib/utils'
 import T from './TranslatedText'
 
 /**
@@ -29,10 +30,10 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card w-full max-w-md flex flex-col" style={{ maxHeight: '70vh' }}
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <div>
             <h3 className="font-bold text-white text-lg flex items-center gap-2">
@@ -65,9 +66,9 @@ export default function NotesPanel({ notes, onSend, onClose, loading, currentUse
                   <p className="text-xs font-semibold mb-1" style={{ color: isMe ? '#DC143C' : '#60A5FA' }}>
                     <T text={note.author_name} />
                   </p>
-                  <p className="text-sm text-white leading-relaxed"><T text={note.content} /></p>
+                  <p className="text-sm text-white leading-relaxed"><T text={note.content} translatable /></p>
                   <p className="text-[10px] text-ink-500 mt-1 text-right">
-                    {new Date(note.created_at).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {new Date(note.created_at).toLocaleString(getLocale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>

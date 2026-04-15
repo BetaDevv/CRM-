@@ -143,7 +143,7 @@ function DraggableTodoCard({ todo, ...cardProps }: { todo: TodoItem } & Omit<Par
 }
 
 export default function TodoSemanal() {
-  const { t, i18n } = useTranslation(['admin', 'common'])
+  const { t } = useTranslation(['admin', 'common'])
   const { clients } = useStore()
   const { user, isAdmin } = useAuthStore()
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -247,14 +247,6 @@ export default function TodoSemanal() {
       setDetailAttachments(atts)
     } catch { setDetailAttachments([]) }
     finally { setDetailLoading(false) }
-  }
-
-  const handleDeleteAttachment = async (att: TodoAttachment) => {
-    if (!detailTodo) return
-    try {
-      await deleteTodoAttachment(detailTodo.id, att.id)
-      setDetailAttachments(prev => prev.filter(a => a.id !== att.id))
-    } catch { /* silent */ }
   }
 
   useEffect(() => {

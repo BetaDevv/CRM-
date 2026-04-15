@@ -1,7 +1,6 @@
 import LegalPage from './LegalPage'
 
 const APP_NAME = 'NextGenCRM'
-const APP_COMPANY = 'Nextgenbrand™'
 const APP_DOMAIN = 'crm.nextgenbrand.de'
 const CONTACT_EMAIL = 'info@nextgenbrand.de'
 

@@ -4,7 +4,7 @@ import { Calendar, Check, Loader2, X, Plus, MessageSquare, Users, User, CheckSqu
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { getCalendarEvents, addClientNoteToEvent, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, type CalendarEvent } from '../../lib/api'
-import { formatDate, categoryColors } from '../../lib/utils'
+import { formatDate, categoryColors, getLocale } from '../../lib/utils'
 
 export default function ClientActividad() {
   const { t } = useTranslation(['client', 'common'])
@@ -146,8 +146,8 @@ export default function ClientActividad() {
             {clientEvents.map((event, i) => {
               const startDate = new Date(event.startTime)
               const endDate = new Date(event.endTime)
-              const dateStr = startDate.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
-              const timeStr = startDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) + ' - ' + endDate.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+              const dateStr = startDate.toLocaleDateString(getLocale(), { weekday: 'short', day: 'numeric', month: 'short' })
+              const timeStr = startDate.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) + ' - ' + endDate.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })
               const isLast = i === clientEvents.length - 1
               const isPast = startDate < new Date()
 
@@ -179,7 +179,7 @@ export default function ClientActividad() {
                       <p className="text-xs text-ink-400 mb-2">{timeStr}</p>
 
                       {event.description && (
-                        <p className="text-xs text-ink-300 mb-2 leading-relaxed"><T text={event.description} /></p>
+                        <p className="text-xs text-ink-300 mb-2 leading-relaxed"><T text={event.description} translatable /></p>
                       )}
 
                       {/* Participants */}
@@ -217,7 +217,7 @@ export default function ClientActividad() {
                           <div className="flex items-start gap-2">
                             <MessageSquare size={12} className="text-crimson-400 mt-0.5 flex-shrink-0" />
                             <div className="flex-1">
-                              <p className="text-xs text-ink-200"><T text={event.clientNote} /></p>
+                              <p className="text-xs text-ink-200"><T text={event.clientNote} translatable /></p>
                               <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs text-crimson-400 mt-1 hover:underline">{t('client:activity.editNote')}</button>
                             </div>
                           </div>
@@ -247,12 +247,12 @@ export default function ClientActividad() {
           <motion.div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => setSelectedEvent(null)}
+            onMouseDown={() => setSelectedEvent(null)}
           >
             <motion.div
               className="bg-ink-900 border border-ink-700 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto thin-scrollbar"
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
             >
               {/* Color bar at top */}
               <div className="h-1 rounded-full mb-4" style={{ backgroundColor: selectedEvent.color || '#3B82F6' }} />
@@ -264,11 +264,11 @@ export default function ClientActividad() {
               <div className="flex items-center gap-2 text-ink-400 text-sm mb-3">
                 <Calendar className="w-4 h-4" />
                 <span>
-                  {new Date(selectedEvent.startTime).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(selectedEvent.startTime).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                   {' '}
-                  {new Date(selectedEvent.startTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(selectedEvent.startTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}
                   {' - '}
-                  {new Date(selectedEvent.endTime).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(selectedEvent.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
@@ -276,7 +276,7 @@ export default function ClientActividad() {
               {selectedEvent.description && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-ink-300 mb-1">{t('client:activity.description')}</h4>
-                  <p className="text-ink-400 text-sm"><T text={selectedEvent.description} /></p>
+                  <p className="text-ink-400 text-sm"><T text={selectedEvent.description} translatable /></p>
                 </div>
               )}
 
@@ -322,7 +322,7 @@ export default function ClientActividad() {
                     <MessageSquare className="w-4 h-4" />
                     <span className="font-medium">{t('client:activity.yourNote')}</span>
                   </div>
-                  <p className="text-ink-300 text-sm"><T text={selectedEvent.clientNote} /></p>
+                  <p className="text-ink-300 text-sm"><T text={selectedEvent.clientNote} translatable /></p>
                 </div>
               )}
 
@@ -344,12 +344,12 @@ export default function ClientActividad() {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setNoteEvent(null)}
+            onMouseDown={() => setNoteEvent(null)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={e => e.stopPropagation()}
+              onMouseDown={e => e.stopPropagation()}
               className="glass-card p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-4">

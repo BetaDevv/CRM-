@@ -49,7 +49,7 @@ export default function ClientPlan() {
                 <p className="text-xs text-ink-400">{t('client:plan.completed')}</p>
               </div>
             </div>
-            {plan.objective && <p className="text-sm text-ink-200 leading-relaxed"><T text={plan.objective} /></p>}
+            {plan.objective && <p className="text-sm text-ink-200 leading-relaxed"><T text={plan.objective} translatable /></p>}
             <div className="mt-4 w-full h-2 bg-ink-700 rounded-full overflow-hidden">
               <motion.div initial={{ width: 0 }} animate={{ width: `${planProgress}%` }} transition={{ duration: 1.2, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: client?.color || '#DC143C' }} />
             </div>
@@ -67,7 +67,7 @@ export default function ClientPlan() {
                   return (
                     <div key={i} className="bg-ink-800/40 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-ink-200"><T text={kpi.label} /></p>
+                        <p className="text-xs font-medium text-ink-200"><T text={kpi.label} translatable /></p>
                         <p className="text-sm font-bold text-white">{pct}%</p>
                       </div>
                       <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden mb-2">
@@ -105,7 +105,7 @@ export default function ClientPlan() {
                           <h5 className={`text-sm font-semibold ${m.completed ? 'line-through text-ink-400' : 'text-white'}`}><T text={m.title} /></h5>
                           <span className="text-xs text-ink-400 flex-shrink-0">{formatDate(m.date)}</span>
                         </div>
-                        {m.description && <p className="text-xs text-ink-300 mt-1 leading-relaxed"><T text={m.description} /></p>}
+                        {m.description && <p className="text-xs text-ink-300 mt-1 leading-relaxed"><T text={m.description} translatable /></p>}
                         {m.completed && <div className="flex items-center gap-1 text-green-400 text-xs mt-1.5"><CheckCircle size={11} /> {t('client:plan.milestoneCompleted')}</div>}
                       </div>
                     </div>

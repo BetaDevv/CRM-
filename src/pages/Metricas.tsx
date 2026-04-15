@@ -12,7 +12,7 @@ import {
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { api } from '../lib/api'
-import { localToday } from '../lib/utils'
+import { localToday, getLocale } from '../lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { JSX } from 'react'
 
@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p className="text-ink-300 mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} style={{ color: p.color || '#fff' }} className="font-semibold">
-          {typeof p.value === 'number' ? p.value.toLocaleString('es-CO') : p.value}
+          {typeof p.value === 'number' ? p.value.toLocaleString(getLocale()) : p.value}
         </p>
       ))}
     </div>
@@ -78,7 +78,7 @@ function formatShort(n: number): string {
 
 function formatAxisDate(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })
 }
 
 function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisconnect }: {
@@ -98,7 +98,7 @@ function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisc
         </div>
         {lastSync && (
           <span className="text-xs text-ink-500">
-            {t('admin:metrics.syncLabel')} {new Date(lastSync).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            {t('admin:metrics.syncLabel')} {new Date(lastSync).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
         <button onClick={onDisconnect} className="flex items-center gap-1 text-xs text-ink-500 hover:text-red-400 transition-colors">
@@ -522,7 +522,7 @@ export default function Metricas() {
             {[7, 30, 90].map(d => (
               <button key={d} onClick={() => setDays(d)}
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${days === d ? 'bg-crimson-700/30 text-white border border-crimson-700/30' : 'text-ink-400 hover:text-white'}`}>
-                {d}d
+                {d}{t('admin:metrics.dayAbbr')}
               </button>
             ))}
           </div>

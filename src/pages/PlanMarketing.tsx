@@ -113,7 +113,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
               )}
             </div>
           </div>
-          <p className="text-xs text-ink-300 leading-relaxed"><T text={milestone.description} /></p>
+          <p className="text-xs text-ink-300 leading-relaxed"><T text={milestone.description} translatable /></p>
         </motion.div>
       </motion.div>
     </div>
@@ -171,11 +171,11 @@ function NewPlanModal({ clients, onClose, onCreated }: {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.93, y: 20 }} transition={{ duration: 0.25 }}
         className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-white/5">
           <div>
             <h3 className="font-bold text-white text-xl">{t('admin:plan.newPlanModal.title')}</h3>
@@ -336,10 +336,10 @@ function EditPlanModal({ plan, onClose, onSaved }: {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editPlan')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
@@ -384,10 +384,10 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.addMilestoneModal.title')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
@@ -439,10 +439,10 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editMilestoneModal.title')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
@@ -493,10 +493,10 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-sm"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editKpiModal.title')}</h3>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={18} /></button>
@@ -677,7 +677,7 @@ export default function PlanMarketing() {
                     </div>
                   )}
                 </div>
-                {plan.objective && <p className="text-sm text-ink-200 leading-relaxed mb-4"><T text={plan.objective} /></p>}
+                {plan.objective && <p className="text-sm text-ink-200 leading-relaxed mb-4"><T text={plan.objective} translatable /></p>}
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
@@ -765,7 +765,7 @@ export default function PlanMarketing() {
                       <motion.div key={kpi.id || i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
                         className="p-3 rounded-xl bg-ink-800/50 group">
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-xs font-medium text-ink-200"><T text={kpi.label} /></p>
+                          <p className="text-xs font-medium text-ink-200"><T text={kpi.label} translatable /></p>
                           <div className="flex items-center gap-2">
                             <div><span className="text-sm font-bold text-white">{kpi.current_value || '—'}</span><span className="text-xs text-ink-400"> / {kpi.target}</span></div>
                             {admin && (

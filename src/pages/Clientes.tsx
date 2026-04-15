@@ -91,7 +91,7 @@ function ClientCard({
       </div>
 
       {client.description && (
-        <p className="text-xs mb-4 line-clamp-2" style={{ color: 'rgb(var(--ink-300))' }}><T text={client.description} /></p>
+        <p className="text-xs mb-4 line-clamp-2" style={{ color: 'rgb(var(--ink-300))' }}><T text={client.description} translatable /></p>
       )}
 
       <div className="space-y-2 mb-4">
@@ -219,11 +219,11 @@ function ClientModal({
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={onClose}>
+      onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}>
+        onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'rgb(var(--ink-100))' }}>
             {initial ? t('admin:clients.editClient') : t('admin:clients.newClient')}
@@ -367,7 +367,7 @@ function ActivityTimeline({ clientId }: { clientId: string }) {
               <Icon size={9} style={{ color: cfg.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm leading-snug" style={{ color: 'rgb(var(--ink-200))' }}><T text={a.description} /></p>
+              <p className="text-sm leading-snug" style={{ color: 'rgb(var(--ink-200))' }}><T text={a.description} translatable /></p>
               <p className="text-xs mt-0.5" style={{ color: 'rgb(var(--ink-400))' }}>{relativeTime(a.created_at)}</p>
             </div>
           </motion.div>
@@ -448,7 +448,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
             exit={{ opacity: 0, y: -10, height: 0 }}
             className="glass-card p-4 group relative"
           >
-            <p className="text-sm leading-relaxed pr-6" style={{ color: 'rgb(var(--ink-200))' }}><T text={note.content} /></p>
+            <p className="text-sm leading-relaxed pr-6" style={{ color: 'rgb(var(--ink-200))' }}><T text={note.content} translatable /></p>
             <div className="flex items-center gap-2 mt-2">
               {note.author && (
                 <span className="text-xs font-medium" style={{ color: 'rgb(var(--ink-300))' }}><T text={note.author} /></span>
@@ -664,7 +664,7 @@ export default function Clientes() {
                       {selected.description && (
                         <div className="mt-4 p-4 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800) / 0.5)' }}>
                           <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'rgb(var(--ink-300))' }}>{t('admin:clients.drawer.description')}</p>
-                          <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}><T text={selected.description} /></p>
+                          <p className="text-sm" style={{ color: 'rgb(var(--ink-200))' }}><T text={selected.description} translatable /></p>
                         </div>
                       )}
                     </motion.div>

@@ -30,7 +30,18 @@
     "changePhoto": "Click to change photo",
     "name": "Name",
     "role": "Role",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "notif": {
+      "todoCompleted": "Task completed",
+      "noteAdded": "New note",
+      "postPending": "Post pending approval",
+      "postApproved": "Post approved",
+      "postRejected": "Post rejected",
+      "postRevision": "Post under revision",
+      "prospectNew": "New prospect",
+      "milestoneUpcoming": "Upcoming milestone",
+      "eventNote": "Client note on event"
+    }
   },
   "pageTitles": {
     "dashboard": { "title": "Dashboard", "subtitle": "Welcome back" },
@@ -53,7 +64,7 @@
     "fillAll": "Please fill in all fields",
     "inviteOnly": "Access is by invitation only.",
     "contactAdmin": "Contact the administrator for credentials.",
-    "copyright": "NextGenCRM © 2025 · Private platform",
+    "copyright": "NextGenCRM © 2025 by Nextgenbrand™",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service"
   },

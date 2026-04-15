@@ -5,15 +5,19 @@ import { useTranslationStore } from '../lib/translationStore'
 
 interface TranslatedTextProps {
   text: string | undefined | null
+  /** Show translate button. Default: false — just renders text without button */
+  translatable?: boolean
 }
 
 /**
  * Renders user-generated text with an optional "Translate" button.
- * Shows original text by default. On click, fetches translation.
+ * By default just renders the text. Pass translatable to show the translate button.
  *
- * Usage: <T text={todo.title} />
+ * Usage:
+ *   <T text={client.company} />              — just renders text
+ *   <T text={idea.description} translatable /> — renders text with translate button
  */
-export default function T({ text }: TranslatedTextProps) {
+export default function T({ text, translatable }: TranslatedTextProps) {
   const { t, i18n } = useTranslation('common')
   const lang = i18n.language
   const requestTranslation = useTranslationStore(s => s.requestTranslation)
@@ -21,8 +25,7 @@ export default function T({ text }: TranslatedTextProps) {
   const [showTranslation, setShowTranslation] = useState(false)
 
   if (!text?.trim()) return null
-  // Default content language is Spanish — no translation needed
-  if (lang === 'es') return <>{text}</>
+  if (lang === 'es' || !translatable) return <>{text}</>
 
   const cacheKey = `${lang}::${text}`
   const cached = cache.get(cacheKey)

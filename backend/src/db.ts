@@ -309,6 +309,20 @@ export async function initDB() {
   `)
 
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS todo_attachments (
+      id TEXT PRIMARY KEY,
+      todo_id TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      original_name TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      size INTEGER NOT NULL,
+      url TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_todo_attachments_todo ON todo_attachments(todo_id);
+  `)
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS api_keys (
       id TEXT PRIMARY KEY,
       key TEXT UNIQUE NOT NULL,

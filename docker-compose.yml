@@ -34,7 +34,7 @@ services:
     depends_on:
       - db
     volumes:
-      - ./uploads:/usr/src/app/uploads
+      - /srv/nextgenbrand/data/crm-uploads:/usr/src/app/uploads
   frontend:
     image: crm-frontend
     build:

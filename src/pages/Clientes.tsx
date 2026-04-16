@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Mail, Phone, DollarSign, Calendar, Briefcase, ExternalLink,
+  X, Mail, Phone, DollarSign, Calendar, Briefcase,
   CheckCircle, Pencil, Trash2, Loader2, Plus, Upload,
   Clock, MessageSquare, Send, FileText, UserPlus, Bell, AlertTriangle,
 } from 'lucide-react'

@@ -32,7 +32,7 @@ const router = Router()
 router.use(verifyToken)
 
 function parseClient(c: any) {
-  return { ...c, services: JSON.parse(c.services || '[]'), linkedin_connected: !!c.linkedin_connected }
+  return { ...c, services: JSON.parse(c.services || '[]'), linkedin_connected: !!c.linkedin_connected, monthly_fee: parseFloat(c.monthly_fee) || 0 }
 }
 
 router.get('/', async (req: AuthRequest, res: Response) => {

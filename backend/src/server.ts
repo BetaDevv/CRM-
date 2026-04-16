@@ -177,7 +177,7 @@ app.get('/api/health', async (_req, res) => {
 
 async function start() {
   await initDB()
-  await seedDB()
+  if (process.env.NODE_ENV !== 'production') await seedDB()
   startMetricsWorker()
   app.listen(PORT, () => {
     console.log(`\n🚀 NextGenCRM Backend → http://localhost:${PORT}`)

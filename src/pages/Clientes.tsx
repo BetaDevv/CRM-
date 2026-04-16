@@ -117,15 +117,9 @@ function ClientCard({
         ))}
       </div>
 
-      <div className="pt-3 flex items-center justify-between" style={{ borderTop: '1px solid rgb(var(--ink-600) / 0.4)' }}>
-        <div>
-          <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.monthlyRetention')}</p>
-          <p className="font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(client.monthlyFee || client.monthly_fee || 0, client.currency || 'USD')}</p>
-        </div>
-        <div className="px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all"
-          style={{ background: client.color + '20', color: client.color }}>
-          <ExternalLink size={11} /> {t('admin:clients.viewMore')}
-        </div>
+      <div className="pt-3" style={{ borderTop: '1px solid rgb(var(--ink-600) / 0.4)' }}>
+        <p className="text-xs" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.monthlyRetention')}</p>
+        <p className="font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(client.monthlyFee || client.monthly_fee || 0, client.currency || 'USD')}</p>
       </div>
     </motion.div>
   )

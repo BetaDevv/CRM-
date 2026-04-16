@@ -134,9 +134,16 @@
   },
   "notes": {
     "title": "Notes",
-    "placeholder": "Write a note...",
+    "comments": "Comments & Activity",
+    "placeholder": "Write a comment...",
     "send": "Send",
-    "noNotes": "No notes yet"
+    "noNotes": "No comments yet",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edited": "edited",
+    "deleteConfirm": "Delete this comment?"
   },
   "time": {
     "justNow": "now",

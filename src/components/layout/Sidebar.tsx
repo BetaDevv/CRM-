@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { useStore } from '../../store/useStore'
 import { useAuthStore } from '../../store/useAuthStore'
 import { LogoMark } from '../Logo'
+import { useThemeStore } from '../../store/useThemeStore'
 
 const adminNav = [
   { path: '/',             icon: LayoutDashboard, labelKey: 'nav.dashboard' },
@@ -39,6 +40,7 @@ export default function Sidebar() {
   const { t } = useTranslation('common')
   const { sidebarCollapsed, toggleSidebar } = useStore()
   const { user, logout } = useAuthStore()
+  const { theme } = useThemeStore()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -68,32 +70,40 @@ export default function Sidebar() {
 
       {/* Logo — fixed height matches Header */}
       <div
-        className="relative flex items-center gap-3 px-4 flex-shrink-0"
+        className="relative flex items-center px-4 flex-shrink-0"
         style={{
           height: '88px',
           borderBottom: '1px solid rgb(var(--ink-600) / 0.4)',
         }}
       >
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="flex-shrink-0 cursor-pointer"
-          onClick={() => navigate(homePath)}
-        >
-          <LogoMark size="sm" animate />
-        </motion.div>
-        <AnimatePresence>
-          {!sidebarCollapsed && (
+        <AnimatePresence mode="wait">
+          {sidebarCollapsed ? (
             <motion.div
+              key="collapsed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              whileHover={{ scale: 1.05 }}
+              className="flex-shrink-0 cursor-pointer"
+              onClick={() => navigate(homePath)}
+            >
+              <LogoMark size="md" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="expanded"
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.2 }}
-              className="overflow-hidden cursor-pointer"
+              className="cursor-pointer"
               onClick={() => navigate(homePath)}
             >
-              <p className="font-black text-sm leading-none tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>
-                NextGen<span className="text-crimson-400">CRM</span>
-              </p>
+              <img
+                src={theme === 'light' ? '/logo-full-black.png' : '/logo-full-white.png'}
+                alt="Nextgenbrand"
+                className="h-7 object-contain"
+              />
             </motion.div>
           )}
         </AnimatePresence>

@@ -1,23 +1,31 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Check, Trash2, Calendar, Loader2, Share2, Users, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Plus, X, Check, Trash2, Calendar, Loader2, Share2, Users, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye, Send } from 'lucide-react'
 import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
-import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead } from '../../lib/api'
-import type { ItemNote } from '../../lib/api'
+import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, editTodoNote, deleteTodoNote, getTodoAttachments } from '../../lib/api'
+import type { ItemNote, TodoAttachment } from '../../lib/api'
 import { priorityConfig, localToday, getLocale } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
-import NotesPanel from '../../components/NotesPanel'
 
-const categories = ['Contenido', 'Diseño', 'Ventas', 'Reportes', 'Estrategia', 'Admin', 'Otro']
+const categoryKeys: Record<string, string> = {
+  'Contenido': 'categories.content',
+  'Diseño': 'categories.design',
+  'Ventas': 'categories.sales',
+  'Reportes': 'categories.reports',
+  'Estrategia': 'categories.strategy',
+  'Admin': 'categories.admin',
+  'Otro': 'categories.other',
+}
+const categories = Object.keys(categoryKeys)
 
 function TodoCardContent({
   todo,
   isOwn,
-  onOpenNotes,
+  onOpenDetail,
   onStartEdit,
   onDelete,
   isDragging,
@@ -25,7 +33,7 @@ function TodoCardContent({
 }: {
   todo: TodoItem
   isOwn: boolean
-  onOpenNotes?: (todo: TodoItem) => void
+  onOpenDetail?: (todo: TodoItem) => void
   onStartEdit?: (todo: TodoItem) => void
   onDelete: (id: string) => void
   isDragging?: boolean
@@ -34,7 +42,8 @@ function TodoCardContent({
   const cfg = priorityConfig[todo.priority]
   return (
     <div
-      className={`group rounded-xl border transition-all duration-200
+      onClick={() => onOpenDetail?.(todo)}
+      className={`group rounded-xl border transition-all duration-200 cursor-pointer
         ${isDragging ? 'opacity-30' : ''}
         ${todo.status === 'done'
           ? 'bg-ink-800/20 border-white/5 opacity-50'
@@ -67,28 +76,21 @@ function TodoCardContent({
                 {new Date(todo.startTime).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })}
               </span>
             )}
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenNotes?.(todo) }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-crimson-400 hover:bg-crimson-700/20 transition-all"
-            >
-              <MessageSquare size={13} />
-              {t('common:notes.title')}
-              {(todo.notesCount ?? 0) > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[10px] font-bold rounded-full">
-                  {todo.notesCount}
-                </span>
-              )}
-            </button>
+            {(todo.notesCount ?? 0) > 0 && (
+              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[9px] font-bold rounded-full">
+                {todo.notesCount}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {isOwn && onStartEdit && (
-            <button onClick={() => onStartEdit(todo)} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(todo) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
               <Pencil size={14} />
             </button>
           )}
           {isOwn && (
-            <button onClick={() => onDelete(todo.id)} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onDelete(todo.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
               <Trash2 size={14} />
             </button>
           )}
@@ -102,14 +104,14 @@ function DraggableTodoCard({
   todo,
   onDelete,
   isOwn,
-  onOpenNotes,
+  onOpenDetail,
   onStartEdit,
   t,
 }: {
   todo: TodoItem
   onDelete: (id: string) => void
   isOwn: boolean
-  onOpenNotes?: (todo: TodoItem) => void
+  onOpenDetail?: (todo: TodoItem) => void
   onStartEdit?: (todo: TodoItem) => void
   t: (key: string) => string
 }) {
@@ -124,7 +126,7 @@ function DraggableTodoCard({
       <TodoCardContent
         todo={todo}
         isOwn={isOwn}
-        onOpenNotes={onOpenNotes}
+        onOpenDetail={onOpenDetail}
         onStartEdit={onStartEdit}
         onDelete={onDelete}
         isDragging={isDragging}
@@ -156,9 +158,13 @@ export default function ClientTodos() {
   const [filterCat, setFilterCat] = useState<string | null>(null)
   const [shared, setShared] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<TodoItem | null>(null)
-  const [notesItem, setNotesItem] = useState<TodoItem | null>(null)
-  const [notesData, setNotesData] = useState<ItemNote[]>([])
-  const [notesLoading, setNotesLoading] = useState(false)
+  const [detailTodo, setDetailTodo] = useState<TodoItem | null>(null)
+  const [detailNotes, setDetailNotes] = useState<ItemNote[]>([])
+  const [detailAttachments, setDetailAttachments] = useState<TodoAttachment[]>([])
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editNoteContent, setEditNoteContent] = useState('')
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [form, setForm] = useState({
     title: '', description: '', priority: 'medium' as Priority,
@@ -268,28 +274,45 @@ export default function ClientTodos() {
     }
   }
 
-  const openNotes = async (item: TodoItem) => {
-    setNotesItem(item)
-    setTodos(prev => prev.map(t => t.id === item.id ? { ...t, notesCount: 0 } : t))
-    setNotesLoading(true)
+  const openDetail = async (todo: TodoItem) => {
+    setDetailTodo(todo)
+    setDetailLoading(true)
+    setNewNoteContent('')
+    setEditingNoteId(null)
     try {
-      const [data] = await Promise.all([getTodoNotes(item.id), markTodoNotesRead(item.id)])
-      setNotesData(data)
-    } catch (err) {
-      console.error('Error fetching notes:', err)
-    } finally {
-      setNotesLoading(false)
-    }
+      const [atts, notes] = await Promise.all([getTodoAttachments(todo.id), getTodoNotes(todo.id)])
+      setDetailAttachments(atts)
+      setDetailNotes(notes)
+      markTodoNotesRead(todo.id)
+      setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, notesCount: 0 } : t))
+    } catch { setDetailAttachments([]); setDetailNotes([]) }
+    finally { setDetailLoading(false) }
   }
 
-  const handleSendNote = async (content: string) => {
-    if (!notesItem) return
+  const handleSendNote = async () => {
+    if (!detailTodo || !newNoteContent.trim()) return
     try {
-      const newNote = await addTodoNoteMsg(notesItem.id, content)
-      setNotesData(prev => [...prev, newNote])
-    } catch (err) {
-      console.error('Error sending note:', err)
-    }
+      const note = await addTodoNoteMsg(detailTodo.id, newNoteContent.trim())
+      setDetailNotes(prev => [...prev, note])
+      setNewNoteContent('')
+    } catch { /* silent */ }
+  }
+
+  const handleEditNote = async (noteId: string) => {
+    if (!detailTodo || !editNoteContent.trim()) return
+    try {
+      const updated = await editTodoNote(detailTodo.id, noteId, editNoteContent.trim())
+      setDetailNotes(prev => prev.map(n => n.id === noteId ? updated : n))
+      setEditingNoteId(null)
+    } catch { /* silent */ }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!detailTodo) return
+    try {
+      await deleteTodoNote(detailTodo.id, noteId)
+      setDetailNotes(prev => prev.filter(n => n.id !== noteId))
+    } catch { /* silent */ }
   }
 
   const isOwn = (todo: TodoItem) => todo.createdBy === user?.id
@@ -423,7 +446,7 @@ export default function ClientTodos() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} t={t} />
+                    <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenDetail={openDetail} onStartEdit={openEdit} t={t} />
                   ))}
                 {pending.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -450,7 +473,7 @@ export default function ClientTodos() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} t={t} />
+                    <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenDetail={openDetail} onStartEdit={openEdit} t={t} />
                   ))}
                 {inProgress.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -472,7 +495,7 @@ export default function ClientTodos() {
             <DroppableColumn id="done">
               <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1 thin-scrollbar">
                 {done.map(todo => (
-                  <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} t={t} />
+                  <DraggableTodoCard key={todo.id} todo={todo} onDelete={handleDeleteRequest} isOwn={isOwn(todo)} onOpenDetail={openDetail} onStartEdit={openEdit} t={t} />
                 ))}
                 {done.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -663,17 +686,166 @@ export default function ClientTodos() {
         )}
       </AnimatePresence>
 
-      {/* Notes Panel */}
+      {/* Detail Modal */}
       <AnimatePresence>
-        {notesItem && (
-          <NotesPanel
-            notes={notesData}
-            onSend={handleSendNote}
-            onClose={() => { setNotesItem(null); setNotesData([]) }}
-            loading={notesLoading}
-            currentUserId={user?.id || ''}
-            itemTitle={notesItem.title}
-          />
+        {detailTodo && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onMouseDown={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="glass-card p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto thin-scrollbar"
+              onMouseDown={e => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
+                <div className="flex items-center gap-2">
+                  {isOwn(detailTodo) && (
+                    <button onClick={() => { openEdit(detailTodo); setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}
+                      className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
+                  )}
+                  <button onClick={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }} className="text-ink-400 hover:text-white"><X size={18} /></button>
+                </div>
+              </div>
+
+              {/* Description */}
+              {detailTodo.description && (
+                <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailTodo.description}</p>
+              )}
+
+              {/* Meta info */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ color: priorityConfig[detailTodo.priority].color, background: priorityConfig[detailTodo.priority].bg }}>
+                  {priorityConfig[detailTodo.priority].label}
+                </span>
+                <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-ink-300">
+                  {categoryKeys[detailTodo.category] ? t(`common:${categoryKeys[detailTodo.category]}`) : detailTodo.category}
+                </span>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  detailTodo.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' :
+                  detailTodo.status === 'in_progress' ? 'bg-blue-500/10 text-blue-400' :
+                  'bg-amber-500/10 text-amber-400'
+                }`}>
+                  {detailTodo.status === 'done' ? t('client:todos.completedLabel') :
+                   detailTodo.status === 'in_progress' ? t('client:todos.developing') :
+                   t('client:todos.pending')}
+                </span>
+              </div>
+
+              {/* Time info */}
+              {detailTodo.startTime && (
+                <div className="flex items-center gap-2 text-xs text-ink-300 mb-5">
+                  <Calendar size={13} />
+                  {new Date(detailTodo.startTime).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {detailTodo.endTime && <> — {new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</>}
+                </div>
+              )}
+
+              {/* Attachments section */}
+              <div className="border-t border-white/5 pt-4">
+                <p className="text-sm font-medium text-white flex items-center gap-2 mb-3">
+                  <Paperclip size={14} /> {t('common:notes.attachments', { defaultValue: 'Attachments' })} ({detailAttachments.length})
+                </p>
+
+                {detailLoading ? (
+                  <div className="flex justify-center py-4"><Loader2 size={18} className="animate-spin text-ink-400" /></div>
+                ) : detailAttachments.length === 0 ? (
+                  <p className="text-xs text-ink-400 text-center py-4">{t('common:notes.noAttachments', { defaultValue: 'No attachments' })}</p>
+                ) : (
+                  <div className="space-y-2">
+                    {detailAttachments.filter(a => a.mime_type.startsWith('image/')).length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {detailAttachments.filter(a => a.mime_type.startsWith('image/')).map(att => (
+                          <div key={att.id} className="group/att relative rounded-xl overflow-hidden border border-white/5">
+                            <img src={att.url} alt={att.original_name} className="w-full h-28 object-cover" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/att:opacity-100 transition-all flex items-center justify-center">
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20"><Eye size={14} /></a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {detailAttachments.filter(a => !a.mime_type.startsWith('image/')).map(att => (
+                      <div key={att.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-ink-800/50 border border-white/5 group/att">
+                        <FileText size={16} className="text-ink-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-white truncate">{att.original_name}</p>
+                          <p className="text-[10px] text-ink-400">{(att.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                        <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-ink-400 hover:text-white transition-all"><Download size={14} /></a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Comments section */}
+              <div className="border-t border-white/5 pt-4 mt-2">
+                <p className="text-sm font-medium text-white flex items-center gap-2 mb-3">
+                  <MessageSquare size={14} /> {t('common:notes.comments', { defaultValue: 'Comments' })} ({detailNotes.length})
+                </p>
+
+                <div className="max-h-[300px] overflow-y-auto thin-scrollbar space-y-3 mb-3">
+                  {detailNotes.length === 0 ? (
+                    <p className="text-xs text-ink-400 text-center py-4">{t('common:notes.noNotes')}</p>
+                  ) : (
+                    detailNotes.map(note => (
+                      <div key={note.id} className="flex gap-3 group/note">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={{ background: note.author_id === user?.id ? '#DC143C30' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? '#DC143C' : 'rgb(var(--ink-300))' }}>
+                          {note.author_name?.slice(0, 2).toUpperCase() || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-white">{note.author_name}</span>
+                            <span className="text-[10px] text-ink-400">
+                              {new Date(note.created_at).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {editingNoteId === note.id ? (
+                            <div className="mt-1">
+                              <textarea value={editNoteContent} onChange={e => setEditNoteContent(e.target.value)}
+                                className="input-dark text-sm w-full resize-none" rows={2} autoFocus />
+                              <div className="flex gap-2 mt-1">
+                                <button onClick={() => handleEditNote(note.id)} className="text-xs text-crimson-400 hover:text-crimson-300">{t('common:notes.save')}</button>
+                                <button onClick={() => setEditingNoteId(null)} className="text-xs text-ink-400 hover:text-ink-200">{t('common:notes.cancel')}</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-ink-200 mt-0.5 leading-relaxed">{note.content}</p>
+                              {note.author_id === user?.id && (
+                                <div className="flex gap-2 mt-1 flex">
+                                  <button onClick={() => { setEditingNoteId(note.id); setEditNoteContent(note.content) }}
+                                    className="text-[10px] text-ink-400 hover:text-white">{t('common:notes.edit')}</button>
+                                  <span className="text-[10px] text-ink-600">·</span>
+                                  <button onClick={() => handleDeleteNote(note.id)}
+                                    className="text-[10px] text-ink-400 hover:text-red-400">{t('common:notes.delete')}</button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* New comment input */}
+                <div className="flex gap-2">
+                  <input type="text" placeholder={t('common:notes.placeholder')}
+                    value={newNoteContent} onChange={e => setNewNoteContent(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
+                    className="input-dark text-sm flex-1" />
+                  <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
+                    className="px-3 py-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-30 text-white rounded-xl transition-all">
+                    <Send size={14} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

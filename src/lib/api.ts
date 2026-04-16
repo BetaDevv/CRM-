@@ -204,6 +204,15 @@ export async function markTodoNotesRead(todoId: string): Promise<void> {
   await api.patch(`/todos/${todoId}/notes/read`)
 }
 
+export async function editTodoNote(todoId: string, noteId: string, content: string): Promise<ItemNote> {
+  const { data } = await api.patch(`/todos/${todoId}/notes/${noteId}`, { content })
+  return data
+}
+
+export async function deleteTodoNote(todoId: string, noteId: string): Promise<void> {
+  await api.delete(`/todos/${todoId}/notes/${noteId}`)
+}
+
 export interface TodoAttachment {
   id: string
   todo_id: string
@@ -245,6 +254,15 @@ export async function addIdeaNoteMsg(ideaId: string, content: string): Promise<I
 
 export async function markIdeaNotesRead(ideaId: string): Promise<void> {
   await api.patch(`/ideas/${ideaId}/notes/read`)
+}
+
+export async function editIdeaNote(ideaId: string, noteId: string, content: string): Promise<ItemNote> {
+  const { data } = await api.patch(`/ideas/${ideaId}/notes/${noteId}`, { content })
+  return data
+}
+
+export async function deleteIdeaNote(ideaId: string, noteId: string): Promise<void> {
+  await api.delete(`/ideas/${ideaId}/notes/${noteId}`)
 }
 
 // --- Posts API ---

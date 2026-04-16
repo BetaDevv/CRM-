@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket, Loader2, MessageSquare, Pencil, AlertTriangle } from 'lucide-react'
+import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket, Loader2, MessageSquare, Pencil, AlertTriangle, Send } from 'lucide-react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useDroppable, useDraggable } from '@dnd-kit/core'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi, getIdeaNotes, addIdeaNoteMsg, markIdeaNotesRead } from '../lib/api'
+import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, deleteIdea as deleteIdeaApi, getIdeaNotes, addIdeaNoteMsg, markIdeaNotesRead, editIdeaNote, deleteIdeaNote } from '../lib/api'
 import type { ItemNote } from '../lib/api'
-import { ideaStatusConfig, localToday } from '../lib/utils'
+import { ideaStatusConfig, localToday, getLocale } from '../lib/utils'
 import type { Idea, IdeaStatus } from '../types'
-import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
 
@@ -40,12 +39,12 @@ function useCommonTags() {
   }))
 }
 
-function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartEdit, statusColumns }: {
+function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenDetail, onStartEdit, statusColumns }: {
   idea: Idea
   onUpdate: (id: string, data: Partial<Idea>) => void
   onDelete: () => void
   clientLabel?: string
-  onOpenNotes?: (idea: Idea) => void
+  onOpenDetail?: (idea: Idea) => void
   onStartEdit?: (idea: Idea) => void
   statusColumns: { key: IdeaStatus; label: string; icon: ReactNode }[]
 }) {
@@ -58,7 +57,8 @@ function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartE
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       whileHover={{ y: -3 }}
-      className="glass-card p-4 group"
+      className="glass-card p-4 group cursor-pointer"
+      onClick={() => onOpenDetail?.(idea)}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -71,11 +71,11 @@ function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartE
         </div>
         <div className="flex items-center gap-1">
           {!clientLabel && onStartEdit && (
-            <button onClick={() => onStartEdit(idea)} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(idea) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
               <Pencil size={14} />
             </button>
           )}
-          <button onClick={() => onDelete()} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+          <button onClick={(e) => { e.stopPropagation(); onDelete() }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
             <X size={14} />
           </button>
         </div>
@@ -90,24 +90,18 @@ function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenNotes, onStartE
       <div className="flex items-center justify-between pt-2 border-t border-white/5">
         <select
           value={idea.status}
+          onClick={e => e.stopPropagation()}
           onChange={e => onUpdate(idea.id, { status: e.target.value as IdeaStatus })}
           className="bg-transparent text-xs outline-none cursor-pointer"
           style={{ color: cfg.color }}
         >
           {statusColumns.map(s => <option key={s.key} value={s.key} className="bg-ink-800">{s.label}</option>)}
         </select>
-        <button
-          onClick={(e) => { e.stopPropagation(); onOpenNotes?.(idea) }}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-crimson-400 hover:bg-crimson-700/20 transition-all"
-        >
-          <MessageSquare size={13} />
-          {t('admin:ideas.notes')}
-          {(idea.notesCount ?? 0) > 0 && (
-            <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[10px] font-bold rounded-full">
-              {idea.notesCount}
-            </span>
-          )}
-        </button>
+        {(idea.notesCount ?? 0) > 0 && (
+          <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[9px] font-bold rounded-full">
+            {idea.notesCount}
+          </span>
+        )}
       </div>
     </motion.div>
   )
@@ -152,9 +146,12 @@ export default function Ideas() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null)
-  const [notesItem, setNotesItem] = useState<Idea | null>(null)
-  const [notesData, setNotesData] = useState<ItemNote[]>([])
-  const [notesLoading, setNotesLoading] = useState(false)
+  const [detailIdea, setDetailIdea] = useState<Idea | null>(null)
+  const [detailNotes, setDetailNotes] = useState<ItemNote[]>([])
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editNoteContent, setEditNoteContent] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<Idea | null>(null)
   const [form, setForm] = useState({
     title: '', description: '', emoji: '💡', tags: [] as string[], customTag: '', clientId: '',
@@ -288,28 +285,44 @@ export default function Ideas() {
     }
   }
 
-  const openNotes = async (item: Idea) => {
-    setNotesItem(item)
-    setIdeas(prev => prev.map(i => i.id === item.id ? { ...i, notesCount: 0 } : i))
-    setNotesLoading(true)
+  const openDetail = async (idea: Idea) => {
+    setDetailIdea(idea)
+    setDetailLoading(true)
+    setNewNoteContent('')
+    setEditingNoteId(null)
     try {
-      const [data] = await Promise.all([getIdeaNotes(item.id), markIdeaNotesRead(item.id)])
-      setNotesData(data)
-    } catch (err) {
-      console.error('Error fetching notes:', err)
-    } finally {
-      setNotesLoading(false)
-    }
+      const notes = await getIdeaNotes(idea.id)
+      setDetailNotes(notes)
+      markIdeaNotesRead(idea.id)
+      setIdeas(prev => prev.map(i => i.id === idea.id ? { ...i, notesCount: 0 } : i))
+    } catch { setDetailNotes([]) }
+    finally { setDetailLoading(false) }
   }
 
-  const handleSendNote = async (content: string) => {
-    if (!notesItem) return
+  const handleSendNote = async () => {
+    if (!detailIdea || !newNoteContent.trim()) return
     try {
-      const newNote = await addIdeaNoteMsg(notesItem.id, content)
-      setNotesData(prev => [...prev, newNote])
-    } catch (err) {
-      console.error('Error sending note:', err)
-    }
+      const note = await addIdeaNoteMsg(detailIdea.id, newNoteContent.trim())
+      setDetailNotes(prev => [...prev, note])
+      setNewNoteContent('')
+    } catch { /* silent */ }
+  }
+
+  const handleEditNote = async (noteId: string) => {
+    if (!detailIdea || !editNoteContent.trim()) return
+    try {
+      const updated = await editIdeaNote(detailIdea.id, noteId, editNoteContent.trim())
+      setDetailNotes(prev => prev.map(n => n.id === noteId ? updated : n))
+      setEditingNoteId(null)
+    } catch { /* silent */ }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!detailIdea) return
+    try {
+      await deleteIdeaNote(detailIdea.id, noteId)
+      setDetailNotes(prev => prev.filter(n => n.id !== noteId))
+    } catch { /* silent */ }
   }
 
   const getClientLabel = (idea: Idea) => {
@@ -380,7 +393,7 @@ export default function Ideas() {
                 <DroppableColumn id={col.key}>
                   {items.map(idea => (
                     <DraggableIdeaCard key={idea.id} idea={idea}>
-                      <IdeaCard idea={idea} onUpdate={handleUpdate} onDelete={() => handleDeleteRequest(idea)} clientLabel={getClientLabel(idea)} onOpenNotes={openNotes} onStartEdit={openEdit} statusColumns={statusColumns} />
+                      <IdeaCard idea={idea} onUpdate={handleUpdate} onDelete={() => handleDeleteRequest(idea)} clientLabel={getClientLabel(idea)} onOpenDetail={openDetail} onStartEdit={openEdit} statusColumns={statusColumns} />
                     </DraggableIdeaCard>
                   ))}
                   {items.length === 0 && (
@@ -402,6 +415,127 @@ export default function Ideas() {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailIdea && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onMouseDown={() => setDetailIdea(null)}>
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="glass-card p-0 w-full max-w-4xl max-h-[85vh] overflow-hidden flex"
+              onMouseDown={e => e.stopPropagation()}>
+
+              {/* Left: Idea info */}
+              <div className="flex-1 p-6 overflow-y-auto thin-scrollbar">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {detailIdea.emoji && <span className="text-2xl">{detailIdea.emoji}</span>}
+                    <h3 className="font-bold text-lg text-white">{detailIdea.title}</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => { openEdit(detailIdea); setDetailIdea(null) }}
+                      className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
+                    <button onClick={() => setDetailIdea(null)} className="text-ink-400 hover:text-white"><X size={18} /></button>
+                  </div>
+                </div>
+
+                {detailIdea.description && (
+                  <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailIdea.description}</p>
+                )}
+
+                {/* Tags */}
+                {detailIdea.tags?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {detailIdea.tags.map(tag => (
+                      <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{tag}</span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Status badge */}
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  detailIdea.status === 'ready' ? 'bg-emerald-500/10 text-emerald-400' :
+                  detailIdea.status === 'developing' ? 'bg-blue-500/10 text-blue-400' :
+                  detailIdea.status === 'brainstorm' ? 'bg-amber-500/10 text-amber-400' :
+                  'bg-purple-500/10 text-purple-400'
+                }`}>
+                  {ideaStatusConfig[detailIdea.status]?.label || detailIdea.status}
+                </span>
+              </div>
+
+              {/* Right: Comments */}
+              <div className="w-[380px] border-l border-white/5 flex flex-col bg-ink-900/50">
+                <div className="p-4 border-b border-white/5">
+                  <p className="text-sm font-medium text-white flex items-center gap-2">
+                    <MessageSquare size={14} /> {t('common:notes.comments')} ({detailNotes.length})
+                  </p>
+                </div>
+
+                <div className="flex-1 overflow-y-auto thin-scrollbar p-4 space-y-3">
+                  {detailLoading ? (
+                    <div className="flex justify-center py-8"><Loader2 size={18} className="animate-spin text-ink-400" /></div>
+                  ) : detailNotes.length === 0 ? (
+                    <p className="text-xs text-ink-400 text-center py-8">{t('common:notes.noNotes')}</p>
+                  ) : (
+                    detailNotes.map(note => (
+                      <div key={note.id} className="flex gap-3 group/note">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                          style={{ background: note.author_id === user?.id ? '#DC143C30' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? '#DC143C' : 'rgb(var(--ink-300))' }}>
+                          {note.author_name?.slice(0, 2).toUpperCase() || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-white">{note.author_name}</span>
+                            <span className="text-[10px] text-ink-400">
+                              {new Date(note.created_at).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {editingNoteId === note.id ? (
+                            <div className="mt-1">
+                              <textarea value={editNoteContent} onChange={e => setEditNoteContent(e.target.value)}
+                                className="input-dark text-sm w-full resize-none" rows={2} autoFocus />
+                              <div className="flex gap-2 mt-1">
+                                <button onClick={() => handleEditNote(note.id)} className="text-xs text-crimson-400">{t('common:notes.save')}</button>
+                                <button onClick={() => setEditingNoteId(null)} className="text-xs text-ink-400">{t('common:notes.cancel')}</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-ink-200 mt-0.5">{note.content}</p>
+                              {note.author_id === user?.id && (
+                                <div className="flex gap-2 mt-1 flex">
+                                  <button onClick={() => { setEditingNoteId(note.id); setEditNoteContent(note.content) }}
+                                    className="text-[10px] text-ink-400 hover:text-white">{t('common:notes.edit')}</button>
+                                  <span className="text-[10px] text-ink-600">·</span>
+                                  <button onClick={() => handleDeleteNote(note.id)}
+                                    className="text-[10px] text-ink-400 hover:text-red-400">{t('common:notes.delete')}</button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-white/5 flex gap-2">
+                  <input type="text" placeholder={t('common:notes.placeholder')}
+                    value={newNoteContent} onChange={e => setNewNoteContent(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
+                    className="input-dark text-sm flex-1" />
+                  <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
+                    className="px-3 py-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-30 text-white rounded-xl transition-all">
+                    <Send size={14} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal - Create / Edit */}
       <AnimatePresence>
@@ -535,19 +669,6 @@ export default function Ideas() {
         )}
       </AnimatePresence>
 
-      {/* Notes Panel */}
-      <AnimatePresence>
-        {notesItem && (
-          <NotesPanel
-            notes={notesData}
-            onSend={handleSendNote}
-            onClose={() => { setNotesItem(null); setNotesData([]) }}
-            loading={notesLoading}
-            currentUserId={user?.id || ''}
-            itemTitle={notesItem.title}
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }

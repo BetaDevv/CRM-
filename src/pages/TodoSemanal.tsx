@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye } from 'lucide-react'
+import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye, Send } from 'lucide-react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { getTodos, createTodo as createTodoApi, toggleTodo as toggleTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus as updateTodoStatusApi, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, getCalendarUsers, getTodoAttachments, uploadTodoAttachments, deleteTodoAttachment } from '../lib/api'
+import { getTodos, createTodo as createTodoApi, toggleTodo as toggleTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus as updateTodoStatusApi, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, editTodoNote, deleteTodoNote, getCalendarUsers, getTodoAttachments, uploadTodoAttachments, deleteTodoAttachment } from '../lib/api'
 import type { ItemNote, CalendarUser, TodoAttachment } from '../lib/api'
 import { priorityConfig, localToday, getLocale } from '../lib/utils'
 import type { Priority, TodoItem } from '../types'
-import NotesPanel from '../components/NotesPanel'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
 
@@ -29,7 +28,6 @@ function TodoCard({
   onToggle,
   onDelete,
   clientLabel,
-  onOpenNotes,
   onStartEdit,
   onOpenDetail,
   column,
@@ -39,7 +37,6 @@ function TodoCard({
   onToggle: (id: string) => void
   onDelete: (id: string) => void
   clientLabel?: string
-  onOpenNotes?: (todo: TodoItem) => void
   onStartEdit?: (todo: TodoItem) => void
   onOpenDetail?: (todo: TodoItem) => void
   column: 'pending' | 'in_progress' | 'done'
@@ -82,18 +79,11 @@ function TodoCard({
               {cfg.label}
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{categoryKeys[todo.category] ? t(`common:${categoryKeys[todo.category]}`) : todo.category}</span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onOpenNotes?.(todo) }}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-crimson-400 hover:bg-crimson-700/20 transition-all"
-            >
-              <MessageSquare size={13} />
-              {t('admin:todo.notes')}
-              {(todo.notesCount ?? 0) > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[10px] font-bold rounded-full">
-                  {todo.notesCount}
-                </span>
-              )}
-            </button>
+            {(todo.notesCount ?? 0) > 0 && (
+              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[9px] font-bold rounded-full">
+                {todo.notesCount}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
@@ -152,15 +142,16 @@ export default function TodoSemanal() {
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null)
   const [filterCat, setFilterCat] = useState<string | null>(null)
   const [selectedClientId, setSelectedClientId] = useState('')
-  const [notesItem, setNotesItem] = useState<TodoItem | null>(null)
-  const [notes, setNotes] = useState<ItemNote[]>([])
-  const [notesLoading, setNotesLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<TodoItem | null>(null)
   const [allUsers, setAllUsers] = useState<CalendarUser[]>([])
   const [activeTodo, setActiveTodo] = useState<TodoItem | null>(null)
   const [detailTodo, setDetailTodo] = useState<TodoItem | null>(null)
   const [detailAttachments, setDetailAttachments] = useState<TodoAttachment[]>([])
   const [detailLoading, setDetailLoading] = useState(false)
+  const [detailNotes, setDetailNotes] = useState<ItemNote[]>([])
+  const [newNoteContent, setNewNoteContent] = useState('')
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [editNoteContent, setEditNoteContent] = useState('')
   const [formAttachments, setFormAttachments] = useState<TodoAttachment[]>([])
   const [pendingFiles, setPendingFiles] = useState<File[]>([])
   const [form, setForm] = useState({
@@ -242,11 +233,21 @@ export default function TodoSemanal() {
   const openDetail = async (todo: TodoItem) => {
     setDetailTodo(todo)
     setDetailLoading(true)
+    setNewNoteContent('')
+    setEditingNoteId(null)
     try {
-      const atts = await getTodoAttachments(todo.id)
+      const [atts, notes] = await Promise.all([
+        getTodoAttachments(todo.id),
+        getTodoNotes(todo.id),
+      ])
       setDetailAttachments(atts)
-    } catch { setDetailAttachments([]) }
-    finally { setDetailLoading(false) }
+      setDetailNotes(notes)
+      markTodoNotesRead(todo.id)
+      setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, notesCount: 0 } : t))
+    } catch {
+      setDetailAttachments([])
+      setDetailNotes([])
+    } finally { setDetailLoading(false) }
   }
 
   useEffect(() => {
@@ -360,28 +361,30 @@ export default function TodoSemanal() {
     }
   }
 
-  const openNotes = async (item: TodoItem) => {
-    setNotesItem(item)
-    setTodos(prev => prev.map(t => t.id === item.id ? { ...t, notesCount: 0 } : t))
-    setNotesLoading(true)
+  const handleSendNote = async () => {
+    if (!detailTodo || !newNoteContent.trim()) return
     try {
-      const [data] = await Promise.all([getTodoNotes(item.id), markTodoNotesRead(item.id)])
-      setNotes(data)
-    } catch (err) {
-      console.error('Error fetching notes:', err)
-    } finally {
-      setNotesLoading(false)
-    }
+      const note = await addTodoNoteMsg(detailTodo.id, newNoteContent.trim())
+      setDetailNotes(prev => [...prev, note])
+      setNewNoteContent('')
+    } catch { /* silent */ }
   }
 
-  const handleSendNote = async (content: string) => {
-    if (!notesItem) return
+  const handleEditNote = async (noteId: string) => {
+    if (!detailTodo || !editNoteContent.trim()) return
     try {
-      const newNote = await addTodoNoteMsg(notesItem.id, content)
-      setNotes(prev => [...prev, newNote])
-    } catch (err) {
-      console.error('Error sending note:', err)
-    }
+      const updated = await editTodoNote(detailTodo.id, noteId, editNoteContent.trim())
+      setDetailNotes(prev => prev.map(n => n.id === noteId ? updated : n))
+      setEditingNoteId(null)
+    } catch { /* silent */ }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!detailTodo) return
+    try {
+      await deleteTodoNote(detailTodo.id, noteId)
+      setDetailNotes(prev => prev.filter(n => n.id !== noteId))
+    } catch { /* silent */ }
   }
 
   const getClientLabel = (todo: TodoItem) => {
@@ -470,7 +473,7 @@ export default function TodoSemanal() {
 
       {/* Client Filter — admin only */}
       {isAdmin() && (
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-3 overflow-x-auto thin-scrollbar pb-2">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedClientId('')}
             className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
@@ -529,7 +532,7 @@ export default function TodoSemanal() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="pending" />
+                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onStartEdit={openEdit} onOpenDetail={openDetail} column="pending" />
                   ))}
                 {pending.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -556,7 +559,7 @@ export default function TodoSemanal() {
                     return order[a.priority] - order[b.priority]
                   })
                   .map(todo => (
-                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="in_progress" />
+                    <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onStartEdit={openEdit} onOpenDetail={openDetail} column="in_progress" />
                   ))}
                 {inProgress.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -578,7 +581,7 @@ export default function TodoSemanal() {
             <div className="max-h-[360px] overflow-y-auto pr-1 thin-scrollbar">
               <DroppableColumn id="done">
                 {done.map(todo => (
-                  <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onOpenNotes={openNotes} onStartEdit={openEdit} onOpenDetail={openDetail} column="done" />
+                  <DraggableTodoCard key={todo.id} todo={todo} onToggle={handleToggle} onDelete={() => handleDeleteRequest(todo)} clientLabel={getClientLabel(todo)} onStartEdit={openEdit} onOpenDetail={openDetail} column="done" />
                 ))}
                 {done.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-12 text-ink-500">
@@ -862,19 +865,19 @@ export default function TodoSemanal() {
         {detailTodo && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onMouseDown={() => setDetailTodo(null)}>
+            onMouseDown={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-2xl max-h-[85vh] overflow-y-auto thin-scrollbar"
+              className="glass-card p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto thin-scrollbar"
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => { openEdit(detailTodo); setDetailTodo(null) }}
+                  <button onClick={() => { openEdit(detailTodo); setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}
                     className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
-                  <button onClick={() => setDetailTodo(null)} className="text-ink-400 hover:text-white"><X size={18} /></button>
+                  <button onClick={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }} className="text-ink-400 hover:text-white"><X size={18} /></button>
                 </div>
               </div>
 
@@ -948,22 +951,77 @@ export default function TodoSemanal() {
                   </div>
                 )}
               </div>
+
+              {/* Comments section */}
+              <div className="border-t border-white/5 pt-4 mt-2">
+                <p className="text-sm font-medium text-white flex items-center gap-2 mb-3">
+                  <MessageSquare size={14} /> {t('common:notes.comments')} ({detailNotes.length})
+                </p>
+
+                {/* Notes list with scrollbar */}
+                <div className="max-h-[300px] overflow-y-auto thin-scrollbar space-y-3 mb-3">
+                  {detailNotes.length === 0 ? (
+                    <p className="text-xs text-ink-400 text-center py-4">{t('common:notes.noNotes')}</p>
+                  ) : (
+                    detailNotes.map(note => (
+                      <div key={note.id} className="flex gap-3 group/note">
+                        {/* Avatar */}
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                          style={{ background: note.author_id === user?.id ? '#DC143C30' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? '#DC143C' : 'rgb(var(--ink-300))' }}>
+                          {note.author_name?.slice(0, 2).toUpperCase() || '??'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {/* Author + time */}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-white">{note.author_name}</span>
+                            <span className="text-[10px] text-ink-400">
+                              {new Date(note.created_at).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {/* Content - editable if own note */}
+                          {editingNoteId === note.id ? (
+                            <div className="mt-1">
+                              <textarea value={editNoteContent} onChange={e => setEditNoteContent(e.target.value)}
+                                className="input-dark text-sm w-full resize-none" rows={2} autoFocus />
+                              <div className="flex gap-2 mt-1">
+                                <button onClick={() => handleEditNote(note.id)} className="text-xs text-crimson-400 hover:text-crimson-300">{t('common:notes.save')}</button>
+                                <button onClick={() => setEditingNoteId(null)} className="text-xs text-ink-400 hover:text-ink-200">{t('common:notes.cancel')}</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-ink-200 mt-0.5 leading-relaxed">{note.content}</p>
+                              {note.author_id === user?.id && (
+                                <div className="flex gap-2 mt-1 flex">
+                                  <button onClick={() => { setEditingNoteId(note.id); setEditNoteContent(note.content) }}
+                                    className="text-[10px] text-ink-400 hover:text-white">{t('common:notes.edit')}</button>
+                                  <span className="text-[10px] text-ink-600">·</span>
+                                  <button onClick={() => handleDeleteNote(note.id)}
+                                    className="text-[10px] text-ink-400 hover:text-red-400">{t('common:notes.delete')}</button>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* New comment input */}
+                <div className="flex gap-2">
+                  <input type="text" placeholder={t('common:notes.placeholder')}
+                    value={newNoteContent} onChange={e => setNewNoteContent(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
+                    className="input-dark text-sm flex-1" />
+                  <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
+                    className="px-3 py-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-30 text-white rounded-xl transition-all">
+                    <Send size={14} />
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Notes Panel */}
-      <AnimatePresence>
-        {notesItem && (
-          <NotesPanel
-            notes={notes}
-            onSend={handleSendNote}
-            onClose={() => { setNotesItem(null); setNotes([]) }}
-            loading={notesLoading}
-            currentUserId={user?.id || ''}
-            itemTitle={notesItem.title}
-          />
         )}
       </AnimatePresence>
     </div>

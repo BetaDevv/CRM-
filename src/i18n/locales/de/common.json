@@ -134,9 +134,16 @@
   },
   "notes": {
     "title": "Notizen",
-    "placeholder": "Schreibe eine Notiz...",
+    "comments": "Kommentare & Aktivität",
+    "placeholder": "Schreibe einen Kommentar...",
     "send": "Senden",
-    "noNotes": "Noch keine Notizen"
+    "noNotes": "Noch keine Kommentare",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edited": "bearbeitet",
+    "deleteConfirm": "Diesen Kommentar löschen?"
   },
   "time": {
     "justNow": "jetzt",

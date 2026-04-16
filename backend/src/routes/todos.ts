@@ -324,4 +324,32 @@ router.post('/:id/notes', async (req: AuthRequest, res: Response) => {
   }
 })
 
+// PATCH /api/todos/:id/notes/:noteId — Edit a note (own only)
+router.patch('/:id/notes/:noteId', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!
+    const { content } = req.body
+    if (!content?.trim()) { res.status(400).json({ error: 'Content required' }); return }
+    const { rows } = await pool.query(
+      'UPDATE item_notes SET content = $1 WHERE id = $2 AND author_id = $3 RETURNING *',
+      [content.trim(), req.params.noteId, user.userId]
+    )
+    if (!rows.length) { res.status(403).json({ error: 'Not allowed' }); return }
+    res.json(rows[0])
+  } catch { res.status(500).json({ error: 'Error interno' }) }
+})
+
+// DELETE /api/todos/:id/notes/:noteId — Delete a note (own only)
+router.delete('/:id/notes/:noteId', async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user!
+    const { rows } = await pool.query(
+      'DELETE FROM item_notes WHERE id = $1 AND author_id = $2 RETURNING *',
+      [req.params.noteId, user.userId]
+    )
+    if (!rows.length) { res.status(403).json({ error: 'Not allowed' }); return }
+    res.json({ ok: true })
+  } catch { res.status(500).json({ error: 'Error interno' }) }
+})
+
 export default router

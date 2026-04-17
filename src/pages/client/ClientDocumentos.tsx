@@ -112,8 +112,8 @@ export default function ClientDocumentos() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-crimson-700/20">
-            <FolderOpen size={24} className="text-crimson-400" />
+          <div className="p-2.5 rounded-xl" style={{ backgroundColor: 'rgb(var(--accent) / 0.2)' }}>
+            <FolderOpen size={24} style={{ color: 'var(--accent-light)' }} />
           </div>
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
@@ -129,7 +129,8 @@ export default function ClientDocumentos() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-crimson-700 hover:bg-crimson-600 text-white font-medium text-sm transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm transition-colors"
+          style={{ backgroundColor: 'rgb(var(--accent))' }}
         >
           <Upload size={16} />
           {t('client:documents.uploadFiles')}
@@ -139,7 +140,7 @@ export default function ClientDocumentos() {
       {/* Stats bar */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="glass-card px-4 py-3 rounded-xl flex items-center gap-2">
-          <HardDrive size={16} className="text-crimson-400" />
+          <HardDrive size={16} style={{ color: 'var(--accent-light)' }} />
           <span className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>
             {t('client:documents.documentsCount', { count: docs.length })}
           </span>
@@ -175,10 +176,12 @@ export default function ClientDocumentos() {
               onClick={() => setFilterCategory(cat.value)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterCategory === cat.value
-                  ? 'bg-crimson-700/30 text-crimson-300 border border-crimson-700/40'
+                  ? 'border'
                   : 'hover:bg-white/5 border border-transparent'
               }`}
-              style={{ color: filterCategory !== cat.value ? 'rgb(var(--ink-300))' : undefined }}
+              style={filterCategory === cat.value
+                ? { backgroundColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.4)' }
+                : { color: 'rgb(var(--ink-300))' }}
             >
               {cat.label}
             </button>
@@ -189,7 +192,7 @@ export default function ClientDocumentos() {
       {/* File Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="animate-spin text-crimson-400" />
+          <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
         </div>
       ) : filtered.length === 0 ? (
         <motion.div
@@ -197,8 +200,8 @@ export default function ClientDocumentos() {
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col items-center justify-center py-20 gap-4"
         >
-          <div className="p-4 rounded-2xl bg-crimson-700/10">
-            <FolderOpen size={48} className="text-crimson-400/50" />
+          <div className="p-4 rounded-2xl" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }}>
+            <FolderOpen size={48} style={{ color: 'var(--accent-light)', opacity: 0.5 }} />
           </div>
           <p className="text-lg font-medium" style={{ color: 'rgb(var(--ink-300))' }}>
             {t('client:documents.noDocuments')}
@@ -210,7 +213,8 @@ export default function ClientDocumentos() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setShowUpload(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-crimson-700 hover:bg-crimson-600 text-white font-medium text-sm mt-2"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm mt-2"
+            style={{ backgroundColor: 'rgb(var(--accent))' }}
           >
             <Upload size={16} />
             {t('client:documents.uploadFiles')}
@@ -233,7 +237,7 @@ export default function ClientDocumentos() {
                 key={doc.id}
                 variants={item}
                 layout
-                className="group relative glass-card rounded-xl p-4 cursor-pointer transition-all hover:ring-1 hover:ring-crimson-700/30"
+                className="group relative glass-card rounded-xl p-4 cursor-pointer transition-all hover:ring-1 hover:ring-[rgb(var(--accent)/0.3)]"
                 style={{ minHeight: '180px' }}
                 onClick={() => handleDownload(doc)}
               >
@@ -475,13 +479,14 @@ function ClientUploadModal({
             border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer
             transition-all duration-200
             ${dragOver
-              ? 'border-crimson-500 bg-crimson-700/10'
-              : 'border-ink-600/60 hover:border-crimson-700/50 hover:bg-white/[0.02]'
+              ? 'border-ink-600/60'
+              : 'border-ink-600/60 hover:bg-white/[0.02]'
             }
           `}
+          style={dragOver ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.1)' } : {}}
         >
-          <div className="p-3 rounded-xl bg-crimson-700/15">
-            <Upload size={28} className="text-crimson-400" />
+          <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgb(var(--accent) / 0.15)' }}>
+            <Upload size={28} style={{ color: 'var(--accent-light)' }} />
           </div>
           <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>
             {t('client:documents.dragDrop')}
@@ -598,7 +603,8 @@ function ClientUploadModal({
           whileTap={{ scale: 0.97 }}
           onClick={handleUpload}
           disabled={uploading || selectedFiles.length === 0}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-crimson-700 hover:bg-crimson-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
+          style={{ backgroundColor: 'rgb(var(--accent))' }}
         >
           {uploading ? (
             <>

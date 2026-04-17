@@ -39,14 +39,14 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       backgroundImage: {
-        'crimson-gradient': 'linear-gradient(135deg, #DC143C 0%, #A50E2D 100%)',
+        'crimson-gradient': 'linear-gradient(135deg, var(--accent-hex) 0%, var(--accent-dark) 100%)',
         'dark-gradient': 'linear-gradient(135deg, #111111 0%, #0a0a0a 100%)',
         'glass-gradient': 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-        'hero-gradient': 'radial-gradient(ellipse at top left, rgba(220,20,60,0.15) 0%, transparent 60%)',
+        'hero-gradient': 'radial-gradient(ellipse at top left, rgb(var(--accent) / 0.15) 0%, transparent 60%)',
       },
       boxShadow: {
-        'crimson': '0 0 20px rgba(220,20,60,0.3), 0 0 60px rgba(220,20,60,0.1)',
-        'crimson-sm': '0 0 10px rgba(220,20,60,0.2)',
+        'crimson': 'var(--accent-glow)',
+        'crimson-sm': '0 0 10px rgb(var(--accent) / 0.2)',
         'glass': '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
         'card': '0 4px 24px rgba(0,0,0,0.4)',
         'elevated': '0 20px 60px rgba(0,0,0,0.5)',
@@ -72,8 +72,8 @@ export default {
           '100%': { backgroundPosition: '200% 0' },
         },
         'pulse-crimson': {
-          '0%, 100%': { boxShadow: '0 0 10px rgba(220,20,60,0.2)' },
-          '50%': { boxShadow: '0 0 30px rgba(220,20,60,0.5)' },
+          '0%, 100%': { boxShadow: '0 0 10px rgb(var(--accent) / 0.2)' },
+          '50%': { boxShadow: '0 0 30px rgb(var(--accent) / 0.5)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },

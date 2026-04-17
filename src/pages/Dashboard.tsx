@@ -49,8 +49,8 @@ export default function Dashboard() {
       value: clients.filter(c => c.status === 'active').length.toString(),
       sub: t('dashboard.totalClients', { count: clients.length }),
       icon: UserCheck,
-      color: '#DC143C',
-      bg: 'rgba(220,20,60,0.1)',
+      color: 'var(--accent-hex)',
+      bg: 'rgb(var(--accent) / 0.1)',
     },
     {
       label: t('dashboard.prospects'),
@@ -100,7 +100,7 @@ export default function Dashboard() {
   function activityColor(type: string): string {
     if (type.startsWith('prospect')) return '#60a5fa'
     if (type.startsWith('client')) return '#34d399'
-    if (type.startsWith('post')) return '#DC143C'
+    if (type.startsWith('post')) return 'var(--accent-hex)'
     if (type.startsWith('idea')) return '#a78bfa'
     if (type.startsWith('todo')) return '#f59e0b'
     return '#9ca3af'
@@ -127,11 +127,11 @@ export default function Dashboard() {
       {/* Hero Banner */}
       <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl bg-ink-800 border border-white/5 p-8">
         <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
-        <div className="absolute -right-10 -top-10 w-64 h-64 bg-crimson-700/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-10 -top-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }} />
         <div className="relative">
           <div className="flex items-center gap-2 mb-3">
-            <Zap size={14} className="text-crimson-400" fill="currentColor" />
-            <span className="text-crimson-400 text-xs font-semibold uppercase tracking-widest">NextGenCRM</span>
+            <Zap size={14} style={{ color: 'var(--accent-light)' }} fill="currentColor" />
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--accent-light)' }}>NextGenCRM</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">
             {t('dashboard.greeting').split('<1>')[0]}<span className="text-gradient-crimson">{t('dashboard.greeting').split('<1>')[1]?.split('</1>')[0]}</span> 👋
@@ -183,7 +183,7 @@ export default function Dashboard() {
         <motion.div variants={fadeUp} className="lg:col-span-2 glass-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-semibold text-white">{t('dashboard.activeClientsTitle')}</h3>
-            <Link to="/clientes" className="text-xs text-crimson-400 hover:text-crimson-300 flex items-center gap-1">
+            <Link to="/clientes" className="text-xs hover:opacity-80 flex items-center gap-1" style={{ color: 'var(--accent-light)' }}>
               {t('dashboard.viewAll')} <ArrowUpRight size={12} />
             </Link>
           </div>

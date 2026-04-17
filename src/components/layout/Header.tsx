@@ -4,9 +4,10 @@ import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, Thum
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '../../store/useThemeStore'
-import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto } from '../../lib/api'
+import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateClientAccent } from '../../lib/api'
 import type { Notification } from '../../lib/api'
 import { useAuthStore } from '../../store/useAuthStore'
+import { useAccentStore } from '../../store/useAccentStore'
 
 const pageKeyMap: Record<string, string> = {
   '/':             'dashboard',
@@ -106,6 +107,7 @@ export default function Header() {
   const location = useLocation()
   const { t, i18n } = useTranslation('common')
   const { user, updateUser } = useAuthStore()
+  const { accentColor, setAccentColor } = useAccentStore()
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
   const [showLangMenu, setShowLangMenu] = useState(false)
@@ -302,11 +304,12 @@ export default function Header() {
                   <button
                     key={lang.code}
                     onClick={() => { i18n.changeLanguage(lang.code); setShowLangMenu(false) }}
-                    className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-ink-800 transition-colors ${i18n.language === lang.code ? 'text-crimson-400' : 'text-ink-300'}`}
+                    className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-ink-800 transition-colors ${i18n.language === lang.code ? '' : 'text-ink-300'}`}
+                    style={i18n.language === lang.code ? { color: 'var(--accent-light)' } : undefined}
                   >
                     <span className="text-lg">{lang.flag}</span>
                     <span>{lang.label}</span>
-                    {i18n.language === lang.code && <Check size={14} className="ml-auto text-crimson-400" />}
+                    {i18n.language === lang.code && <Check size={14} className="ml-auto" style={{ color: 'var(--accent-light)' }} />}
                   </button>
                 ))}
               </motion.div>
@@ -334,7 +337,8 @@ export default function Header() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[10px] font-bold rounded-full"
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-white text-[10px] font-bold rounded-full"
+                  style={{ backgroundColor: 'rgb(var(--accent))' }}
                 >
                   <span className="animate-pulse">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 </motion.span>
@@ -360,7 +364,7 @@ export default function Header() {
                       {t('header.notifications')}
                     </p>
                     {unreadCount > 0 && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-crimson-500/20 text-crimson-400">
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}>
                         {unreadCount}
                       </span>
                     )}
@@ -368,7 +372,7 @@ export default function Header() {
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllRead}
-                      className="flex items-center gap-1 text-xs transition-colors hover:text-crimson-400"
+                      className="flex items-center gap-1 text-xs transition-colors hover:text-[var(--accent-light)]"
                       style={{ color: 'rgb(var(--ink-300))' }}
                     >
                       <CheckCheck size={13} />
@@ -406,7 +410,7 @@ export default function Header() {
                       >
                         {/* Unread indicator */}
                         {!n.is_read && (
-                          <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-crimson-500" />
+                          <div className="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'rgb(var(--accent))' }} />
                         )}
 
                         {/* Icon */}
@@ -452,8 +456,8 @@ export default function Header() {
         {/* Avatar */}
         <button
           onClick={() => setShowProfile(true)}
-          className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center text-white font-bold text-sm cursor-pointer flex-shrink-0 border transition-all hover:ring-2 hover:ring-crimson-500/50"
-          style={{ borderColor: 'rgb(var(--ink-500) / 0.4)' }}
+          className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center text-white font-bold text-sm cursor-pointer flex-shrink-0 border transition-all hover:ring-2"
+          style={{ borderColor: 'rgb(var(--ink-500) / 0.4)', '--tw-ring-color': 'rgb(var(--accent) / 0.5)' } as React.CSSProperties}
         >
           {user?.profile_photo ? (
             <img src={user.profile_photo} alt={user.name} className="w-full h-full object-cover" />
@@ -491,7 +495,7 @@ export default function Header() {
                   {user?.profile_photo ? (
                     <img src={user.profile_photo} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2" style={{ borderColor: 'rgb(var(--ink-600))' }} />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-crimson-600 flex items-center justify-center text-2xl font-bold text-white">
+                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white" style={{ backgroundColor: 'rgb(var(--accent))' }}>
                       {user?.name?.charAt(0)?.toUpperCase()}
                     </div>
                   )}
@@ -509,8 +513,8 @@ export default function Header() {
                 <input
                   value={profileName}
                   onChange={e => setProfileName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-crimson-500/50"
-                  style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-600))', color: 'rgb(var(--ink-100))' }}
+                  className="w-full px-3 py-2 border rounded-xl outline-none focus:ring-2"
+                  style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-600))', color: 'rgb(var(--ink-100))', '--tw-ring-color': 'rgb(var(--accent) / 0.5)' } as React.CSSProperties}
                 />
               </div>
 
@@ -528,11 +532,59 @@ export default function Header() {
               {/* Role (read-only) */}
               <div className="mb-6">
                 <label className="text-sm mb-1 block" style={{ color: 'rgb(var(--ink-400))' }}>{t('header.role')}</label>
-                <span className="px-3 py-1 bg-crimson-500/10 text-crimson-400 rounded-lg text-sm">{user?.role}</span>
+                <span className="px-3 py-1 rounded-lg text-sm" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)', color: 'var(--accent-light)' }}>{user?.role}</span>
+              </div>
+
+              {/* Accent Color */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <p className="text-xs font-medium mb-2" style={{ color: 'rgb(var(--ink-300))' }}>
+                  {t('header.accentColor')}
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={accentColor}
+                    onChange={e => {
+                      setAccentColor(e.target.value)
+                      if (user?.clientId) updateClientAccent(user.clientId, e.target.value)
+                    }}
+                    className="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent"
+                    style={{ padding: 0 }}
+                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={accentColor}
+                      onChange={e => {
+                        if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+                          setAccentColor(e.target.value)
+                          if (user?.clientId) updateClientAccent(user.clientId, e.target.value)
+                        }
+                      }}
+                      className="input-dark text-sm font-mono"
+                      placeholder="#DC143C"
+                    />
+                  </div>
+                  <button
+                    onClick={() => { setAccentColor('#DC143C'); if (user?.clientId) updateClientAccent(user.clientId, '#DC143C') }}
+                    className="text-xs px-2 py-1 rounded-lg border border-white/10 text-ink-300 hover:text-white transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
+                {/* Preview swatches */}
+                <div className="flex gap-1.5 mt-2">
+                  {['#DC143C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444'].map(c => (
+                    <button key={c} onClick={() => { setAccentColor(c); if (user?.clientId) updateClientAccent(user.clientId, c) }}
+                      className="w-6 h-6 rounded-lg transition-transform hover:scale-110"
+                      style={{ background: c, boxShadow: accentColor === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : 'none' }}
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-6">
                 <button
                   onClick={() => setShowProfile(false)}
                   className="flex-1 px-4 py-2 rounded-xl transition-colors"
@@ -545,7 +597,10 @@ export default function Header() {
                 <button
                   onClick={handleSaveProfile}
                   disabled={profileSaving}
-                  className="flex-1 px-4 py-2 bg-crimson-600 text-white rounded-xl hover:bg-crimson-500 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 text-white rounded-xl transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: 'rgb(var(--accent))' }}
+                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--accent-light)' }}
+                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgb(var(--accent))' }}
                 >
                   {profileSaving ? t('header.saving') : t('common.saveChanges')}
                 </button>

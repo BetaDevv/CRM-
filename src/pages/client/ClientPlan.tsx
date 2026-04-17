@@ -29,7 +29,7 @@ export default function ClientPlan() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 size={28} className="animate-spin text-crimson-400" />
+      <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
     </div>
   )
 
@@ -45,20 +45,20 @@ export default function ClientPlan() {
                 <p className="text-xs text-ink-400 mt-0.5">{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-3xl font-black" style={{ color: client?.color || '#DC143C' }}>{planProgress}%</p>
+                <p className="text-3xl font-black" style={{ color: 'var(--accent-hex)' }}>{planProgress}%</p>
                 <p className="text-xs text-ink-400">{t('client:plan.completed')}</p>
               </div>
             </div>
             {plan.objective && <p className="text-sm text-ink-200 leading-relaxed"><T text={plan.objective} translatable /></p>}
             <div className="mt-4 w-full h-2 bg-ink-700 rounded-full overflow-hidden">
-              <motion.div initial={{ width: 0 }} animate={{ width: `${planProgress}%` }} transition={{ duration: 1.2, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: client?.color || '#DC143C' }} />
+              <motion.div initial={{ width: 0 }} animate={{ width: `${planProgress}%` }} transition={{ duration: 1.2, ease: 'easeOut' }} className="h-full rounded-full" style={{ background: 'var(--accent-hex)' }} />
             </div>
           </div>
 
           {/* KPIs */}
           {plan.kpis?.length > 0 && (
             <div className="glass-card p-5">
-              <h4 className="font-semibold text-white mb-4 flex items-center gap-2"><Target size={16} className="text-crimson-400" /> {t('client:plan.keyIndicators')}</h4>
+              <h4 className="font-semibold text-white mb-4 flex items-center gap-2"><Target size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:plan.keyIndicators')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 {plan.kpis.map((kpi: any, i: number) => {
                   const cur = parseFloat(kpi.current_value?.replace(/[^0-9.]/g, '') || '0')
@@ -71,7 +71,7 @@ export default function ClientPlan() {
                         <p className="text-sm font-bold text-white">{pct}%</p>
                       </div>
                       <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden mb-2">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: i * 0.1 }} className="h-full rounded-full" style={{ background: client?.color || '#DC143C' }} />
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: i * 0.1 }} className="h-full rounded-full" style={{ background: 'var(--accent-hex)' }} />
                       </div>
                       <div className="flex items-center justify-between text-xs text-ink-400">
                         <span>{t('client:plan.actual')}: <strong className="text-white"><T text={kpi.current_value || '—'} /></strong></span>
@@ -86,16 +86,16 @@ export default function ClientPlan() {
 
           {/* Timeline */}
           <div className="glass-card p-5">
-            <h4 className="font-semibold text-white mb-5 flex items-center gap-2"><Calendar size={16} className="text-crimson-400" /> {t('client:plan.milestonesTimeline')}</h4>
+            <h4 className="font-semibold text-white mb-5 flex items-center gap-2"><Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:plan.milestonesTimeline')}</h4>
             <div className="space-y-0">
               {plan.milestones?.map((m: any, i: number) => {
-                const color = categoryColors[m.category] || '#DC143C'
+                const color = categoryColors[m.category] || 'var(--accent-hex)'
                 const isLast = i === plan.milestones.length - 1
                 return (
                   <div key={m.id} className="flex gap-4">
                     <div className="flex flex-col items-center">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 z-10" style={{ background: m.completed ? color : 'transparent', borderColor: color, boxShadow: m.completed ? `0 0 12px ${color}40` : 'none' }}>
-                        {m.completed ? <Check size={14} className="text-white" /> : <div className="w-2 h-2 rounded-full" style={{ background: categoryColors[m.category] || '#DC143C' }} />}
+                        {m.completed ? <Check size={14} className="text-white" /> : <div className="w-2 h-2 rounded-full" style={{ background: categoryColors[m.category] || 'var(--accent-hex)' }} />}
                       </div>
                       {!isLast && <div className="w-0.5 flex-1 mt-1" style={{ background: m.completed ? color + '60' : 'rgba(255,255,255,0.06)' }} />}
                     </div>

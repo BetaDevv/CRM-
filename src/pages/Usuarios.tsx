@@ -251,7 +251,7 @@ export default function Usuarios() {
 
   const stats = [
     { label: t('admin:users.stats.total'), value: totalUsers, icon: Users, color: 'text-white' },
-    { label: t('admin:users.stats.admins'), value: adminCount, icon: Shield, color: 'text-crimson-400' },
+    { label: t('admin:users.stats.admins'), value: adminCount, icon: Shield, color: 'text-[var(--accent-light)]' },
     { label: t('admin:users.stats.clients'), value: clientCount, icon: UserCheck, color: 'text-blue-400' },
     { label: t('admin:users.stats.inactive'), value: inactiveCount, icon: UserX, color: 'text-ink-400' },
   ]
@@ -259,7 +259,7 @@ export default function Usuarios() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="animate-spin text-crimson-400" size={32} />
+        <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-light)' }} />
       </div>
     )
   }
@@ -346,9 +346,10 @@ export default function Usuarios() {
                         <div
                           className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                             user.active
-                              ? 'bg-gradient-to-br from-crimson-700/40 to-crimson-900/40 text-crimson-300 ring-1 ring-crimson-700/30'
+                              ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)]'
                               : 'bg-ink-700 text-ink-400 ring-1 ring-ink-600/30'
                           }`}
+                          style={user.active ? { background: `linear-gradient(to bottom right, rgb(var(--accent) / 0.4), rgb(var(--accent) / 0.15))`, color: 'var(--accent-light)' } : {}}
                         >
                           {user.avatar ? (
                             <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
@@ -370,7 +371,7 @@ export default function Usuarios() {
                       <span
                         className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
                           user.role === 'admin'
-                            ? 'bg-crimson-700/20 text-crimson-400 ring-1 ring-crimson-700/30'
+                            ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
                             : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
                         }`}
                       >
@@ -524,7 +525,7 @@ export default function Usuarios() {
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
                           ak.role === 'admin'
-                            ? 'bg-crimson-700/20 text-crimson-400 ring-1 ring-crimson-700/30'
+                            ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
                             : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
                         }`}>
                           {ak.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}

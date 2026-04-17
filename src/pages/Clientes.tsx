@@ -278,7 +278,8 @@ function ClientModal({
           <div className="flex gap-2">
             {['active', 'paused'].map(s => (
               <button key={s} onClick={() => setForm(p => ({ ...p, status: s }))}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${form.status === s ? 'bg-crimson-700 text-white border-crimson-700' : 'border-ink-500/30 text-ink-300'}`}>
+                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${form.status === s ? 'text-white' : 'border-ink-500/30 text-ink-300'}`}
+                style={form.status === s ? { backgroundColor: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
                 {s === 'active' ? t('admin:clients.status.active') : t('admin:clients.status.paused')}
               </button>
             ))}
@@ -336,7 +337,7 @@ function ActivityTimeline({ clientId }: { clientId: string }) {
     getClientActivity(clientId).then(setActivities).finally(() => setLoading(false))
   }, [clientId])
 
-  if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>
   if (!activities.length) return <p className="text-center py-8 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.noActivity')}</p>
 
   return (
@@ -427,7 +428,7 @@ function NotesPanel({ clientId }: { clientId: string }) {
         </div>
       </div>
 
-      {loading && <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin text-crimson-400" /></div>}
+      {loading && <div className="flex justify-center py-6"><Loader2 size={20} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>}
 
       {!loading && !notes.length && (
         <p className="text-center py-6 text-sm" style={{ color: 'rgb(var(--ink-400))' }}>{t('admin:clients.noNotes')}</p>
@@ -553,7 +554,7 @@ export default function Clientes() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={24} className="animate-spin text-crimson-400" />
+          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
         </div>
       )}
 

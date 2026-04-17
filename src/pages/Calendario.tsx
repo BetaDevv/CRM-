@@ -32,6 +32,8 @@ import { useStore } from '../store/useStore'
 /* ─── FullCalendar locale map ─── */
 const fcLocales: Record<string, typeof esLocale> = { es: esLocale, en: enLocale, de: deLocale }
 
+function getAccentHex() { return getComputedStyle(document.documentElement).getPropertyValue('--accent-hex').trim() || '#DC143C' }
+
 /* ─── Color Presets ─── */
 const COLOR_PRESETS = [
   '#DC143C', '#3B82F6', '#10B981', '#8B5CF6',
@@ -48,7 +50,7 @@ function hexToRgba(hex: string, alpha: number): string {
 
 /* ─── Helper: convert API event to FullCalendar event ─── */
 function toFCEvent(event: CalendarEvent): EventInput {
-  const color = event.color || '#DC143C'
+  const color = event.color || getAccentHex()
   return {
     id: event.id,
     title: event.title,
@@ -249,7 +251,8 @@ function EventModal({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setAllDay(!allDay)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${allDay ? 'bg-crimson-600' : 'bg-ink-600'}`}
+              className={`relative w-10 h-5 rounded-full transition-colors ${allDay ? '' : 'bg-ink-600'}`}
+              style={allDay ? { background: 'rgb(var(--accent))' } : {}}
             >
               <motion.div
                 animate={{ x: allDay ? 20 : 2 }}
@@ -303,7 +306,7 @@ function EventModal({
           <div>
             <button
               onClick={() => setShowParticipants(!showParticipants)}
-              className="flex items-center gap-2 text-sm font-medium text-ink-200 transition-colors hover:text-crimson-400"
+              className="flex items-center gap-2 text-sm font-medium text-ink-200 transition-colors hover:text-[var(--accent-light)]"
             >
               <Users size={14} />
               {t('admin:calendar.form.participants')} {participantIds.length > 0 && `(${participantIds.length})`}
@@ -322,14 +325,15 @@ function EventModal({
                         key={u.id}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/5 transition-colors"
                       >
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${participantIds.includes(u.id) ? 'bg-crimson-600 border-crimson-600' : 'border-ink-500'}`}>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${participantIds.includes(u.id) ? '' : 'border-ink-500'}`}
+                          style={participantIds.includes(u.id) ? { background: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
                           {participantIds.includes(u.id) && <Check size={10} className="text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate text-white">{u.name}</p>
                           <p className="text-xs truncate text-ink-400">{u.email}</p>
                         </div>
-                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: u.role === 'admin' ? 'rgba(220,20,60,0.15)' : 'rgba(59,130,246,0.15)', color: u.role === 'admin' ? '#DC143C' : '#3B82F6' }}>
+                        <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: u.role === 'admin' ? 'rgb(var(--accent) / 0.15)' : 'rgba(59,130,246,0.15)', color: u.role === 'admin' ? 'var(--accent-hex)' : '#3B82F6' }}>
                           {u.role}
                         </span>
                         <input type="checkbox" className="sr-only" checked={participantIds.includes(u.id)} onChange={() => toggleParticipant(u.id)} />
@@ -417,7 +421,8 @@ function EventModal({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsShared(!isShared)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${isShared || participantIds.length > 0 ? 'bg-crimson-600' : 'bg-ink-600'}`}
+              className={`relative w-10 h-5 rounded-full transition-colors ${isShared || participantIds.length > 0 ? '' : 'bg-ink-600'}`}
+              style={(isShared || participantIds.length > 0) ? { background: 'rgb(var(--accent))' } : {}}
             >
               <motion.div
                 animate={{ x: (isShared || participantIds.length > 0) ? 20 : 2 }}
@@ -553,7 +558,7 @@ export default function Calendario() {
       startTime: allDay ? start + 'T09:00' : toDatetimeLocal(start),
       endTime: allDay ? start + 'T10:00' : toDatetimeLocal(end),
       allDay,
-      color: '#DC143C',
+      color: getAccentHex(),
       participantIds: [],
       clientId: '',
       todoId: '',
@@ -580,7 +585,7 @@ export default function Calendario() {
       startTime: toDatetimeLocal(ev.startTime),
       endTime: toDatetimeLocal(ev.endTime),
       allDay: ev.allDay,
-      color: ev.color || '#DC143C',
+      color: ev.color || getAccentHex(),
       participantIds: ev.participants.map(p => p.id),
       clientId: ev.clientId || '',
       todoId: ev.todoId || '',
@@ -717,7 +722,7 @@ export default function Calendario() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-2 border-crimson-500 border-t-transparent rounded-full"
+          className="w-8 h-8 border-2 border-t-transparent rounded-full" style={{ borderColor: 'rgb(var(--accent))', borderTopColor: 'transparent' }}
         />
       </div>
     )
@@ -733,8 +738,8 @@ export default function Calendario() {
       {/* ─── Header ─── */}
       <div className="flex items-center justify-between flex-shrink-0 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-crimson-700/20">
-            <CalendarIcon size={22} className="text-crimson-400" />
+          <div className="p-2 rounded-xl" style={{ background: 'rgb(var(--accent) / 0.2)' }}>
+            <CalendarIcon size={22} style={{ color: 'var(--accent-light)' }} />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-white">
@@ -762,7 +767,7 @@ export default function Calendario() {
                 startTime: toDatetimeLocal(now.toISOString()),
                 endTime: toDatetimeLocal(end.toISOString()),
                 allDay: false,
-                color: '#DC143C',
+                color: getAccentHex(),
                 participantIds: [],
                 todoId: '',
                 milestoneId: '',

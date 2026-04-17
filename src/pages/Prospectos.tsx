@@ -74,7 +74,7 @@ function ProspectCard({
         </button>
         <button
           onClick={() => onDelete(prospect.id)}
-          className="p-1.5 rounded text-ink-400 hover:text-crimson-400 hover:bg-crimson-500/10 transition-all"
+          className="p-1.5 rounded text-ink-400 hover:text-[var(--accent-light)] hover:bg-[rgb(var(--accent)/0.1)] transition-all"
         >
           <Trash2 size={11} />
         </button>
@@ -86,7 +86,7 @@ function ProspectCard({
         </div>
         <div className="flex items-center gap-1.5">
           {prob > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-crimson-700/20 text-crimson-400">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}>
               {prob}%
             </span>
           )}
@@ -124,7 +124,8 @@ function ProspectCard({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => onConvert(prospect.id)}
-          className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-crimson-700/20 text-crimson-400 text-xs font-semibold hover:bg-crimson-700/30 transition-colors border border-crimson-700/30"
+          className="mt-3 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          style={{ backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)', borderWidth: '1px', borderColor: 'rgb(var(--accent) / 0.3)' }}
         >
           <Sparkles size={12} /> {t('prospects.convertToClient')}
         </motion.button>
@@ -243,7 +244,7 @@ function ProspectModal({
           <div>
             <label className="block text-xs text-ink-400 mb-1">
               {t('prospects.form.closeProbability')}
-              <span className="ml-2 text-crimson-400 font-bold">{form.probability}%</span>
+              <span className="ml-2 font-bold" style={{ color: 'var(--accent-light)' }}>{form.probability}%</span>
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -253,7 +254,8 @@ function ProspectModal({
                 step={5}
                 value={form.probability}
                 onChange={e => setForm(prev => ({ ...prev, probability: parseInt(e.target.value) }))}
-                className="flex-1 accent-crimson-500 h-1.5"
+                className="flex-1 h-1.5"
+                style={{ accentColor: 'var(--accent-light)' }}
               />
               <input
                 type="number"
@@ -391,9 +393,10 @@ export default function Prospectos() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-shrink-0 px-4 py-2.5 rounded-xl border border-crimson-700/30 bg-crimson-700/10 text-sm font-medium flex items-center gap-2"
+          className="flex-shrink-0 px-4 py-2.5 rounded-xl border text-sm font-medium flex items-center gap-2"
+          style={{ borderColor: 'rgb(var(--accent) / 0.3)', backgroundColor: 'rgb(var(--accent) / 0.1)' }}
         >
-          <TrendingUp size={14} className="text-crimson-400" />
+          <TrendingUp size={14} style={{ color: 'var(--accent-light)' }} />
           <span className="text-ink-300 text-xs">{t('admin:prospects.estimatedPipeline')}</span>
           <span className="text-white font-bold">{formatCurrency(pipelineEstimado)}</span>
         </motion.div>
@@ -438,7 +441,7 @@ export default function Prospectos() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={24} className="animate-spin text-crimson-400" />
+          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
         </div>
       )}
 

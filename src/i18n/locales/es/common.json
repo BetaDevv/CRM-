@@ -31,6 +31,7 @@
     "name": "Nombre",
     "role": "Rol",
     "saving": "Guardando...",
+    "accentColor": "Color de acento",
     "notif": {
       "todoCompleted": "Tarea completada",
       "noteAdded": "Nueva nota",

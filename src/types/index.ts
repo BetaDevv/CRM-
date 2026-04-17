@@ -37,6 +37,7 @@ export interface Client {
   avatar_url?: string
   color: string
   currency?: string
+  accent_color?: string
   description?: string
   linkedin_connected?: boolean
 }

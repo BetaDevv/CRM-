@@ -14,6 +14,14 @@
   --ink-300: 82 82 82;
   --ink-200: 115 115 115;
   --ink-100: 163 163 163;
+
+  --accent: 220 20 60;
+  --accent-hex: #DC143C;
+  --accent-light: #ff3456;
+  --accent-dark: #a50e2d;
+  --accent-glow: 0 0 20px rgba(220,20,60,0.3), 0 0 60px rgba(220,20,60,0.1);
+  --accent-text: #ffffff;
+  --accent-text-rgb: 255 255 255;
 }
 
 [data-theme="light"] {
@@ -58,12 +66,18 @@ body, header, aside, nav, main,
   }
 
   .crimson-glow {
-    box-shadow: 0 0 20px rgba(220,20,60,0.3), 0 0 60px rgba(220,20,60,0.1);
+    box-shadow: var(--accent-glow);
   }
 
   .btn-primary {
-    @apply bg-crimson-700 hover:bg-crimson-600 text-white font-medium px-5 py-2.5 rounded-xl
-           transition-all duration-200 hover:shadow-crimson active:scale-95 flex items-center gap-2;
+    @apply text-white font-medium px-5 py-2.5 rounded-xl
+           transition-all duration-200 active:scale-95 flex items-center gap-2;
+    background-color: rgb(var(--accent));
+    color: var(--accent-text);
+    box-shadow: var(--accent-glow);
+  }
+  .btn-primary:hover {
+    background-color: var(--accent-light);
   }
 
   .btn-ghost {
@@ -78,7 +92,7 @@ body, header, aside, nav, main,
 
   .input-dark {
     @apply border rounded-xl px-4 py-2.5
-           focus:outline-none focus:border-crimson-700/50 transition-all duration-200 w-full;
+           focus:outline-none transition-all duration-200 w-full;
     background-color: rgb(var(--ink-700) / 0.5);
     border-color: rgb(var(--ink-500) / 0.4);
     color: rgb(var(--ink-100));
@@ -92,7 +106,9 @@ body, header, aside, nav, main,
 
   .nav-item-active {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-white font-medium text-sm
-           transition-all duration-200 cursor-pointer bg-crimson-700/20 border border-crimson-700/30;
+           transition-all duration-200 cursor-pointer border;
+    background-color: rgb(var(--accent) / 0.2);
+    border-color: rgb(var(--accent) / 0.3);
   }
 
   .section-title {
@@ -120,7 +136,7 @@ body, header, aside, nav, main,
   }
 
   .text-gradient-crimson {
-    background: linear-gradient(to right, #f83856, #DC143C);
+    background: linear-gradient(to right, var(--accent-light), var(--accent-hex));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -143,7 +159,7 @@ body, header, aside, nav, main,
 }
 
 .glass-card-hover:hover {
-  border-color: rgb(220 20 60 / 0.3);
+  border-color: rgb(var(--accent) / 0.3);
   background-color: rgb(var(--ink-700) / 0.6);
 }
 
@@ -155,6 +171,7 @@ body, header, aside, nav, main,
 
 .input-dark:focus {
   background-color: rgb(var(--ink-700));
+  border-color: rgb(var(--accent) / 0.5);
 }
 
 .input-dark::placeholder {
@@ -171,7 +188,7 @@ body, header, aside, nav, main,
 }
 
 [data-theme="light"] .glass-card-hover:hover {
-  border-color: rgb(220 20 60 / 0.25);
+  border-color: rgb(var(--accent) / 0.25);
   background-color: rgb(var(--ink-800) / 0.95);
 }
 
@@ -204,19 +221,19 @@ body, header, aside, nav, main,
   --fc-border-color: rgba(255, 255, 255, 0.05);
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: rgba(17, 17, 17, 0.5);
-  --fc-list-event-hover-bg-color: rgba(220, 20, 60, 0.1);
-  --fc-highlight-color: rgba(220, 20, 60, 0.1);
-  --fc-today-bg-color: rgba(220, 20, 60, 0.05);
-  --fc-now-indicator-color: #DC143C;
-  --fc-button-bg-color: rgba(220, 20, 60, 0.2);
-  --fc-button-border-color: rgba(220, 20, 60, 0.3);
-  --fc-button-hover-bg-color: rgba(220, 20, 60, 0.3);
-  --fc-button-hover-border-color: rgba(220, 20, 60, 0.5);
-  --fc-button-active-bg-color: #DC143C;
-  --fc-button-active-border-color: #DC143C;
-  --fc-event-bg-color: #DC143C;
-  --fc-event-border-color: #DC143C;
-  --fc-event-text-color: #ffffff;
+  --fc-list-event-hover-bg-color: rgb(var(--accent) / 0.1);
+  --fc-highlight-color: rgb(var(--accent) / 0.1);
+  --fc-today-bg-color: rgb(var(--accent) / 0.05);
+  --fc-now-indicator-color: var(--accent-hex);
+  --fc-button-bg-color: rgb(var(--accent) / 0.2);
+  --fc-button-border-color: rgb(var(--accent) / 0.3);
+  --fc-button-hover-bg-color: rgb(var(--accent) / 0.3);
+  --fc-button-hover-border-color: rgb(var(--accent) / 0.5);
+  --fc-button-active-bg-color: var(--accent-hex);
+  --fc-button-active-border-color: var(--accent-hex);
+  --fc-event-bg-color: var(--accent-hex);
+  --fc-event-border-color: var(--accent-hex);
+  --fc-event-text-color: var(--accent-text);
   --fc-non-business-color: rgba(0, 0, 0, 0.2);
 }
 
@@ -380,9 +397,9 @@ body, header, aside, nav, main,
   --fc-border-color: rgba(0, 0, 0, 0.08);
   --fc-page-bg-color: transparent;
   --fc-neutral-bg-color: rgba(241, 243, 246, 0.5);
-  --fc-today-bg-color: rgba(220, 20, 60, 0.04);
+  --fc-today-bg-color: rgb(var(--accent) / 0.04);
   --fc-non-business-color: rgba(0, 0, 0, 0.03);
-  --fc-list-event-hover-bg-color: rgba(220, 20, 60, 0.06);
+  --fc-list-event-hover-bg-color: rgb(var(--accent) / 0.06);
 }
 
 [data-theme="light"] .fc .fc-col-header-cell {

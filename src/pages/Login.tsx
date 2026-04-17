@@ -41,16 +41,17 @@ export default function Login() {
 
       {/* Animated background */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-crimson-700/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-crimson-900/10 rounded-full blur-[100px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ backgroundColor: 'rgb(var(--accent) / 0.08)' }} />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full blur-[100px]" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }} />
         <div className="dot-pattern absolute inset-0 opacity-40" />
 
         {/* Animated floating elements */}
         {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-crimson-500 rounded-full"
+            className="absolute w-1 h-1 rounded-full"
             style={{
+              backgroundColor: 'rgb(var(--accent))',
               left: `${15 + i * 15}%`,
               top: `${20 + (i % 3) * 25}%`,
             }}
@@ -139,7 +140,8 @@ export default function Login() {
                 disabled={loading}
                 whileHover={!loading ? { scale: 1.01 } : {}}
                 whileTap={!loading ? { scale: 0.98 } : {}}
-                className="w-full flex items-center justify-center gap-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-crimson mt-2"
+                className="w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-crimson mt-2"
+                style={{ backgroundColor: 'rgb(var(--accent))' }}
               >
                 {loading ? (
                   <><Loader2 size={18} className="animate-spin" /> {t('login.loading')}</>
@@ -167,11 +169,11 @@ export default function Login() {
         >
           <p>{t('login.copyright')}</p>
           <div className="flex items-center justify-center gap-3">
-            <a href="/privacy" className="text-ink-500 hover:text-crimson-400 transition-colors underline underline-offset-2">
+            <a href="/privacy" className="text-ink-500 hover:text-[var(--accent-light)] transition-colors underline underline-offset-2">
               {t('login.privacyPolicy')}
             </a>
             <span className="text-ink-600">·</span>
-            <a href="/terms" className="text-ink-500 hover:text-crimson-400 transition-colors underline underline-offset-2">
+            <a href="/terms" className="text-ink-500 hover:text-[var(--accent-light)] transition-colors underline underline-offset-2">
               {t('login.termsOfService')}
             </a>
           </div>

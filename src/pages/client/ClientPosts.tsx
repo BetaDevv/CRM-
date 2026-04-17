@@ -34,7 +34,7 @@ export default function ClientPosts() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 size={28} className="animate-spin text-crimson-400" />
+      <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
     </div>
   )
 

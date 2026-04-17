@@ -34,7 +34,7 @@ export default function ClientMetricas() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 size={28} className="animate-spin text-crimson-400" />
+      <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
     </div>
   )
 
@@ -78,7 +78,7 @@ export default function ClientMetricas() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: t('client:metrics.followers'), value: formatShort(li.summary.followers), color: '#0077B5', sub: `+${li.summary.follower_growth_pct}%` },
-                  { label: t('client:metrics.impressions30d'), value: formatShort(li.summary.total_impressions), color: '#DC143C', sub: t('client:metrics.last30days') },
+                  { label: t('client:metrics.impressions30d'), value: formatShort(li.summary.total_impressions), color: 'var(--accent-hex)', sub: t('client:metrics.last30days') },
                   { label: t('client:metrics.pageViews'), value: formatShort(li.summary.total_page_views), color: '#7C3AED', sub: t('client:metrics.last30days') },
                   { label: t('client:metrics.engagement'), value: `${li.summary.avg_engagement_rate}%`, color: '#F59E0B', sub: t('client:metrics.monthlyAverage') },
                 ].map(s => (
@@ -187,7 +187,7 @@ export default function ClientMetricas() {
                 {[
                   { label: t('client:metrics.sessions'), value: formatShort(ga4.summary.total_sessions), color: '#E37400' },
                   { label: t('client:metrics.activeUsers'), value: formatShort(ga4.summary.total_users), color: '#7C3AED' },
-                  { label: t('client:metrics.ga4PageViews'), value: formatShort(ga4.summary.total_page_views), color: '#DC143C' },
+                  { label: t('client:metrics.ga4PageViews'), value: formatShort(ga4.summary.total_page_views), color: 'var(--accent-hex)' },
                   { label: t('client:metrics.newUsers'), value: formatShort(ga4.summary.new_users), color: '#34D399' },
                 ].map(s => (
                   <div key={s.label} className="bg-ink-800/40 rounded-xl p-3">

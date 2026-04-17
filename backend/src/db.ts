@@ -75,6 +75,7 @@ export async function initDB() {
   // Safe migrations for columns added after initial schema
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url TEXT`)
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'`)
+  await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#DC143C'`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active INTEGER DEFAULT 1`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ`)
   await pool.query(`

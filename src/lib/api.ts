@@ -768,6 +768,17 @@ export async function deleteApiKey(id: string): Promise<void> {
   await api.delete(`/api-keys/${id}`)
 }
 
+// --- Client Settings API ---
+
+export async function getMyClientSettings(): Promise<{ accent_color: string; avatar_url: string | null; company: string }> {
+  const { data } = await api.get('/clients/me/settings')
+  return data
+}
+
+export async function updateClientAccent(clientId: string, accent_color: string): Promise<void> {
+  await api.patch(`/clients/${clientId}/accent`, { accent_color })
+}
+
 // --- Profile API ---
 
 export async function getMyProfile() {

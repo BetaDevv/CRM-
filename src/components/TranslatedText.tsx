@@ -46,7 +46,8 @@ export default function T({ text, translatable }: TranslatedTextProps) {
       {!showTranslation ? (
         <button
           onClick={(e) => { e.stopPropagation(); handleTranslate() }}
-          className="inline-flex items-center gap-1 ml-1.5 text-[10px] font-medium text-crimson-400/70 hover:text-crimson-400 transition-colors align-middle"
+          className="inline-flex items-center gap-1 ml-1.5 text-[10px] font-medium hover:text-[var(--accent-light)] transition-colors align-middle"
+          style={{ color: 'color-mix(in srgb, var(--accent-light) 70%, transparent)' }}
         >
           <Languages size={10} />
           {t('common.translate')}

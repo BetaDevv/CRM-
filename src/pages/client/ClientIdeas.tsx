@@ -42,12 +42,12 @@ function IdeaCardContent({ idea, onUpdate, onDelete, isOwn, onOpenDetail, onStar
         </div>
         <div className="flex items-center gap-1">
           {isOwn && onStartEdit && (
-            <button onClick={(e) => { e.stopPropagation(); onStartEdit(idea) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(idea) }} className="opacity-0 group-hover:opacity-100 text-ink-400 transition-all hover:text-[var(--accent-light)]">
               <Pencil size={14} />
             </button>
           )}
           {isOwn && (
-            <button onClick={(e) => { e.stopPropagation(); onDelete(idea.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onDelete(idea.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 transition-all hover:text-[var(--accent-light)]">
               <X size={14} />
             </button>
           )}
@@ -75,7 +75,7 @@ function IdeaCardContent({ idea, onUpdate, onDelete, isOwn, onOpenDetail, onStar
           <span className="text-xs font-medium" style={{ color: cfg.color }}>{statusColumns.find(s => s.key === idea.status)?.label}</span>
         )}
         {(idea.notesCount ?? 0) > 0 && (
-          <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[9px] font-bold rounded-full">
+          <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-white text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))' }}>
             {idea.notesCount}
           </span>
         )}
@@ -326,7 +326,7 @@ export default function ClientIdeas() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={32} className="animate-spin text-crimson-500" />
+        <Loader2 size={32} className="animate-spin" style={{ color: 'rgb(var(--accent))' }} />
       </div>
     )
   }
@@ -426,7 +426,7 @@ export default function ClientIdeas() {
                   <div className="flex items-center gap-2">
                     {isOwn(detailIdea) && (
                       <button onClick={() => { openEdit(detailIdea); setDetailIdea(null) }}
-                        className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
+                        className="text-ink-400 transition-all hover:text-[var(--accent-light)]"><Pencil size={16} /></button>
                     )}
                     <button onClick={() => setDetailIdea(null)} className="text-ink-400 hover:text-white"><X size={18} /></button>
                   </div>
@@ -473,7 +473,7 @@ export default function ClientIdeas() {
                     detailNotes.map(note => (
                       <div key={note.id} className="flex gap-3 group/note">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                          style={{ background: note.author_id === user?.id ? '#DC143C30' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? '#DC143C' : 'rgb(var(--ink-300))' }}>
+                          style={{ background: note.author_id === user?.id ? 'rgb(var(--accent) / 0.19)' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? 'rgb(var(--accent))' : 'rgb(var(--ink-300))' }}>
                           {note.author_name?.slice(0, 2).toUpperCase() || '??'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -488,7 +488,7 @@ export default function ClientIdeas() {
                               <textarea value={editNoteContent} onChange={e => setEditNoteContent(e.target.value)}
                                 className="input-dark text-sm w-full resize-none" rows={2} autoFocus />
                               <div className="flex gap-2 mt-1">
-                                <button onClick={() => handleEditNote(note.id)} className="text-xs text-crimson-400">{t('common:notes.save')}</button>
+                                <button onClick={() => handleEditNote(note.id)} className="text-xs" style={{ color: 'var(--accent-light)' }}>{t('common:notes.save')}</button>
                                 <button onClick={() => setEditingNoteId(null)} className="text-xs text-ink-400">{t('common:notes.cancel')}</button>
                               </div>
                             </div>
@@ -518,7 +518,7 @@ export default function ClientIdeas() {
                     onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
                     className="input-dark text-sm flex-1" />
                   <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
-                    className="px-3 py-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-30 text-white rounded-xl transition-all">
+                    className="px-3 py-2 disabled:opacity-30 text-white rounded-xl transition-all" style={{ backgroundColor: 'rgb(var(--accent))' }}>
                     <Send size={14} />
                   </button>
                 </div>
@@ -558,7 +558,8 @@ export default function ClientIdeas() {
                       <button
                         key={e}
                         onClick={() => setForm(prev => ({ ...prev, emoji: e }))}
-                        className={`text-2xl p-2 rounded-xl transition-all ${form.emoji === e ? 'bg-crimson-700/20 ring-1 ring-crimson-500' : 'hover:bg-white/5'}`}
+                        className={`text-2xl p-2 rounded-xl transition-all ${form.emoji === e ? 'ring-1' : 'hover:bg-white/5'}`}
+                        style={form.emoji === e ? { backgroundColor: 'rgb(var(--accent) / 0.2)', ringColor: 'var(--accent-light)', '--tw-ring-color': 'var(--accent-light)' } as React.CSSProperties : {}}
                       >
                         {e}
                       </button>
@@ -588,9 +589,10 @@ export default function ClientIdeas() {
                         onClick={() => toggleTag(tg)}
                         className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
                           form.tags.includes(tg)
-                            ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300'
+                            ? ''
                             : 'border-white/10 text-ink-300 hover:border-white/20'
                         }`}
+                        style={form.tags.includes(tg) ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' } : {}}
                       >
                         {tg}
                       </button>

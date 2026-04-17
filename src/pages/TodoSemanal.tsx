@@ -53,13 +53,15 @@ function TodoCard({
           ? 'bg-ink-800/20 border-white/5 opacity-50'
           : 'bg-ink-800/50 border-white/5 hover:border-white/10'
         }
-        ${isOverlay ? 'shadow-2xl shadow-crimson-700/20 ring-1 ring-crimson-500/30 scale-[1.02]' : ''}`}
+        ${isOverlay ? 'shadow-2xl ring-1 ring-[rgb(var(--accent)/0.3)] scale-[1.02]' : ''}`}
+      style={isOverlay ? { boxShadow: '0 25px 50px -12px rgb(var(--accent) / 0.2)' } : {}}
     >
       <div className="flex items-start gap-3 p-3.5">
         <button
           onClick={(e) => { e.stopPropagation(); onToggle(todo.id) }}
           className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 mt-0.5 transition-all
-            ${isDone ? 'bg-crimson-700 border-crimson-700' : 'border-ink-500 hover:border-crimson-500'}`}
+            ${isDone ? '' : 'border-ink-500'}`}
+          style={isDone ? { backgroundColor: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}
         >
           {isDone && <Check size={11} className="text-white" />}
         </button>
@@ -69,7 +71,7 @@ function TodoCard({
               <T text={todo.title} />
             </p>
             {clientLabel && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-crimson-500/10 text-crimson-400 flex-shrink-0">
+              <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)', color: 'var(--accent-light)' }}>
                 {t('admin:todo.fromClient', { clientName: clientLabel })}
               </span>
             )}
@@ -80,7 +82,7 @@ function TodoCard({
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{categoryKeys[todo.category] ? t(`common:${categoryKeys[todo.category]}`) : todo.category}</span>
             {(todo.notesCount ?? 0) > 0 && (
-              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-crimson-500 text-white text-[9px] font-bold rounded-full">
+              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-white text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))' }}>
                 {todo.notesCount}
               </span>
             )}
@@ -88,11 +90,11 @@ function TodoCard({
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {!clientLabel && onStartEdit && (
-            <button onClick={(e) => { e.stopPropagation(); onStartEdit(todo) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+            <button onClick={(e) => { e.stopPropagation(); onStartEdit(todo) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-[var(--accent-light)] transition-all">
               <Pencil size={14} />
             </button>
           )}
-          <button onClick={(e) => { e.stopPropagation(); onDelete(todo.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-crimson-400 transition-all">
+          <button onClick={(e) => { e.stopPropagation(); onDelete(todo.id) }} className="opacity-0 group-hover:opacity-100 text-ink-400 hover:text-[var(--accent-light)] transition-all">
             <Trash2 size={14} />
           </button>
         </div>
@@ -409,7 +411,7 @@ export default function TodoSemanal() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={32} className="animate-spin text-crimson-500" />
+        <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
       </div>
     )
   }
@@ -477,7 +479,8 @@ export default function TodoSemanal() {
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedClientId('')}
             className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
-              ${!selectedClientId ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}>
+              ${!selectedClientId ? '' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
+            style={!selectedClientId ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' } : {}}>
             {t('admin:todo.allClients')}
           </motion.button>
           {clients.filter(c => c.status === 'active').map(c => (
@@ -499,7 +502,8 @@ export default function TodoSemanal() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setFilterCat(null)}
-          className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!filterCat ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300'}`}
+          className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!filterCat ? '' : 'border-white/10 text-ink-300'}`}
+          style={!filterCat ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' } : {}}
         >
           {t('admin:todo.allCategories')}
         </button>
@@ -507,7 +511,8 @@ export default function TodoSemanal() {
           <button
             key={c}
             onClick={() => setFilterCat(filterCat === c ? null : c)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filterCat === c ? 'border-crimson-500 bg-crimson-700/20 text-crimson-300' : 'border-white/10 text-ink-300'}`}
+            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filterCat === c ? '' : 'border-white/10 text-ink-300'}`}
+            style={filterCat === c ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' } : {}}
           >
             {t(`common:${categoryKeys[c]}`)}
           </button>
@@ -876,7 +881,7 @@ export default function TodoSemanal() {
                 <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { openEdit(detailTodo); setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}
-                    className="text-ink-400 hover:text-crimson-400 transition-all"><Pencil size={16} /></button>
+                    className="text-ink-400 hover:text-[var(--accent-light)] transition-all"><Pencil size={16} /></button>
                   <button onClick={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }} className="text-ink-400 hover:text-white"><X size={18} /></button>
                 </div>
               </div>
@@ -967,7 +972,7 @@ export default function TodoSemanal() {
                       <div key={note.id} className="flex gap-3 group/note">
                         {/* Avatar */}
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                          style={{ background: note.author_id === user?.id ? '#DC143C30' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? '#DC143C' : 'rgb(var(--ink-300))' }}>
+                          style={{ background: note.author_id === user?.id ? 'rgb(var(--accent) / 0.19)' : 'rgb(var(--ink-700))', color: note.author_id === user?.id ? 'var(--accent-hex)' : 'rgb(var(--ink-300))' }}>
                           {note.author_name?.slice(0, 2).toUpperCase() || '??'}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -984,7 +989,7 @@ export default function TodoSemanal() {
                               <textarea value={editNoteContent} onChange={e => setEditNoteContent(e.target.value)}
                                 className="input-dark text-sm w-full resize-none" rows={2} autoFocus />
                               <div className="flex gap-2 mt-1">
-                                <button onClick={() => handleEditNote(note.id)} className="text-xs text-crimson-400 hover:text-crimson-300">{t('common:notes.save')}</button>
+                                <button onClick={() => handleEditNote(note.id)} className="text-xs hover:opacity-80" style={{ color: 'var(--accent-light)' }}>{t('common:notes.save')}</button>
                                 <button onClick={() => setEditingNoteId(null)} className="text-xs text-ink-400 hover:text-ink-200">{t('common:notes.cancel')}</button>
                               </div>
                             </div>
@@ -1015,7 +1020,8 @@ export default function TodoSemanal() {
                     onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
                     className="input-dark text-sm flex-1" />
                   <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
-                    className="px-3 py-2 bg-crimson-700 hover:bg-crimson-600 disabled:opacity-30 text-white rounded-xl transition-all">
+                    className="px-3 py-2 disabled:opacity-30 text-white rounded-xl transition-all"
+                    style={{ backgroundColor: 'rgb(var(--accent))' }}>
                     <Send size={14} />
                   </button>
                 </div>

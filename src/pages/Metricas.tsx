@@ -34,7 +34,7 @@ const PLATFORMS: { key: Platform; label: string; icon: JSX.Element; color: strin
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="glass-card px-3 py-2 text-xs border-crimson-700/30">
+    <div className="glass-card px-3 py-2 text-xs" style={{ borderColor: 'rgb(var(--accent) / 0.3)' }}>
       <p className="text-ink-300 mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} style={{ color: p.color || '#fff' }} className="font-semibold">
@@ -109,7 +109,7 @@ function ConnectionBadge({ connected, name, lastSync, platform, clientId, onDisc
   }
   return (
     <button onClick={handleConnect}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-crimson-700/20 border border-crimson-700/30 text-crimson-400 text-xs font-medium hover:bg-crimson-700/30 transition-all">
+      className="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all" style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
       <ExternalLink size={12} /> {t('admin:metrics.connectReal')}
     </button>
   )
@@ -236,13 +236,13 @@ function LinkedInPanel({ data, days }: { data: any; days: number }) {
       {data.topPosts?.length > 0 && (
         <div className="glass-card p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-5">
-            <TrendingUp size={16} className="text-crimson-400" /> {t('admin:metrics.topPosts')}
+            <TrendingUp size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.topPosts')}
           </h4>
           <div className="space-y-3">
             {data.topPosts.map((post: any, i: number) => (
               <motion.div key={post.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
                 className="flex items-start gap-4 p-4 rounded-xl bg-ink-800/40 hover:bg-ink-800/60 transition-colors">
-                <div className="w-7 h-7 rounded-lg bg-crimson-700/20 flex items-center justify-center text-sm font-bold text-crimson-400 flex-shrink-0">{i + 1}</div>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ background: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}>{i + 1}</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-white text-sm truncate">{post.title}</p>
                   <p className="text-xs text-ink-400 mt-0.5">{post.date}</p>
@@ -521,14 +521,15 @@ export default function Metricas() {
           <div className="flex gap-1 bg-ink-800/60 rounded-xl p-1 border border-white/5">
             {[7, 30, 90].map(d => (
               <button key={d} onClick={() => setDays(d)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${days === d ? 'bg-crimson-700/30 text-white border border-crimson-700/30' : 'text-ink-400 hover:text-white'}`}>
+                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${days === d ? 'text-white border' : 'text-ink-400 hover:text-white'}`}
+                style={days === d ? { background: 'rgb(var(--accent) / 0.3)', borderColor: 'rgb(var(--accent) / 0.3)' } : {}}>
                 {d}{t('admin:metrics.dayAbbr')}
               </button>
             ))}
           </div>
           {selectedClientId && data && (
             <button onClick={handleExport} disabled={exporting}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-crimson-700/20 border border-crimson-700/30 text-crimson-400 hover:bg-crimson-700/30 hover:text-white transition-all disabled:opacity-50">
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all disabled:opacity-50" style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
               <FileDown size={13} className={exporting ? 'animate-bounce' : ''} />
               {exporting ? t('admin:metrics.exporting') : t('admin:metrics.exportPDF')}
             </button>
@@ -563,7 +564,7 @@ export default function Metricas() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={28} className="animate-spin text-crimson-400" />
+          <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
         </div>
       )}
 

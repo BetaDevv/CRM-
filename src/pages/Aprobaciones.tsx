@@ -525,7 +525,7 @@ export default function Aprobaciones() {
       ) : (
         <div className="mb-8">
           <div className="glass-card p-6 relative overflow-hidden mb-0">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-crimson-700/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgb(var(--accent) / 0.05)' }} />
             <h2 className="text-2xl font-bold text-white mb-1">{t('admin:approvals.contentApproval')}</h2>
             <p className="text-ink-300"><Trans i18nKey="approvals.contentApprovalDesc" ns="admin" values={{ clientName }} components={{ 1: <strong className="text-white" /> }} /></p>
             <div className="flex items-center gap-6 mt-4">
@@ -563,7 +563,7 @@ export default function Aprobaciones() {
 
       {/* Posts Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin text-crimson-400" /></div>
+        <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <AnimatePresence>
@@ -598,8 +598,8 @@ export default function Aprobaciones() {
               <div className="sticky top-0 bg-ink-900/95 backdrop-blur-sm z-10 p-5 border-b border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-crimson-700/20 flex items-center justify-center">
-                      <LayoutTemplate size={20} className="text-crimson-400" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgb(var(--accent) / 0.2)' }}>
+                      <LayoutTemplate size={20} style={{ color: 'var(--accent-light)' }} />
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-lg">{t('admin:approvals.templates.title')}</h3>
@@ -614,7 +614,7 @@ export default function Aprobaciones() {
                   {platformTabs.map(tab => (
                     <button key={tab.key} onClick={() => setTemplatePlatformFilter(tab.key)}
                       className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${templatePlatformFilter === tab.key
-                        ? 'text-white border-crimson-500/50 bg-crimson-700/20'
+                        ? 'text-white border-[rgb(var(--accent)_/_0.5)] bg-[rgb(var(--accent)_/_0.2)]'
                         : 'border-white/10 text-ink-400 hover:text-white hover:border-white/20'}`}>
                       {tab.label}
                     </button>
@@ -626,7 +626,7 @@ export default function Aprobaciones() {
               <div className="p-5 pb-0">
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   onClick={() => { setEditingTemplate(null); setTemplateForm({ title: '', content: '', platform: 'linkedin', category: 'general', industry: '', tags: '', variables: '' }); setShowTemplateForm(true) }}
-                  className="w-full py-3 rounded-xl border border-dashed border-white/20 text-sm text-ink-300 hover:text-white hover:border-crimson-500/40 transition-all flex items-center justify-center gap-2">
+                  className="w-full py-3 rounded-xl border border-dashed border-white/20 text-sm text-ink-300 hover:text-white hover:border-[rgb(var(--accent)_/_0.4)] transition-all flex items-center justify-center gap-2">
                   <Plus size={16} /> {t('admin:approvals.templates.newTemplate')}
                 </motion.button>
               </div>
@@ -634,7 +634,7 @@ export default function Aprobaciones() {
               {/* Template cards */}
               <div className="p-5 space-y-3">
                 {loadingTemplates ? (
-                  <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin text-crimson-400" /></div>
+                  <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>
                 ) : templates.length === 0 ? (
                   <div className="text-center py-12 text-ink-500">
                     <LayoutTemplate size={36} className="mx-auto mb-3 opacity-20" />
@@ -668,7 +668,7 @@ export default function Aprobaciones() {
                         {tpl.variables.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-3">
                             {tpl.variables.map(v => (
-                              <span key={v} className="text-xs px-2 py-0.5 rounded-full bg-crimson-700/15 text-crimson-400 border border-crimson-500/20 font-mono">
+                              <span key={v} className="text-xs px-2 py-0.5 rounded-full border font-mono" style={{ background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.2)' }}>
                                 {`{{${v}}}`}
                               </span>
                             ))}
@@ -690,7 +690,7 @@ export default function Aprobaciones() {
                         <div className="flex items-center gap-2 pt-2 border-t border-white/5">
                           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                             onClick={() => handleUseTemplate(tpl)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-crimson-700/15 text-crimson-400 border border-crimson-500/20 text-xs font-semibold hover:bg-crimson-700/25 transition-all">
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-semibold transition-all" style={{ background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.2)' }}>
                             <Copy size={13} /> {t('admin:approvals.templates.use')}
                           </motion.button>
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -749,7 +749,7 @@ export default function Aprobaciones() {
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       <span className="text-xs text-ink-400 mr-1">{t('admin:approvals.templates.detectedVars')}</span>
                       {templateForm.variables.split(',').filter(Boolean).map(v => (
-                        <span key={v.trim()} className="text-xs px-2 py-0.5 rounded-full bg-crimson-700/15 text-crimson-400 border border-crimson-500/20 font-mono">
+                        <span key={v.trim()} className="text-xs px-2 py-0.5 rounded-full border font-mono" style={{ background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.2)' }}>
                           {`{{${v.trim()}}}`}
                         </span>
                       ))}
@@ -854,7 +854,8 @@ export default function Aprobaciones() {
                 <div className="flex gap-2 p-1 bg-ink-800/50 rounded-xl">
                   {[{ k: 'post', l: t('admin:approvals.publication') }, { k: 'design', l: t('admin:approvals.design') }].map(opt => (
                     <button key={opt.k} onClick={() => setForm(p => ({ ...p, type: opt.k }))}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${form.type === opt.k ? 'bg-crimson-700 text-white' : 'text-ink-300 hover:text-white'}`}>
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${form.type === opt.k ? 'text-white' : 'text-ink-300 hover:text-white'}`}
+                      style={form.type === opt.k ? { background: 'rgb(var(--accent))' } : {}}>
                       {opt.l}
                     </button>
                   ))}
@@ -879,7 +880,7 @@ export default function Aprobaciones() {
                 <div>
                   <input ref={fileRef} type="file" multiple accept="image/*,video/mp4" className="hidden" onChange={e => setSelectedFiles(Array.from(e.target.files || []))} />
                   <button onClick={() => fileRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all">
+                    className="w-full flex items-center justify-center gap-2 py-3 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-[rgb(var(--accent)_/_0.5)] transition-all">
                     <Upload size={16} /> {selectedFiles.length > 0 ? t('admin:approvals.filesSelected', { count: selectedFiles.length }) : t('admin:approvals.uploadMedia')}
                   </button>
                   {selectedFiles.length > 0 && (

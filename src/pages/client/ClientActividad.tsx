@@ -83,7 +83,7 @@ export default function ClientActividad() {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 size={28} className="animate-spin text-crimson-400" />
+      <Loader2 size={28} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
     </div>
   )
 
@@ -138,7 +138,7 @@ export default function ClientActividad() {
       {/* Activity timeline */}
       <div className="glass-card p-6">
         <h4 className="font-semibold text-white flex items-center gap-2 mb-6">
-          <Calendar size={16} className="text-crimson-400" /> {t('client:activity.activityLog')}
+          <Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:activity.activityLog')}
         </h4>
 
         {clientEvents.length > 0 ? (
@@ -157,7 +157,7 @@ export default function ClientActividad() {
                   <div className="flex flex-col items-center">
                     <div
                       className={`w-3 h-3 rounded-full flex-shrink-0 mt-1.5 transition-all ${isPast ? 'opacity-50' : 'ring-4'}`}
-                      style={{ backgroundColor: event.color || '#DC143C' }}
+                      style={{ backgroundColor: event.color || 'var(--accent-hex)' }}
                     />
                     {!isLast && <div className="w-0.5 flex-1 mt-1 bg-white/5" />}
                   </div>
@@ -197,12 +197,12 @@ export default function ClientActividad() {
                         <div
                           className="mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg"
                           style={{
-                            backgroundColor: (categoryColors[event.milestone.category] || '#DC143C') + '15',
-                            borderLeft: '3px solid ' + (categoryColors[event.milestone.category] || '#DC143C'),
+                            backgroundColor: (categoryColors[event.milestone.category] || 'var(--accent-hex)') + '15',
+                            borderLeft: '3px solid ' + (categoryColors[event.milestone.category] || 'var(--accent-hex)'),
                           }}
                         >
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: categoryColors[event.milestone.category] || '#DC143C' }} />
-                          <span className="text-xs font-medium" style={{ color: categoryColors[event.milestone.category] || '#DC143C' }}>
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: categoryColors[event.milestone.category] || 'var(--accent-hex)' }} />
+                          <span className="text-xs font-medium" style={{ color: categoryColors[event.milestone.category] || 'var(--accent-hex)' }}>
                             <T text={event.milestone.title} />
                           </span>
                           {event.milestone.date && (
@@ -215,14 +215,14 @@ export default function ClientActividad() {
                       <div className="mt-3 pt-3 border-t border-white/5">
                         {event.clientNote ? (
                           <div className="flex items-start gap-2">
-                            <MessageSquare size={12} className="text-crimson-400 mt-0.5 flex-shrink-0" />
+                            <MessageSquare size={12} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--accent-light)' }} />
                             <div className="flex-1">
                               <p className="text-xs text-ink-200"><T text={event.clientNote} translatable /></p>
-                              <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs text-crimson-400 mt-1 hover:underline">{t('client:activity.editNote')}</button>
+                              <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs mt-1 hover:underline" style={{ color: 'var(--accent-light)' }}>{t('client:activity.editNote')}</button>
                             </div>
                           </div>
                         ) : (
-                          <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs text-ink-400 hover:text-crimson-400 transition-colors flex items-center gap-1">
+                          <button onClick={(e) => { e.stopPropagation(); openNoteEditor(event) }} className="text-xs text-ink-400 transition-colors flex items-center gap-1 hover:text-[var(--accent-light)]">
                             <Plus size={12} /> {t('client:activity.addNote')}
                           </button>
                         )}
@@ -317,8 +317,8 @@ export default function ClientActividad() {
 
               {/* Client note */}
               {selectedEvent.clientNote && (
-                <div className="mb-4 p-3 bg-crimson-500/10 rounded-xl border border-crimson-500/20">
-                  <div className="flex items-center gap-2 text-crimson-400 text-sm mb-1">
+                <div className="mb-4 p-3 rounded-xl" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
+                  <div className="flex items-center gap-2 text-sm mb-1" style={{ color: 'var(--accent-light)' }}>
                     <MessageSquare className="w-4 h-4" />
                     <span className="font-medium">{t('client:activity.yourNote')}</span>
                   </div>

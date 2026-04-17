@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
+import { useAccentStore } from './store/useAccentStore'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -53,6 +54,8 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { restoreSession } = useAuthStore()
+  // Trigger accent store rehydration — applies CSS variables on load
+  useAccentStore()
 
   useEffect(() => {
     restoreSession()

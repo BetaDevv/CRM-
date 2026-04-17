@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,8 +9,10 @@ import {
 import { useTranslation } from 'react-i18next'
 import { useStore } from '../../store/useStore'
 import { useAuthStore } from '../../store/useAuthStore'
+import { useAccentStore } from '../../store/useAccentStore'
 import { LogoMark } from '../Logo'
 import { useThemeStore } from '../../store/useThemeStore'
+import { getMyClientSettings } from '../../lib/api'
 
 const adminNav = [
   { path: '/',             icon: LayoutDashboard, labelKey: 'nav.dashboard' },
@@ -47,8 +50,21 @@ export default function Sidebar() {
   const isClient = user?.role === 'client'
   const navItems = isClient ? clientNav : adminNav
   const homePath = isClient ? '/portal' : '/'
+  const [clientLogo, setClientLogo] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isClient) {
+      getMyClientSettings().then(s => {
+        setClientLogo(s.avatar_url)
+        if (s.accent_color) useAccentStore.getState().setAccentColor(s.accent_color)
+      }).catch(() => {})
+    } else {
+      useAccentStore.getState().setAccentColor('#DC143C')
+    }
+  }, [isClient])
 
   const handleLogout = () => {
+    useAccentStore.getState().setAccentColor('#DC143C')
     logout()
     navigate('/login')
   }
@@ -65,7 +81,7 @@ export default function Sidebar() {
     >
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-crimson-700/5 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b to-transparent" style={{ '--tw-gradient-from': 'rgb(var(--accent) / 0.05)' } as React.CSSProperties} />
       </div>
 
       {/* Logo — fixed height matches Header */}
@@ -77,7 +93,19 @@ export default function Sidebar() {
         }}
       >
         <AnimatePresence mode="wait">
-          {sidebarCollapsed ? (
+          {sidebarCollapsed && isClient && clientLogo ? (
+            <motion.div
+              key="client-logo"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              whileHover={{ scale: 1.05 }}
+              className="flex-shrink-0 cursor-pointer"
+              onClick={() => navigate(homePath)}
+            >
+              <img src={clientLogo} alt="" className="w-10 h-10 rounded-xl object-cover" />
+            </motion.div>
+          ) : sidebarCollapsed ? (
             <motion.div
               key="collapsed"
               initial={{ opacity: 0 }}
@@ -88,6 +116,18 @@ export default function Sidebar() {
               onClick={() => navigate(homePath)}
             >
               <LogoMark size="md" />
+            </motion.div>
+          ) : isClient && clientLogo ? (
+            <motion.div
+              key="client-expanded"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+              className="cursor-pointer flex flex-col gap-2"
+              onClick={() => navigate(homePath)}
+            >
+              <img src={clientLogo} alt="" className="h-12 object-contain max-w-[160px] rounded-xl" style={{ filter: theme === 'light' ? 'none' : 'brightness(1.1)' }} />
             </motion.div>
           ) : (
             <motion.div
@@ -126,27 +166,30 @@ export default function Sidebar() {
                   relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                   transition-colors duration-150 cursor-pointer
                   ${isActive
-                    ? 'bg-crimson-700/20 border border-crimson-700/30'
+                    ? 'border'
                     : 'hover:bg-white/5 border border-transparent'
                   }
                   ${sidebarCollapsed ? 'justify-center' : ''}
                 `}
-                style={{ color: isActive ? 'rgb(var(--ink-100))' : 'rgb(var(--ink-300))' }}
+                style={{
+                  color: isActive ? 'rgb(var(--ink-100))' : 'rgb(var(--ink-300))',
+                  ...(isActive ? { backgroundColor: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)' } : {}),
+                }}
               >
                 {/* Animated background on active */}
                 {isActive && (
                   <motion.div
                     layoutId="active-nav"
-                    className="absolute inset-0 rounded-xl bg-crimson-700/10"
+                    className="absolute inset-0 rounded-xl"
+                    style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }}
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
 
                 <item.icon
                   size={18}
-                  className={`flex-shrink-0 relative z-10 transition-colors duration-150 ${
-                    isActive ? 'text-crimson-400' : ''
-                  }`}
+                  className="flex-shrink-0 relative z-10 transition-colors duration-150"
+                  style={isActive ? { color: 'var(--accent-light)' } : undefined}
                 />
 
                 <AnimatePresence>
@@ -167,7 +210,8 @@ export default function Sidebar() {
                 {isActive && !sidebarCollapsed && (
                   <motion.div
                     layoutId="active-indicator"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-crimson-500 rounded-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full"
+                    style={{ backgroundColor: 'var(--accent-light)' }}
                   />
                 )}
               </motion.div>
@@ -195,12 +239,23 @@ export default function Sidebar() {
           )}
         </AnimatePresence>
 
+        {isClient && !sidebarCollapsed && (
+          <div className="px-3 py-2 flex items-center gap-2 opacity-35">
+            <span className="text-[9px] uppercase tracking-widest" style={{ color: 'rgb(var(--ink-400))' }}>powered by</span>
+            <img
+              src={theme === 'light' ? '/logo-full-black.png' : '/logo-full-white.png'}
+              alt="Nextgenbrand"
+              className="h-4 object-contain"
+            />
+          </div>
+        )}
+
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.97 }}
           onClick={handleLogout}
           title={t('header.logout')}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm ${sidebarCollapsed ? 'justify-center' : ''}`}
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-ink-400 hover:text-[var(--accent-light)] hover:bg-[rgb(var(--accent)_/_0.1)] transition-all text-sm ${sidebarCollapsed ? 'justify-center' : ''}`}
         >
           <LogOut size={15} className="flex-shrink-0" />
           <AnimatePresence>

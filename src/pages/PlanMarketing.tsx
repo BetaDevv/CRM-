@@ -105,7 +105,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); onDelete() }}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-ink-500 hover:text-crimson-400 hover:bg-crimson-500/10 transition-all"
+                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg text-ink-500 hover:text-[var(--accent-light)] hover:bg-[rgb(var(--accent)_/_0.1)] transition-all"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -187,11 +187,12 @@ function NewPlanModal({ clients, onClose, onCreated }: {
           <div className="flex items-center gap-3">
             {[{ n: 1, l: t('admin:plan.newPlanModal.steps.info') }, { n: 2, l: t('admin:plan.newPlanModal.steps.milestones') }, { n: 3, l: t('admin:plan.newPlanModal.steps.kpis') }].map(s => (
               <div key={s.n} className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? 'bg-crimson-700 border-crimson-700 text-white' : 'border-ink-600 text-ink-500'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? 'text-white' : 'border-ink-600 text-ink-500'}`}
+                  style={step >= s.n ? { background: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
                   {step > s.n ? <Check size={13} /> : s.n}
                 </div>
                 <span className={`text-xs font-medium ${step === s.n ? 'text-white' : 'text-ink-500'}`}>{s.l}</span>
-                {s.n < 3 && <div className={`flex-1 h-px w-8 ${step > s.n ? 'bg-crimson-700' : 'bg-ink-700'}`} />}
+                {s.n < 3 && <div className={`flex-1 h-px w-8 ${step > s.n ? '' : 'bg-ink-700'}`} style={step > s.n ? { background: 'rgb(var(--accent))' } : {}} />}
               </div>
             ))}
           </div>
@@ -250,7 +251,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                   </div>
                 </div>
               ))}
-              <button onClick={addMilestone} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all flex items-center justify-center gap-2">
+              <button onClick={addMilestone} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-[rgb(var(--accent)_/_0.5)] transition-all flex items-center justify-center gap-2">
                 <Plus size={14} /> {t('admin:plan.addMilestone')}
               </button>
             </motion.div>
@@ -276,7 +277,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                   </div>
                 </div>
               ))}
-              <button onClick={addKpi} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-crimson-500/50 transition-all flex items-center justify-center gap-2">
+              <button onClick={addKpi} className="w-full py-2.5 border border-dashed border-white/20 rounded-xl text-sm text-ink-300 hover:text-white hover:border-[rgb(var(--accent)_/_0.5)] transition-all flex items-center justify-center gap-2">
                 <Plus size={14} /> {t('admin:plan.newPlanModal.addKpi')}
               </button>
             </motion.div>
@@ -646,7 +647,7 @@ export default function PlanMarketing() {
 
       {loading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 size={24} className="animate-spin text-crimson-400" />
+          <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
         </div>
       )}
 
@@ -671,7 +672,7 @@ export default function PlanMarketing() {
                       <button onClick={() => setShowEditPlan(true)} className="p-2 rounded-xl text-ink-400 hover:text-white hover:bg-white/10 transition-all">
                         <Pencil size={14} />
                       </button>
-                      <button onClick={handleDeletePlan} className="p-2 rounded-xl text-ink-400 hover:text-crimson-400 hover:bg-crimson-500/10 transition-all">
+                      <button onClick={handleDeletePlan} className="p-2 rounded-xl text-ink-400 hover:text-[var(--accent-light)] hover:bg-[rgb(var(--accent)_/_0.1)] transition-all">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -708,7 +709,7 @@ export default function PlanMarketing() {
             <div className="glass-card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h4 className="font-semibold text-white flex items-center gap-2">
-                  <Zap size={16} className="text-crimson-400" /> {t('admin:plan.timelineTitle')}
+                  <Zap size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.timelineTitle')}
                 </h4>
                 {admin && (
                   <button onClick={() => setShowAddMilestone(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-ink-700 text-ink-300 hover:text-white hover:bg-ink-600 border border-white/10 text-xs transition-all">
@@ -739,7 +740,7 @@ export default function PlanMarketing() {
               <div className="glass-card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-semibold text-white flex items-center gap-2">
-                    <Target size={16} className="text-crimson-400" /> KPIs
+                    <Target size={16} style={{ color: 'var(--accent-light)' }} /> KPIs
                   </h4>
                   {admin && (
                     <button
@@ -790,7 +791,7 @@ export default function PlanMarketing() {
             {/* Category breakdown */}
             <div className="glass-card p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp size={16} className="text-crimson-400" /> {t('admin:plan.byCategory')}
+                <TrendingUp size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.byCategory')}
               </h4>
               <div className="space-y-2.5">
                 {Object.keys(categoryColors).map(cat => {
@@ -819,7 +820,7 @@ export default function PlanMarketing() {
             {/* Proximos hitos */}
             <div className="glass-card p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar size={16} className="text-crimson-400" /> {t('admin:plan.upcomingMilestones')}
+                <Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.upcomingMilestones')}
               </h4>
               <div className="space-y-2">
                 {plan.milestones?.filter((m: any) => !m.completed).slice(0, 3).map((m: any) => (
@@ -838,7 +839,7 @@ export default function PlanMarketing() {
         </div>
       ) : !loading && (
         <div className="glass-card p-12 flex flex-col items-center justify-center text-center">
-          <Target size={40} className="text-crimson-500 mb-4 opacity-50" />
+          <Target size={40} className="mb-4 opacity-50" style={{ color: 'rgb(var(--accent))' }} />
           <p className="text-lg font-semibold text-white mb-2">{t('admin:plan.noPlan')}</p>
           <p className="text-sm text-ink-300 mb-5">{t('admin:plan.noPlanDesc')}</p>
           {admin && (

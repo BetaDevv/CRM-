@@ -38,7 +38,7 @@ export default function LegalPage({ content, lastUpdated }: LegalPageProps) {
             <LogoMark size="sm" />
             <span className="font-bold text-white">{APP_NAME}</span>
           </div>
-          <a href="/login" className="text-sm text-ink-400 hover:text-crimson-400 transition-colors">
+          <a href="/login" className="text-sm text-ink-400 hover:text-[var(--accent-light)] transition-colors">
             {c.backToLogin}
           </a>
         </motion.div>

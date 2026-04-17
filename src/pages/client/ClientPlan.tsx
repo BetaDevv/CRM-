@@ -4,18 +4,14 @@ import { Check, Calendar, Target, TrendingUp, CheckCircle, Loader2 } from 'lucid
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
-import { useStore } from '../../store/useStore'
 import { api } from '../../lib/api'
 import { formatDate, categoryColors } from '../../lib/utils'
 
 export default function ClientPlan() {
   const { t } = useTranslation(['client', 'common'])
   const { user } = useAuthStore()
-  const { clients } = useStore()
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
-  const client = clients.find(c => c.id === user?.clientId)
 
   useEffect(() => {
     api.get('/plans').then(r => setPlans(r.data)).finally(() => setLoading(false))

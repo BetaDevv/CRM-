@@ -111,7 +111,9 @@
     "categoryContracts": "Contracts",
     "categoryReports": "Reports",
     "categoryDesigns": "Designs",
-    "categoryOther": "Other"
+    "categoryOther": "Other",
+    "download": "Download",
+    "noPreview": "Preview not available for this file type"
   },
   "todos": {
     "title": "My Tasks",

@@ -111,7 +111,9 @@
     "categoryContracts": "Contratos",
     "categoryReports": "Reportes",
     "categoryDesigns": "Disenos",
-    "categoryOther": "Otros"
+    "categoryOther": "Otros",
+    "download": "Descargar",
+    "noPreview": "Vista previa no disponible para este tipo de archivo"
   },
   "todos": {
     "title": "Mis Tareas",

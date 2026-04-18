@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FolderOpen, Upload, Trash2, X, Loader2,
-  HardDrive, Search, Share2, Users as UsersIcon,
+  HardDrive, Search, Share2, Users as UsersIcon, Download, FileText,
 } from 'lucide-react'
 import {
   getDocuments, uploadDocuments, deleteDocument, getDocumentDownloadUrl,
@@ -35,6 +35,8 @@ export default function ClientDocumentos() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const categories = [
     { value: 'todos', label: t('client:documents.categoryAll') },
@@ -87,6 +89,26 @@ export default function ClientDocumentos() {
         URL.revokeObjectURL(a.href)
       })
   }
+
+  const openPreview = useCallback((doc: Document) => {
+    setPreviewDoc(doc)
+    const isPreviewable = doc.mimeType.startsWith('image/') || doc.mimeType.includes('pdf')
+    if (isPreviewable) {
+      const url = getDocumentDownloadUrl(doc.id)
+      const token = localStorage.getItem('tbs_token')
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => res.blob())
+        .then(blob => setPreviewUrl(URL.createObjectURL(blob)))
+    } else {
+      setPreviewUrl(null)
+    }
+  }, [])
+
+  const closePreview = useCallback(() => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewDoc(null)
+    setPreviewUrl(null)
+  }, [previewUrl])
 
   // Filtered docs by search
   const filtered = docs.filter(d =>
@@ -239,17 +261,26 @@ export default function ClientDocumentos() {
                 layout
                 className="group relative glass-card rounded-xl p-4 cursor-pointer transition-all hover:ring-1 hover:ring-[rgb(var(--accent)/0.3)]"
                 style={{ minHeight: '180px' }}
-                onClick={() => handleDownload(doc)}
+                onClick={() => openPreview(doc)}
               >
-                {/* Delete button — only for own uploads */}
-                {ownUpload && (
+                {/* Action buttons — top right on hover */}
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-10">
                   <button
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 opacity-0 group-hover:opacity-100 transition-all z-10"
-                    onClick={e => { e.stopPropagation(); setConfirmDelete(doc.id) }}
+                    className="p-1.5 rounded-lg bg-ink-700/80 text-ink-300 hover:bg-ink-600 hover:text-white transition-all"
+                    onClick={e => { e.stopPropagation(); handleDownload(doc) }}
+                    title={t('client:documents.download')}
                   >
-                    <Trash2 size={14} />
+                    <Download size={14} />
                   </button>
-                )}
+                  {ownUpload && (
+                    <button
+                      className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all"
+                      onClick={e => { e.stopPropagation(); setConfirmDelete(doc.id) }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
 
                 {/* Badge: from admin team */}
                 {!ownUpload && (
@@ -317,6 +348,77 @@ export default function ClientDocumentos() {
           })}
         </motion.div>
       )}
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onMouseDown={closePreview}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-ink-900 border border-ink-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              onMouseDown={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText size={18} style={{ color: 'var(--accent-light)' }} />
+                  <p className="text-sm font-medium text-white truncate">{previewDoc.originalName}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDownload(previewDoc)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                    style={{ backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}
+                  >
+                    <Download size={13} /> {t('client:documents.download')}
+                  </button>
+                  <button onClick={closePreview} className="text-ink-400 hover:text-white p-1">
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Preview content */}
+              <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-ink-950/50">
+                {previewDoc.mimeType.startsWith('image/') ? (
+                  previewUrl ? (
+                    <img src={previewUrl} alt={previewDoc.originalName} className="max-w-full max-h-[70vh] object-contain rounded-lg" />
+                  ) : (
+                    <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
+                  )
+                ) : previewDoc.mimeType.includes('pdf') ? (
+                  previewUrl ? (
+                    <iframe src={previewUrl} className="w-full h-[75vh] rounded-lg bg-white" title="PDF Preview" />
+                  ) : (
+                    <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-light)' }} />
+                  )
+                ) : (
+                  <div className="text-center py-16">
+                    <FileText size={48} className="mx-auto mb-4 text-ink-500" />
+                    <p className="text-ink-300 text-sm mb-1">{previewDoc.originalName}</p>
+                    <p className="text-ink-500 text-xs mb-4">{t('client:documents.noPreview')}</p>
+                    <button
+                      onClick={() => handleDownload(previewDoc)}
+                      className="px-4 py-2 rounded-xl text-sm font-medium text-white transition-all"
+                      style={{ backgroundColor: 'rgb(var(--accent))' }}
+                    >
+                      <Download size={14} className="inline mr-1.5" />{t('client:documents.download')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Modal */}
       <AnimatePresence>

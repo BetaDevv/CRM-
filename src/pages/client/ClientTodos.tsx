@@ -6,8 +6,8 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
-import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, editTodoNote, deleteTodoNote, getTodoAttachments } from '../../lib/api'
-import type { ItemNote, TodoAttachment } from '../../lib/api'
+import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, editTodoNote, deleteTodoNote, getTodoAttachments, getCalendarUsers } from '../../lib/api'
+import type { ItemNote, TodoAttachment, CalendarUser } from '../../lib/api'
 import { priorityConfig, localToday, getLocale } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
 
@@ -149,7 +149,7 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
 }
 
 export default function ClientTodos() {
-  const { t } = useTranslation(['client', 'common'])
+  const { t } = useTranslation(['client', 'common', 'admin'])
   const { user } = useAuthStore()
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -166,6 +166,7 @@ export default function ClientTodos() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [editNoteContent, setEditNoteContent] = useState('')
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
+  const [allUsers, setAllUsers] = useState<CalendarUser[]>([])
   const [form, setForm] = useState({
     title: '', description: '', priority: 'medium' as Priority,
     category: 'Contenido', startTime: '', endTime: '',
@@ -207,6 +208,7 @@ export default function ClientTodos() {
       .then(setTodos)
       .catch(err => console.error('Error fetching todos:', err))
       .finally(() => setLoading(false))
+    getCalendarUsers().then(setAllUsers).catch(() => {})
   }, [])
 
   const handleAdd = async () => {
@@ -738,12 +740,32 @@ export default function ClientTodos() {
 
               {/* Time info */}
               {detailTodo.startTime && (
-                <div className="flex items-center gap-2 text-xs text-ink-300 mb-5">
-                  <Calendar size={13} />
-                  {new Date(detailTodo.startTime).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  {detailTodo.endTime && <> — {new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</>}
+                <div className="flex items-center gap-3 p-3 rounded-xl mb-5" style={{ backgroundColor: 'rgb(var(--ink-700) / 0.3)' }}>
+                  <Calendar size={16} style={{ color: 'var(--accent-light)' }} />
+                  <div>
+                    <p className="text-sm text-white font-medium">
+                      {new Date(detailTodo.startTime).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                    <p className="text-xs text-ink-300 mt-0.5">
+                      {new Date(detailTodo.startTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}
+                      {detailTodo.endTime && ` — ${new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}`}
+                    </p>
+                  </div>
                 </div>
               )}
+
+              {/* Assigned user */}
+              {detailTodo.assignedTo && (() => {
+                const assignee = allUsers.find(u => u.id === detailTodo.assignedTo)
+                return assignee ? (
+                  <div className="flex items-center gap-2 text-xs text-ink-300 mb-5">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}>
+                      {assignee.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <span>{t('admin:todo.assignedTo')}: <strong className="text-white">{assignee.name}</strong></span>
+                  </div>
+                ) : null
+              })()}
 
               {/* Attachments section */}
               <div className="border-t border-white/5 pt-4">

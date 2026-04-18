@@ -189,6 +189,7 @@
   "todo.attachments": "Anhänge",
   "todo.addFiles": "Dateien hinzufügen",
   "todo.noAttachments": "Noch keine Anhänge",
+  "todo.assignedTo": "Zugewiesen an",
 
   "approvals.title": "Genehmigungen",
   "approvals.pendingReview": "{{count}} Beiträge warten auf Kundenprüfung",
@@ -532,5 +533,7 @@
   "documents.uploadModal.uploadCount": "{{count}} Datei hochladen",
   "documents.uploadModal.uploadCountPlural": "{{count}} Dateien hochladen",
   "documents.uploadModal.errorUploading": "Fehler beim Hochladen der Dateien",
-  "documents.uploadModal.someFilesSkipped": "Einige Dateien wurden übersprungen. Erlaubte Formate: {{formats}}"
+  "documents.uploadModal.someFilesSkipped": "Einige Dateien wurden übersprungen. Erlaubte Formate: {{formats}}",
+  "documents.download": "Herunterladen",
+  "documents.noPreview": "Vorschau für diesen Dateityp nicht verfügbar"
 }

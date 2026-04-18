@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye, Send } from 'lucide-react'
+import { Plus, X, Check, Trash2, Calendar, Loader2, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye, Send, Briefcase } from 'lucide-react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useStore } from '../store/useStore'
@@ -910,10 +910,43 @@ export default function TodoSemanal() {
 
               {/* Time info */}
               {detailTodo.startTime && (
-                <div className="flex items-center gap-2 text-xs text-ink-300 mb-5">
-                  <Calendar size={13} />
-                  {new Date(detailTodo.startTime).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                  {detailTodo.endTime && <> — {new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</>}
+                <div className="flex items-center gap-3 p-3 rounded-xl mb-5" style={{ backgroundColor: 'rgb(var(--ink-700) / 0.3)' }}>
+                  <Calendar size={16} style={{ color: 'var(--accent-light)' }} />
+                  <div>
+                    <p className="text-sm text-white font-medium">
+                      {new Date(detailTodo.startTime).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                    <p className="text-xs text-ink-300 mt-0.5">
+                      {new Date(detailTodo.startTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}
+                      {detailTodo.endTime && ` — ${new Date(detailTodo.endTime).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}`}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Assigned user & Client */}
+              {(detailTodo.assignedTo || detailTodo.clientId) && (
+                <div className="flex flex-wrap gap-3 mb-5">
+                  {detailTodo.assignedTo && (() => {
+                    const assignee = allUsers.find(u => u.id === detailTodo.assignedTo)
+                    return assignee ? (
+                      <div className="flex items-center gap-2 text-xs text-ink-300">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' }}>
+                          {assignee.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <span>{t('admin:todo.assignedTo')}: <strong className="text-white">{assignee.name}</strong></span>
+                      </div>
+                    ) : null
+                  })()}
+                  {detailTodo.clientId && (() => {
+                    const cl = clients.find(c => c.id === detailTodo.clientId)
+                    return cl ? (
+                      <div className="flex items-center gap-2 text-xs text-ink-300">
+                        <Briefcase size={13} />
+                        <span>{cl.company}</span>
+                      </div>
+                    ) : null
+                  })()}
                 </div>
               )}
 

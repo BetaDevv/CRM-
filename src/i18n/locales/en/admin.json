@@ -189,6 +189,7 @@
   "todo.attachments": "Attachments",
   "todo.addFiles": "Add files",
   "todo.noAttachments": "No attachments yet",
+  "todo.assignedTo": "Assigned to",
 
   "approvals.title": "Approvals",
   "approvals.pendingReview": "{{count}} posts awaiting client review",
@@ -532,5 +533,7 @@
   "documents.uploadModal.uploadCount": "Upload {{count}} file",
   "documents.uploadModal.uploadCountPlural": "Upload {{count}} files",
   "documents.uploadModal.errorUploading": "Error uploading files",
-  "documents.uploadModal.someFilesSkipped": "Some files were skipped. Allowed formats: {{formats}}"
+  "documents.uploadModal.someFilesSkipped": "Some files were skipped. Allowed formats: {{formats}}",
+  "documents.download": "Download",
+  "documents.noPreview": "Preview not available for this file type"
 }

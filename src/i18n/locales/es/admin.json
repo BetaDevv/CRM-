@@ -189,6 +189,7 @@
   "todo.attachments": "Archivos adjuntos",
   "todo.addFiles": "Agregar archivos",
   "todo.noAttachments": "Sin archivos adjuntos",
+  "todo.assignedTo": "Asignado a",
 
   "approvals.title": "Aprobaciones",
   "approvals.pendingReview": "{{count}} publicaciones esperando revisión del cliente",
@@ -532,5 +533,7 @@
   "documents.uploadModal.uploadCount": "Subir {{count}} archivo",
   "documents.uploadModal.uploadCountPlural": "Subir {{count}} archivos",
   "documents.uploadModal.errorUploading": "Error al subir archivos",
-  "documents.uploadModal.someFilesSkipped": "Algunos archivos fueron omitidos. Formatos permitidos: {{formats}}"
+  "documents.uploadModal.someFilesSkipped": "Algunos archivos fueron omitidos. Formatos permitidos: {{formats}}",
+  "documents.download": "Descargar",
+  "documents.noPreview": "Vista previa no disponible para este tipo de archivo"
 }

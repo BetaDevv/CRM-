@@ -111,7 +111,9 @@
     "categoryContracts": "Vertr\u00e4ge",
     "categoryReports": "Berichte",
     "categoryDesigns": "Designs",
-    "categoryOther": "Sonstige"
+    "categoryOther": "Sonstige",
+    "download": "Herunterladen",
+    "noPreview": "Vorschau für diesen Dateityp nicht verfügbar"
   },
   "todos": {
     "title": "Meine Aufgaben",

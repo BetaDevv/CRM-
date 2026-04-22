@@ -38,6 +38,8 @@ function mapIdea(raw: any): Idea {
     emoji: raw.emoji ?? undefined,
     shared: Boolean(raw.shared),
     createdBy: raw.created_by ?? undefined,
+    createdByName: raw.created_by_name ?? null,
+    createdByAvatar: raw.created_by_avatar ?? null,
 
     notesCount: raw.notes_count ?? 0,
   }
@@ -116,6 +118,8 @@ function mapTodo(raw: any): TodoItem {
     category: raw.category ?? '',
     shared: Boolean(raw.shared),
     createdBy: raw.created_by ?? undefined,
+    createdByName: raw.created_by_name ?? null,
+    createdByAvatar: raw.created_by_avatar ?? null,
     status: raw.status ?? (raw.done ? 'done' : 'pending'),
     startTime: toDatetimeLocal(raw.start_time ?? raw.startTime),
     endTime: toDatetimeLocal(raw.end_time ?? raw.endTime),
@@ -279,6 +283,8 @@ function mapPost(raw: any): Post {
     mediaUrl: raw.media_url ?? raw.mediaUrl,
     createdAt: raw.created_at ?? raw.createdAt ?? '',
     feedback: raw.feedback ?? undefined,
+    createdByName: raw.created_by_name ?? null,
+    createdByAvatar: raw.created_by_avatar ?? null,
   }
 }
 
@@ -431,6 +437,8 @@ export interface CalendarEvent {
   clientNote: string | null
   milestone: { title: string; category: string; date: string } | null
   participants: { id: string; status: string; name: string; email: string }[]
+  createdByName?: string | null
+  createdByAvatar?: string | null
 }
 
 function mapCalendarEvent(raw: any): CalendarEvent {
@@ -452,6 +460,8 @@ function mapCalendarEvent(raw: any): CalendarEvent {
     clientNote: raw.client_note ?? raw.clientNote ?? null,
     milestone: raw.milestone ?? null,
     participants: raw.participants ?? [],
+    createdByName: raw.created_by_name ?? null,
+    createdByAvatar: raw.created_by_avatar ?? null,
   }
 }
 
@@ -615,6 +625,8 @@ export interface Document {
   createdAt: string
   clientName: string | null
   shared: boolean
+  uploadedByName?: string | null
+  uploadedByAvatar?: string | null
 }
 
 function mapDocument(raw: any): Document {
@@ -631,6 +643,8 @@ function mapDocument(raw: any): Document {
     createdAt: raw.created_at ?? raw.createdAt ?? '',
     clientName: raw.client_name ?? raw.clientName ?? null,
     shared: Boolean(raw.shared),
+    uploadedByName: raw.uploaded_by_name ?? null,
+    uploadedByAvatar: raw.uploaded_by_avatar ?? null,
   }
 }
 
@@ -770,13 +784,34 @@ export async function deleteApiKey(id: string): Promise<void> {
 
 // --- Client Settings API ---
 
-export async function getMyClientSettings(): Promise<{ accent_color: string; avatar_url: string | null; company: string }> {
+export interface MyClientSettings {
+  accent_color: string               // RESOLVED: user override -> client default -> crimson fallback
+  user_accent_color: string | null   // raw per-user override
+  client_accent_color: string | null // raw client default
+  avatar_url: string | null
+  company: string
+}
+
+export async function getMyClientSettings(): Promise<MyClientSettings> {
   const { data } = await api.get('/clients/me/settings')
   return data
 }
 
+/** admin-only: sets the client-wide default color (affects every user of that client) */
 export async function updateClientAccent(clientId: string, accent_color: string): Promise<void> {
   await api.patch(`/clients/${clientId}/accent`, { accent_color })
+}
+
+export interface MyAccentResponse {
+  accent_color: string               // RESOLVED
+  user_accent_color: string | null   // raw user override
+  client_accent_color: string | null // raw client default
+}
+
+/** Per-user accent override. Pass `null` or empty to clear the override and fall back to the client default. */
+export async function updateMyAccentColor(color: string | null): Promise<MyAccentResponse> {
+  const { data } = await api.patch('/users/me/accent-color', { color })
+  return data
 }
 
 // --- Profile API ---

@@ -5,6 +5,7 @@ import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, Poi
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
+import CreatorBadge from '../../components/CreatorBadge'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, updateTodo as updateTodoApi, updateTodoStatus, getTodoNotes, addTodoNoteMsg, markTodoNotesRead, editTodoNote, deleteTodoNote, getTodoAttachments, getCalendarUsers } from '../../lib/api'
 import type { ItemNote, TodoAttachment, CalendarUser } from '../../lib/api'
@@ -67,7 +68,7 @@ function TodoCardContent({
           )}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
-              {cfg.label}
+              {t(`common:priority.${todo.priority}`)}
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300"><T text={todo.category} /></span>
             {todo.startTime && (
@@ -77,9 +78,12 @@ function TodoCardContent({
               </span>
             )}
             {(todo.notesCount ?? 0) > 0 && (
-              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-white text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))' }}>
+              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                 {todo.notesCount}
               </span>
+            )}
+            {todo.createdByName && (
+              <CreatorBadge name={todo.createdByName} avatar={todo.createdByAvatar} size="sm" variant="compact" className="ml-auto" />
             )}
           </div>
         </div>
@@ -395,13 +399,13 @@ export default function ClientTodos() {
 
         {/* Priority breakdown */}
         <div className="grid grid-cols-4 gap-3 mt-4">
-          {['high', 'medium', 'low'].map(p => {
-            const cfg = priorityConfig[p as Priority]
-            const count = todos.filter(t => t.priority === p && t.status !== 'done').length
+          {(['high', 'medium', 'low'] as Priority[]).map(p => {
+            const cfg = priorityConfig[p]
+            const count = todos.filter(td => td.priority === p && td.status !== 'done').length
             return (
               <div key={p} className="p-3 rounded-xl bg-ink-800/50 text-center">
                 <p className="text-lg font-bold" style={{ color: cfg.color }}>{count}</p>
-                <p className="text-xs text-ink-400">{cfg.label} {t('client:todos.prioritySuffix')}</p>
+                <p className="text-xs text-ink-400">{t(`common:priority.${p}`)} {t('client:todos.prioritySuffix')}</p>
               </div>
             )
           })}
@@ -597,7 +601,7 @@ export default function ClientTodos() {
                               ${form.priority === p ? 'border-current' : 'border-transparent bg-ink-700/50'}`}
                             style={form.priority === p ? { color: cfg.color, background: cfg.bg, borderColor: cfg.color } : {}}
                           >
-                            {cfg.label}
+                            {t(`common:priority.${p}`)}
                           </button>
                         )
                       })}
@@ -714,6 +718,14 @@ export default function ClientTodos() {
                 </div>
               </div>
 
+              {/* Creator */}
+              {detailTodo.createdByName && (
+                <div className="flex items-center gap-2 mb-4 text-xs text-ink-400">
+                  <span>{t('common:common.createdBy')}:</span>
+                  <CreatorBadge name={detailTodo.createdByName} avatar={detailTodo.createdByAvatar} size="md" variant="full" />
+                </div>
+              )}
+
               {/* Description */}
               {detailTodo.description && (
                 <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailTodo.description}</p>
@@ -722,7 +734,7 @@ export default function ClientTodos() {
               {/* Meta info */}
               <div className="flex flex-wrap gap-2 mb-5">
                 <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ color: priorityConfig[detailTodo.priority].color, background: priorityConfig[detailTodo.priority].bg }}>
-                  {priorityConfig[detailTodo.priority].label}
+                  {t(`common:priority.${detailTodo.priority}`)}
                 </span>
                 <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-ink-300">
                   {categoryKeys[detailTodo.category] ? t(`common:${categoryKeys[detailTodo.category]}`) : detailTodo.category}
@@ -864,7 +876,7 @@ export default function ClientTodos() {
                     onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
                     className="input-dark text-sm flex-1" />
                   <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
-                    className="px-3 py-2 disabled:opacity-30 text-white rounded-xl transition-all" style={{ backgroundColor: 'rgb(var(--accent))' }}>
+                    className="px-3 py-2 disabled:opacity-30 rounded-xl transition-all" style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                     <Send size={14} />
                   </button>
                 </div>

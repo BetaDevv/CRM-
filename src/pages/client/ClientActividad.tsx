@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Check, Loader2, X, Plus, MessageSquare, Users, User, CheckSquare, Flag } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
+import CreatorBadge from '../../components/CreatorBadge'
 import { getCalendarEvents, addClientNoteToEvent, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, type CalendarEvent } from '../../lib/api'
 import { formatDate, categoryColors, getLocale } from '../../lib/utils'
 
@@ -176,7 +177,12 @@ export default function ClientActividad() {
                         </span>
                       </div>
 
-                      <p className="text-xs text-ink-400 mb-2">{timeStr}</p>
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <p className="text-xs text-ink-400">{timeStr}</p>
+                        {event.createdByName && (
+                          <CreatorBadge name={event.createdByName} avatar={event.createdByAvatar} size="sm" variant="compact" className="ml-auto" />
+                        )}
+                      </div>
 
                       {event.description && (
                         <p className="text-xs text-ink-300 mb-2 leading-relaxed"><T text={event.description} translatable /></p>
@@ -259,6 +265,14 @@ export default function ClientActividad() {
 
               {/* Title */}
               <h3 className="text-xl font-bold text-white mb-2"><T text={selectedEvent.title} /></h3>
+
+              {/* Creator */}
+              {selectedEvent.createdByName && (
+                <div className="flex items-center gap-2 mb-3 text-xs text-ink-400">
+                  <span>{t('common:common.createdBy')}:</span>
+                  <CreatorBadge name={selectedEvent.createdByName} avatar={selectedEvent.createdByAvatar} size="md" variant="full" />
+                </div>
+              )}
 
               {/* Date/Time */}
               <div className="flex items-center gap-2 text-ink-400 text-sm mb-3">

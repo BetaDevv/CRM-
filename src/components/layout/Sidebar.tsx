@@ -12,7 +12,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useAccentStore } from '../../store/useAccentStore'
 import { LogoMark } from '../Logo'
 import { useThemeStore } from '../../store/useThemeStore'
-import { getMyClientSettings } from '../../lib/api'
+import { getMyClientSettings, getMyProfile } from '../../lib/api'
 
 const adminNav = [
   { path: '/',             icon: LayoutDashboard, labelKey: 'nav.dashboard' },
@@ -56,15 +56,22 @@ export default function Sidebar() {
     if (isClient) {
       getMyClientSettings().then(s => {
         setClientLogo(s.avatar_url)
-        if (s.accent_color) useAccentStore.getState().setAccentColor(s.accent_color)
+        useAccentStore.getState().setAccent(s.accent_color, s.user_accent_color, s.client_accent_color)
       }).catch(() => {})
     } else {
-      useAccentStore.getState().setAccentColor('#DC143C')
+      // Admin: no client, but they can still set a per-user override. Resolve via /users/me.
+      getMyProfile().then((u: any) => {
+        const userRaw = u?.accent_color ?? null
+        const resolved = userRaw || '#DC143C'
+        useAccentStore.getState().setAccent(resolved, userRaw, null)
+      }).catch(() => {
+        useAccentStore.getState().setAccent('#DC143C', null, null)
+      })
     }
   }, [isClient])
 
   const handleLogout = () => {
-    useAccentStore.getState().setAccentColor('#DC143C')
+    useAccentStore.getState().setAccent('#DC143C', null, null)
     logout()
     navigate('/login')
   }

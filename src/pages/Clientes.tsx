@@ -278,8 +278,8 @@ function ClientModal({
           <div className="flex gap-2">
             {['active', 'paused'].map(s => (
               <button key={s} onClick={() => setForm(p => ({ ...p, status: s }))}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${form.status === s ? 'text-white' : 'border-ink-500/30 text-ink-300'}`}
-                style={form.status === s ? { backgroundColor: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
+                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${form.status === s ? '' : 'border-ink-500/30 text-ink-300'}`}
+                style={form.status === s ? { backgroundColor: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))', color: 'var(--accent-text)' } : {}}>
                 {s === 'active' ? t('admin:clients.status.active') : t('admin:clients.status.paused')}
               </button>
             ))}

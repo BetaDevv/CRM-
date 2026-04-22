@@ -70,7 +70,7 @@ body, header, aside, nav, main,
   }
 
   .btn-primary {
-    @apply text-white font-medium px-5 py-2.5 rounded-xl
+    @apply font-medium px-5 py-2.5 rounded-xl
            transition-all duration-200 active:scale-95 flex items-center gap-2;
     background-color: rgb(var(--accent));
     color: var(--accent-text);

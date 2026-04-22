@@ -32,6 +32,8 @@
     "role": "Role",
     "saving": "Saving...",
     "accentColor": "Accent color",
+    "usingClientDefault": "Using team default",
+    "resetAccent": "Reset",
     "notif": {
       "todoCompleted": "Task completed",
       "noteAdded": "New note",
@@ -88,7 +90,8 @@
     "all": "All",
     "filters": "Filters",
     "from": "From",
-    "to": "To"
+    "to": "To",
+    "createdBy": "Created by"
   },
   "status": {
     "pending": "Pending",

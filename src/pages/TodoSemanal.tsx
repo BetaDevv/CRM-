@@ -11,6 +11,7 @@ import { priorityConfig, localToday, getLocale } from '../lib/utils'
 import type { Priority, TodoItem } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
+import CreatorBadge from '../components/CreatorBadge'
 
 const categoryKeys: Record<string, string> = {
   'Contenido': 'categories.content',
@@ -63,7 +64,7 @@ function TodoCard({
             ${isDone ? '' : 'border-ink-500'}`}
           style={isDone ? { backgroundColor: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}
         >
-          {isDone && <Check size={11} className="text-white" />}
+          {isDone && <Check size={11} style={{ color: 'var(--accent-text)' }} />}
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -78,13 +79,16 @@ function TodoCard({
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
-              {cfg.label}
+              {t(`common:priority.${todo.priority}`)}
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{categoryKeys[todo.category] ? t(`common:${categoryKeys[todo.category]}`) : todo.category}</span>
             {(todo.notesCount ?? 0) > 0 && (
-              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-white text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))' }}>
+              <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-[9px] font-bold rounded-full" style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                 {todo.notesCount}
               </span>
+            )}
+            {todo.createdByName && (
+              <CreatorBadge name={todo.createdByName} avatar={todo.createdByAvatar} size="sm" variant="compact" className="ml-auto" />
             )}
           </div>
         </div>
@@ -706,7 +710,7 @@ export default function TodoSemanal() {
                               ${form.priority === p ? 'border-current' : 'border-transparent bg-ink-700/50'}`}
                             style={form.priority === p ? { color: cfg.color, background: cfg.bg, borderColor: cfg.color } : {}}
                           >
-                            {cfg.label}
+                            {t(`common:priority.${p}`)}
                           </button>
                         )
                       })}
@@ -886,6 +890,14 @@ export default function TodoSemanal() {
                 </div>
               </div>
 
+              {/* Creator */}
+              {detailTodo.createdByName && (
+                <div className="flex items-center gap-2 mb-4 text-xs text-ink-400">
+                  <span>{t('common:common.createdBy')}:</span>
+                  <CreatorBadge name={detailTodo.createdByName} avatar={detailTodo.createdByAvatar} size="md" variant="full" />
+                </div>
+              )}
+
               {/* Description */}
               {detailTodo.description && (
                 <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailTodo.description}</p>
@@ -894,7 +906,7 @@ export default function TodoSemanal() {
               {/* Meta info */}
               <div className="flex flex-wrap gap-2 mb-5">
                 <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ color: priorityConfig[detailTodo.priority].color, background: priorityConfig[detailTodo.priority].bg }}>
-                  {priorityConfig[detailTodo.priority].label}
+                  {t(`common:priority.${detailTodo.priority}`)}
                 </span>
                 <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-ink-300">
                   {categoryKeys[detailTodo.category] ? t(`common:${categoryKeys[detailTodo.category]}`) : detailTodo.category}
@@ -1053,8 +1065,8 @@ export default function TodoSemanal() {
                     onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
                     className="input-dark text-sm flex-1" />
                   <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
-                    className="px-3 py-2 disabled:opacity-30 text-white rounded-xl transition-all"
-                    style={{ backgroundColor: 'rgb(var(--accent))' }}>
+                    className="px-3 py-2 disabled:opacity-30 rounded-xl transition-all"
+                    style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                     <Send size={14} />
                   </button>
                 </div>

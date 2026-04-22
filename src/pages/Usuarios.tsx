@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, UserPlus, Shield, UserCheck, UserX, Key,
   Trash2, X, Loader2, Eye, EyeOff, AlertTriangle,
-  Copy, Check, Power, Zap, Globe,
+  Copy, Check, Power, Zap, Globe, Search, Building2,
 } from 'lucide-react'
 import {
   getUsers, createUser, toggleUserActive, resetUserPassword, deleteUser,
@@ -72,6 +72,9 @@ export default function Usuarios() {
     open: false, userId: '', userName: '',
   })
   const [newPassword, setNewPassword] = useState('')
+
+  // Search across all user groups
+  const [search, setSearch] = useState('')
 
   // API Keys state
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
@@ -165,12 +168,6 @@ export default function Usuarios() {
     })
   }
 
-  function getClientName(clientId: string | null) {
-    if (!clientId) return '—'
-    const c = clients.find(cl => cl.id === clientId)
-    return c?.company || '—'
-  }
-
   // API Key handlers
   async function handleCreateApiKey() {
     if (!apiKeyForm.name || !apiKeyForm.user_id || !apiKeyForm.role) return
@@ -249,6 +246,55 @@ export default function Usuarios() {
   const clientCount = users.filter(u => u.role === 'client').length
   const inactiveCount = users.filter(u => !u.active).length
 
+  // Grouping: admins/team first, then clients alphabetically, then orphan client-role users
+  type UserGroup = {
+    key: string
+    kind: 'team' | 'client' | 'orphan'
+    label: string
+    users: User[]
+  }
+
+  const groups = useMemo<UserGroup[]>(() => {
+    const q = search.trim().toLowerCase()
+    const matches = (u: User) =>
+      !q ||
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q)
+
+    // Team: admins OR users without a client_id
+    const teamUsers = users
+      .filter(u => u.role === 'admin' || !u.clientId)
+      .filter(matches)
+
+    // Per-client groups
+    const clientGroups: UserGroup[] = [...clients]
+      .sort((a, b) => a.company.localeCompare(b.company))
+      .map(c => ({
+        key: `client-${c.id}`,
+        kind: 'client' as const,
+        label: c.company,
+        users: users.filter(u => u.role !== 'admin' && u.clientId === c.id).filter(matches),
+      }))
+
+    // Orphans: client-role users with a client_id that doesn't match any known client
+    const knownClientIds = new Set(clients.map(c => c.id))
+    const orphanUsers = users
+      .filter(u => u.role !== 'admin' && u.clientId && !knownClientIds.has(u.clientId))
+      .filter(matches)
+
+    const result: UserGroup[] = []
+    if (teamUsers.length > 0 || !q) {
+      result.push({ key: 'team', kind: 'team', label: t('admin:users.team'), users: teamUsers })
+    }
+    result.push(...clientGroups)
+    if (orphanUsers.length > 0) {
+      result.push({ key: 'orphan', kind: 'orphan', label: t('admin:users.noClient'), users: orphanUsers })
+    }
+
+    // When searching, hide empty groups
+    return q ? result.filter(g => g.users.length > 0) : result
+  }, [users, clients, search, t])
+
   const stats = [
     { label: t('admin:users.stats.total'), value: totalUsers, icon: Users, color: 'text-white' },
     { label: t('admin:users.stats.admins'), value: adminCount, icon: Shield, color: 'text-[var(--accent-light)]' },
@@ -309,148 +355,205 @@ export default function Usuarios() {
         ))}
       </motion.div>
 
-      {/* Users Table */}
+      {/* Search bar */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-card overflow-hidden"
+        transition={{ delay: 0.15 }}
+        className="relative"
       >
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.user')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.email')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.role')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.client')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.status')}</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.lastLogin')}</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.table.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <AnimatePresence>
-                {users.map((user, i) => (
-                  <motion.tr
-                    key={user.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none" />
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={t('admin:users.searchPlaceholder')}
+          className="input-dark w-full pl-9"
+        />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-ink-400 hover:text-white transition-colors"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </motion.div>
+
+      {/* Grouped Users */}
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-4"
+      >
+        <AnimatePresence mode="popLayout">
+          {groups.map((group, gi) => {
+            const isTeam = group.kind === 'team'
+            const groupIcon = isTeam ? Shield : Building2
+            const GroupIcon = groupIcon
+            return (
+              <motion.section
+                key={group.key}
+                layout
+                variants={item}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ delay: gi * 0.04 }}
+                className="glass-card overflow-hidden"
+              >
+                {/* Group header */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`p-2 rounded-xl ${
+                        isTeam
+                          ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)]'
+                          : 'bg-ink-800/60 ring-1 ring-white/5'
+                      }`}
+                      style={isTeam ? { background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)' } : {}}
+                    >
+                      <GroupIcon size={16} className={isTeam ? '' : 'text-ink-300'} />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-bold text-white">{group.label}</h2>
+                      <p className="text-[11px] text-ink-400">
+                        {t('admin:users.userCount', { count: group.users.length })}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="text-xs font-bold px-2.5 py-1 rounded-full"
+                    style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
                   >
-                    {/* Avatar + Name */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
-                            user.active
-                              ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)]'
-                              : 'bg-ink-700 text-ink-400 ring-1 ring-ink-600/30'
-                          }`}
-                          style={user.active ? { background: `linear-gradient(to bottom right, rgb(var(--accent) / 0.4), rgb(var(--accent) / 0.15))`, color: 'var(--accent-light)' } : {}}
+                    {group.users.length}
+                  </span>
+                </div>
+
+                {/* Group body: user cards grid */}
+                {group.users.length === 0 ? (
+                  <div className="text-center py-8 text-ink-500 text-sm">
+                    {t('admin:users.emptyGroup')}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
+                    <AnimatePresence mode="popLayout">
+                      {group.users.map((user, ui) => (
+                        <motion.div
+                          key={user.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ delay: ui * 0.02 }}
+                          className="relative rounded-2xl bg-ink-900/40 hover:bg-ink-800/50 border border-white/5 hover:border-white/10 p-4 transition-all"
                         >
-                          {user.avatar ? (
-                            <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                          ) : (
-                            getInitials(user.name)
-                          )}
-                        </div>
-                        <span className={`font-medium ${user.active ? 'text-white' : 'text-ink-400'}`}>
-                          {user.name}
-                        </span>
-                      </div>
-                    </td>
+                          {/* Top row: avatar + name/email + role pill */}
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                user.active
+                                  ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)]'
+                                  : 'bg-ink-700 text-ink-400 ring-1 ring-ink-600/30'
+                              }`}
+                              style={user.active ? { background: `linear-gradient(to bottom right, rgb(var(--accent) / 0.4), rgb(var(--accent) / 0.15))`, color: 'var(--accent-light)' } : {}}
+                            >
+                              {user.avatar ? (
+                                <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                              ) : (
+                                getInitials(user.name)
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-sm truncate ${user.active ? 'text-white' : 'text-ink-400'}`}>
+                                {user.name}
+                              </p>
+                              <p className="text-xs text-ink-400 truncate">{user.email}</p>
+                            </div>
+                            <span
+                              className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                                user.role === 'admin'
+                                  ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
+                                  : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
+                              }`}
+                            >
+                              {user.role === 'admin' ? <Shield size={10} /> : <UserCheck size={10} />}
+                              {user.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
+                            </span>
+                          </div>
 
-                    {/* Email */}
-                    <td className="px-4 py-3 text-ink-300">{user.email}</td>
-
-                    {/* Role badge */}
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                          user.role === 'admin'
-                            ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
-                            : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
-                        }`}
-                      >
-                        {user.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}
-                        {user.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
-                      </span>
-                    </td>
-
-                    {/* Client */}
-                    <td className="px-4 py-3 text-ink-300 text-xs">{getClientName(user.clientId)}</td>
-
-                    {/* Active status */}
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                          user.active
-                            ? 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30'
-                            : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30'
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${user.active ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                        {user.active ? t('admin:users.status.active') : t('admin:users.status.inactive')}
-                      </span>
-                    </td>
-
-                    {/* Last login */}
-                    <td className="px-4 py-3 text-ink-400 text-xs">
-                      {relativeTime(user.lastLogin, t('admin:users.never'))}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleToggle(user)}
-                          title={user.active ? t('admin:users.deactivate') : t('admin:users.activate')}
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            user.active
-                              ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
-                              : 'text-ink-400 hover:text-emerald-400 hover:bg-emerald-500/10'
-                          }`}
-                        >
-                          {user.active ? <UserX size={15} /> : <UserCheck size={15} />}
-                        </motion.button>
-
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => setResetDialog({ open: true, userId: user.id, userName: user.name })}
-                          title={t('admin:users.resetPasswordModal.title')}
-                          className="p-1.5 rounded-lg text-ink-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
-                        >
-                          <Key size={15} />
-                        </motion.button>
-
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(user)}
-                          title={t('common:common.delete')}
-                          className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        >
-                          <Trash2 size={15} />
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
-        </div>
+                          {/* Bottom row: status + last login + actions */}
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                                  user.active
+                                    ? 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30'
+                                    : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30'
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full ${user.active ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                                {user.active ? t('admin:users.status.active') : t('admin:users.status.inactive')}
+                              </span>
+                              <span className="text-[10px] text-ink-500">
+                                {relativeTime(user.lastLogin, t('admin:users.never'))}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => handleToggle(user)}
+                                title={user.active ? t('admin:users.deactivate') : t('admin:users.activate')}
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                  user.active
+                                    ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
+                                    : 'text-ink-400 hover:text-emerald-400 hover:bg-emerald-500/10'
+                                }`}
+                              >
+                                {user.active ? <UserX size={14} /> : <UserCheck size={14} />}
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => setResetDialog({ open: true, userId: user.id, userName: user.name })}
+                                title={t('admin:users.resetPasswordModal.title')}
+                                className="p-1.5 rounded-lg text-ink-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                              >
+                                <Key size={14} />
+                              </motion.button>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => handleDelete(user)}
+                                title={t('common:common.delete')}
+                                className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </motion.button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </motion.section>
+            )
+          })}
+        </AnimatePresence>
 
         {users.length === 0 && (
-          <div className="text-center py-12 text-ink-400">
+          <div className="glass-card text-center py-12 text-ink-400">
             <Users size={40} className="mx-auto mb-3 opacity-40" />
             <p>{t('admin:users.noUsers')}</p>
+          </div>
+        )}
+
+        {users.length > 0 && groups.length === 0 && (
+          <div className="glass-card text-center py-10 text-ink-400 text-sm">
+            {t('admin:users.noSearchResults')}
           </div>
         )}
       </motion.div>

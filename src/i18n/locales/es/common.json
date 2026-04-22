@@ -32,6 +32,8 @@
     "role": "Rol",
     "saving": "Guardando...",
     "accentColor": "Color de acento",
+    "usingClientDefault": "Usando color del equipo",
+    "resetAccent": "Reset",
     "notif": {
       "todoCompleted": "Tarea completada",
       "noteAdded": "Nueva nota",
@@ -88,7 +90,8 @@
     "all": "Todas",
     "filters": "Filtros",
     "from": "Desde",
-    "to": "Hasta"
+    "to": "Hasta",
+    "createdBy": "Creado por"
   },
   "status": {
     "pending": "Pendiente",

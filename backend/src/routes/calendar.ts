@@ -101,6 +101,8 @@ router.get('/events', async (req: AuthRequest, res: Response) => {
 
     const { rows } = await pool.query(
       `SELECT e.*,
+        u_creator.name AS created_by_name,
+        u_creator.avatar AS created_by_avatar,
         COALESCE(
           (SELECT json_agg(json_build_object('id', ep2.user_id, 'status', ep2.status, 'name', u2.name, 'email', u2.email))
            FROM event_participants ep2
@@ -110,6 +112,7 @@ router.get('/events', async (req: AuthRequest, res: Response) => {
         (SELECT json_build_object('title', ms.title, 'category', ms.category, 'date', ms.date)
          FROM milestones ms WHERE ms.id = e.milestone_id) as milestone
       FROM events e
+      LEFT JOIN users u_creator ON u_creator.id = e.creator_id
       WHERE (
         e.creator_id = $1
         OR e.id IN (SELECT ep.event_id FROM event_participants ep WHERE ep.user_id = $1)

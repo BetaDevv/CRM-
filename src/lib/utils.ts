@@ -15,7 +15,8 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
 /** Map i18n language code to Intl locale */
 const LOCALE_MAP: Record<string, string> = { es: 'es-CO', en: 'en-US', de: 'de-DE' }
 export function getLocale(): string {
-  const lang = document.documentElement.lang || localStorage.getItem('i18nextLng') || 'es'
+  const raw = localStorage.getItem('tbs_language') || document.documentElement.lang || 'es'
+  const lang = raw.split('-')[0]
   return LOCALE_MAP[lang] || LOCALE_MAP.es
 }
 
@@ -45,10 +46,10 @@ export const prospectStatusConfig: Record<ProspectStatus, { label: string; color
   lost:        { label: 'Perdido',      color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 }
 
-export const priorityConfig: Record<Priority, { label: string; color: string; bg: string }> = {
-  high:   { label: 'Alta',   color: '#DC143C', bg: 'rgba(220,20,60,0.1)' },
-  medium: { label: 'Media',  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  low:    { label: 'Baja',   color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+export const priorityConfig: Record<Priority, { color: string; bg: string }> = {
+  high:   { color: '#DC143C', bg: 'rgba(220,20,60,0.1)' },
+  medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  low:    { color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 }
 
 export const postStatusConfig: Record<PostStatus, { label: string; color: string; bg: string }> = {

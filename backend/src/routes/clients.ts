@@ -50,13 +50,29 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 })
 
 // GET /api/clients/me/settings — Get current client's settings (for portal)
+// Returns resolved accent_color using fallback: user.accent_color → client.accent_color → '#DC143C'
+// Also exposes raw user_accent_color and client_accent_color so UI can tell if user overrode.
 router.get('/me/settings', async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user!
     if (!user.clientId) { res.status(400).json({ error: 'No client' }); return }
-    const { rows } = await pool.query('SELECT accent_color, avatar_url, company FROM clients WHERE id = $1', [user.clientId])
+    const { rows } = await pool.query(
+      `SELECT c.avatar_url, c.company, c.accent_color AS client_accent_color, u.accent_color AS user_accent_color
+       FROM clients c
+       LEFT JOIN users u ON u.id = $2
+       WHERE c.id = $1`,
+      [user.clientId, user.userId]
+    )
     if (!rows.length) { res.status(404).json({ error: 'Not found' }); return }
-    res.json(rows[0])
+    const row = rows[0]
+    const resolved = row.user_accent_color || row.client_accent_color || '#DC143C'
+    res.json({
+      company: row.company,
+      avatar_url: row.avatar_url,
+      accent_color: resolved,
+      user_accent_color: row.user_accent_color ?? null,
+      client_accent_color: row.client_accent_color ?? null,
+    })
   } catch { res.status(500).json({ error: 'Error interno' }) }
 })
 

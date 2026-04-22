@@ -9,6 +9,7 @@ import {
 } from '../../lib/api'
 import type { Document } from '../../lib/api'
 import T from '../../components/TranslatedText'
+import CreatorBadge from '../../components/CreatorBadge'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../../store/useAuthStore'
 import { getFileIcon, formatFileSize, formatDocDate } from '../../lib/documentHelpers'
@@ -151,8 +152,8 @@ export default function ClientDocumentos() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm transition-colors"
-          style={{ backgroundColor: 'rgb(var(--accent))' }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
+          style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
         >
           <Upload size={16} />
           {t('client:documents.uploadFiles')}
@@ -235,8 +236,8 @@ export default function ClientDocumentos() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setShowUpload(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white font-medium text-sm mt-2"
-            style={{ backgroundColor: 'rgb(var(--accent))' }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm mt-2"
+            style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
           >
             <Upload size={16} />
             {t('client:documents.uploadFiles')}
@@ -343,6 +344,13 @@ export default function ClientDocumentos() {
                 <p className="text-[10px] mt-1" style={{ color: 'rgb(var(--ink-500))' }}>
                   {formatDocDate(doc.createdAt)}
                 </p>
+
+                {/* Uploader */}
+                {doc.uploadedByName && (
+                  <div className="mt-2 pt-2 border-t border-white/5">
+                    <CreatorBadge name={doc.uploadedByName} avatar={doc.uploadedByAvatar} size="sm" variant="compact" />
+                  </div>
+                )}
               </motion.div>
             )
           })}
@@ -386,6 +394,14 @@ export default function ClientDocumentos() {
                 </div>
               </div>
 
+              {/* Uploader */}
+              {previewDoc.uploadedByName && (
+                <div className="flex items-center gap-2 px-4 py-2 text-xs text-ink-400 border-b border-white/5">
+                  <span>{t('common:common.createdBy')}:</span>
+                  <CreatorBadge name={previewDoc.uploadedByName} avatar={previewDoc.uploadedByAvatar} size="md" variant="full" />
+                </div>
+              )}
+
               {/* Preview content */}
               <div className="flex-1 overflow-auto flex items-center justify-center p-4 bg-ink-950/50">
                 {previewDoc.mimeType.startsWith('image/') ? (
@@ -407,8 +423,8 @@ export default function ClientDocumentos() {
                     <p className="text-ink-500 text-xs mb-4">{t('client:documents.noPreview')}</p>
                     <button
                       onClick={() => handleDownload(previewDoc)}
-                      className="px-4 py-2 rounded-xl text-sm font-medium text-white transition-all"
-                      style={{ backgroundColor: 'rgb(var(--accent))' }}
+                      className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                      style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
                     >
                       <Download size={14} className="inline mr-1.5" />{t('client:documents.download')}
                     </button>
@@ -705,8 +721,8 @@ function ClientUploadModal({
           whileTap={{ scale: 0.97 }}
           onClick={handleUpload}
           disabled={uploading || selectedFiles.length === 0}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
-          style={{ backgroundColor: 'rgb(var(--accent))' }}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm transition-colors"
+          style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
         >
           {uploading ? (
             <>

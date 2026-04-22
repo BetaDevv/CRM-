@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ThumbsUp, ThumbsDown, RotateCcw, Send, CheckCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
+import CreatorBadge from '../../components/CreatorBadge'
 import { useAuthStore } from '../../store/useAuthStore'
 import { api } from '../../lib/api'
 import { postStatusConfig, platformConfig, formatDate } from '../../lib/utils'
@@ -60,7 +61,12 @@ export default function ClientPosts() {
                     <p className="text-xs text-ink-400">{post.platform} · {formatDate(post.scheduled_date)}</p>
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {post.created_by_name && (
+                    <CreatorBadge name={post.created_by_name} avatar={post.created_by_avatar} size="sm" variant="compact" />
+                  )}
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+                </div>
               </div>
 
               <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">

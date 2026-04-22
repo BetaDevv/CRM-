@@ -47,9 +47,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     if (req.user!.role === 'client') {
       // Client only sees their own documents
       query = `
-        SELECT d.*, c.company as client_name
+        SELECT d.*, c.company as client_name,
+               u_creator.name AS uploaded_by_name,
+               u_creator.avatar AS uploaded_by_avatar
         FROM documents d
         LEFT JOIN clients c ON d.client_id = c.id
+        LEFT JOIN users u_creator ON u_creator.id = d.uploaded_by
         WHERE d.client_id = $1
         ORDER BY d.created_at DESC
       `
@@ -69,9 +72,12 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 
       const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
       query = `
-        SELECT d.*, c.company as client_name
+        SELECT d.*, c.company as client_name,
+               u_creator.name AS uploaded_by_name,
+               u_creator.avatar AS uploaded_by_avatar
         FROM documents d
         LEFT JOIN clients c ON d.client_id = c.id
+        LEFT JOIN users u_creator ON u_creator.id = d.uploaded_by
         ${where}
         ORDER BY d.created_at DESC
       `

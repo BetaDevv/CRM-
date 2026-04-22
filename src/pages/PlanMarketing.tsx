@@ -187,8 +187,8 @@ function NewPlanModal({ clients, onClose, onCreated }: {
           <div className="flex items-center gap-3">
             {[{ n: 1, l: t('admin:plan.newPlanModal.steps.info') }, { n: 2, l: t('admin:plan.newPlanModal.steps.milestones') }, { n: 3, l: t('admin:plan.newPlanModal.steps.kpis') }].map(s => (
               <div key={s.n} className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? 'text-white' : 'border-ink-600 text-ink-500'}`}
-                  style={step >= s.n ? { background: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? '' : 'border-ink-600 text-ink-500'}`}
+                  style={step >= s.n ? { background: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))', color: 'var(--accent-text)' } : {}}>
                   {step > s.n ? <Check size={13} /> : s.n}
                 </div>
                 <span className={`text-xs font-medium ${step === s.n ? 'text-white' : 'text-ink-500'}`}>{s.l}</span>

@@ -18,8 +18,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const user = req.user!
     if (user.role === 'admin') {
       const { rows } = await pool.query(
-        `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count
+        `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count,
+                u_creator.name AS created_by_name,
+                u_creator.avatar AS created_by_avatar
          FROM ideas i
+         LEFT JOIN users u_creator ON u_creator.id = i.created_by
          LEFT JOIN (
            SELECT inn.item_id, COUNT(*) AS cnt
            FROM item_notes inn
@@ -36,8 +39,11 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       res.json(rows.map(parseIdea))
     } else {
       const { rows } = await pool.query(
-        `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count
+        `SELECT i.*, COALESCE(n.cnt, 0)::int AS notes_count,
+                u_creator.name AS created_by_name,
+                u_creator.avatar AS created_by_avatar
          FROM ideas i
+         LEFT JOIN users u_creator ON u_creator.id = i.created_by
          LEFT JOIN (
            SELECT inn.item_id, COUNT(*) AS cnt
            FROM item_notes inn

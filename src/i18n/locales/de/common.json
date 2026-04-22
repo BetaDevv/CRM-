@@ -32,6 +32,8 @@
     "role": "Rolle",
     "saving": "Speichern...",
     "accentColor": "Akzentfarbe",
+    "usingClientDefault": "Team-Standardfarbe",
+    "resetAccent": "Zurücksetzen",
     "notif": {
       "todoCompleted": "Aufgabe erledigt",
       "noteAdded": "Neue Notiz",
@@ -88,7 +90,8 @@
     "all": "Alle",
     "filters": "Filter",
     "from": "Von",
-    "to": "Bis"
+    "to": "Bis",
+    "createdBy": "Erstellt von"
   },
   "status": {
     "pending": "Ausstehend",

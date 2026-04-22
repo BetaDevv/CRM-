@@ -33,7 +33,7 @@ const uploadPhoto = multer({
 router.get('/me', async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, client_id, profile_photo, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, client_id, profile_photo, accent_color, created_at FROM users WHERE id = $1',
       [req.user?.userId]
     )
     if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return }
@@ -65,6 +65,42 @@ router.post('/me/photo', uploadPhoto.single('photo'), async (req: AuthRequest, r
     const photoPath = `/uploads/avatars/${req.file.filename}`
     await pool.query('UPDATE users SET profile_photo = $1 WHERE id = $2', [photoPath, req.user?.userId])
     res.json({ profilePhoto: photoPath })
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// PATCH /api/users/me/accent-color — set or clear the current user's accent override
+// Body: { color: string | null }. Passing null or '' resets to client default.
+// Response mirrors /api/clients/me/settings resolution so UI can refresh immediately.
+router.patch('/me/accent-color', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId
+    if (!userId) { res.status(401).json({ error: 'No autenticado' }); return }
+
+    const raw = req.body?.color
+    const normalized = (raw === null || raw === undefined || (typeof raw === 'string' && raw.trim() === ''))
+      ? null
+      : String(raw).trim()
+
+    await pool.query('UPDATE users SET accent_color = $1 WHERE id = $2', [normalized, userId])
+
+    // Resolve fallback chain: user.accent_color → client.accent_color → '#DC143C'
+    const { rows } = await pool.query(
+      `SELECT u.accent_color AS user_accent_color, c.accent_color AS client_accent_color
+       FROM users u
+       LEFT JOIN clients c ON c.id = u.client_id
+       WHERE u.id = $1`,
+      [userId]
+    )
+    const row = rows[0] || { user_accent_color: null, client_accent_color: null }
+    const resolved = row.user_accent_color || row.client_accent_color || '#DC143C'
+
+    res.json({
+      accent_color: resolved,
+      user_accent_color: row.user_accent_color ?? null,
+      client_accent_color: row.client_accent_color ?? null,
+    })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

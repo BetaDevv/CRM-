@@ -470,6 +470,13 @@
   "users.apiKeys.confirmDelete.title": "API-Schlüssel löschen",
   "users.apiKeys.confirmDelete.message": "Bist du sicher, dass du den Schlüssel \"{{name}}\" löschen möchtest? Integrationen, die ihn verwenden, werden nicht mehr funktionieren.",
   "users.apiKeys.confirmDelete.errorDeleting": "Fehler beim Löschen des API-Schlüssels",
+  "users.team": "Team",
+  "users.noClient": "Kein Kunde",
+  "users.userCount_one": "{{count}} Benutzer",
+  "users.userCount_other": "{{count}} Benutzer",
+  "users.searchPlaceholder": "Benutzer suchen...",
+  "users.emptyGroup": "Keine Benutzer in dieser Gruppe",
+  "users.noSearchResults": "Keine Benutzer entsprechen deiner Suche",
 
   "calendar.title": "Mein Kalender",
   "calendar.subtitle": "Termine, Meetings und Deadlines",

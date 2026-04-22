@@ -4,7 +4,7 @@ import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, Thum
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '../../store/useThemeStore'
-import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateClientAccent } from '../../lib/api'
+import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateMyAccentColor } from '../../lib/api'
 import type { Notification } from '../../lib/api'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useAccentStore } from '../../store/useAccentStore'
@@ -107,7 +107,17 @@ export default function Header() {
   const location = useLocation()
   const { t, i18n } = useTranslation('common')
   const { user, updateUser } = useAuthStore()
-  const { accentColor, setAccentColor } = useAccentStore()
+  const { accentColor, userAccent, setAccent } = useAccentStore()
+
+  // Apply a new per-user accent and sync the store with the resolved values from the server.
+  async function applyUserAccent(color: string | null) {
+    try {
+      const res = await updateMyAccentColor(color)
+      setAccent(res.accent_color, res.user_accent_color, res.client_accent_color)
+    } catch (err) {
+      console.error('Failed to update accent color', err)
+    }
+  }
   const [showSearch, setShowSearch] = useState(false)
   const [showNotifs, setShowNotifs] = useState(false)
   const [showLangMenu, setShowLangMenu] = useState(false)
@@ -337,8 +347,8 @@ export default function Header() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-white text-[10px] font-bold rounded-full"
-                  style={{ backgroundColor: 'rgb(var(--accent))' }}
+                  className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold rounded-full"
+                  style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
                 >
                   <span className="animate-pulse">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 </motion.span>
@@ -495,7 +505,7 @@ export default function Header() {
                   {user?.profile_photo ? (
                     <img src={user.profile_photo} alt={user.name} className="w-24 h-24 rounded-full object-cover border-2" style={{ borderColor: 'rgb(var(--ink-600))' }} />
                   ) : (
-                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white" style={{ backgroundColor: 'rgb(var(--accent))' }}>
+                    <div className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                       {user?.name?.charAt(0)?.toUpperCase()}
                     </div>
                   )}
@@ -535,7 +545,7 @@ export default function Header() {
                 <span className="px-3 py-1 rounded-lg text-sm" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)', color: 'var(--accent-light)' }}>{user?.role}</span>
               </div>
 
-              {/* Accent Color */}
+              {/* Accent Color — per-user override */}
               <div className="mt-4 pt-4 border-t border-white/5">
                 <p className="text-xs font-medium mb-2" style={{ color: 'rgb(var(--ink-300))' }}>
                   {t('header.accentColor')}
@@ -544,10 +554,7 @@ export default function Header() {
                   <input
                     type="color"
                     value={accentColor}
-                    onChange={e => {
-                      setAccentColor(e.target.value)
-                      if (user?.clientId) updateClientAccent(user.clientId, e.target.value)
-                    }}
+                    onChange={e => applyUserAccent(e.target.value)}
                     className="w-10 h-10 rounded-xl cursor-pointer border-0 bg-transparent"
                     style={{ padding: 0 }}
                   />
@@ -557,8 +564,7 @@ export default function Header() {
                       value={accentColor}
                       onChange={e => {
                         if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
-                          setAccentColor(e.target.value)
-                          if (user?.clientId) updateClientAccent(user.clientId, e.target.value)
+                          applyUserAccent(e.target.value)
                         }
                       }}
                       className="input-dark text-sm font-mono"
@@ -566,21 +572,26 @@ export default function Header() {
                     />
                   </div>
                   <button
-                    onClick={() => { setAccentColor('#DC143C'); if (user?.clientId) updateClientAccent(user.clientId, '#DC143C') }}
+                    onClick={() => applyUserAccent(null)}
                     className="text-xs px-2 py-1 rounded-lg border border-white/10 text-ink-300 hover:text-white transition-colors"
                   >
-                    Reset
+                    {t('header.resetAccent')}
                   </button>
                 </div>
                 {/* Preview swatches */}
                 <div className="flex gap-1.5 mt-2">
                   {['#DC143C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444'].map(c => (
-                    <button key={c} onClick={() => { setAccentColor(c); if (user?.clientId) updateClientAccent(user.clientId, c) }}
+                    <button key={c} onClick={() => applyUserAccent(c)}
                       className="w-6 h-6 rounded-lg transition-transform hover:scale-110"
                       style={{ background: c, boxShadow: accentColor === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : 'none' }}
                     />
                   ))}
                 </div>
+                {userAccent === null && (
+                  <p className="text-[11px] mt-2" style={{ color: 'rgb(var(--ink-400))' }}>
+                    {t('header.usingClientDefault')}
+                  </p>
+                )}
               </div>
 
               {/* Buttons */}
@@ -597,8 +608,8 @@ export default function Header() {
                 <button
                   onClick={handleSaveProfile}
                   disabled={profileSaving}
-                  className="flex-1 px-4 py-2 text-white rounded-xl transition-colors disabled:opacity-50"
-                  style={{ backgroundColor: 'rgb(var(--accent))' }}
+                  className="flex-1 px-4 py-2 rounded-xl transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
                   onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--accent-light)' }}
                   onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgb(var(--accent))' }}
                 >

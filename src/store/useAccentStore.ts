@@ -1,8 +1,11 @@
 import { create } from 'zustand'
 
 interface AccentState {
-  accentColor: string
-  setAccentColor: (color: string) => void
+  accentColor: string              // resolved value currently applied
+  userAccent: string | null        // user's raw override (null if none)
+  clientAccent: string | null      // client's raw default (null for admins / no client)
+  setAccent: (resolved: string, userRaw: string | null, clientRaw: string | null) => void
+  setAccentColor: (color: string) => void  // back-compat: sets resolved only
 }
 
 function hexToRgb(hex: string): string {
@@ -46,6 +49,12 @@ const DEFAULT_ACCENT = '#DC143C'
 // No persist — accent is always loaded from DB for clients, default for admin
 export const useAccentStore = create<AccentState>()((set) => ({
   accentColor: DEFAULT_ACCENT,
+  userAccent: null,
+  clientAccent: null,
+  setAccent: (resolved, userRaw, clientRaw) => {
+    set({ accentColor: resolved, userAccent: userRaw, clientAccent: clientRaw })
+    applyAccent(resolved)
+  },
   setAccentColor: (color: string) => {
     set({ accentColor: color })
     applyAccent(color)

@@ -140,8 +140,8 @@ export default function Login() {
                 disabled={loading}
                 whileHover={!loading ? { scale: 1.01 } : {}}
                 whileTap={!loading ? { scale: 0.98 } : {}}
-                className="w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-crimson mt-2"
-                style={{ backgroundColor: 'rgb(var(--accent))' }}
+                className="w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed font-semibold py-3 rounded-xl transition-all duration-200 shadow-crimson mt-2"
+                style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
               >
                 {loading ? (
                   <><Loader2 size={18} className="animate-spin" /> {t('login.loading')}</>

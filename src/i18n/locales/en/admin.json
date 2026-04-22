@@ -470,6 +470,13 @@
   "users.apiKeys.confirmDelete.title": "Delete API Key",
   "users.apiKeys.confirmDelete.message": "Are you sure you want to delete the key \"{{name}}\"? Integrations using it will stop working.",
   "users.apiKeys.confirmDelete.errorDeleting": "Error deleting API key",
+  "users.team": "Team",
+  "users.noClient": "No client",
+  "users.userCount_one": "{{count}} user",
+  "users.userCount_other": "{{count}} users",
+  "users.searchPlaceholder": "Search user...",
+  "users.emptyGroup": "No users in this group",
+  "users.noSearchResults": "No users match your search",
 
   "calendar.title": "My Calendar",
   "calendar.subtitle": "Events, meetings and deadlines",

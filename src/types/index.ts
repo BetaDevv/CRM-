@@ -53,6 +53,8 @@ export interface TodoItem {
   category: string
   shared?: boolean
   createdBy?: string
+  createdByName?: string | null
+  createdByAvatar?: string | null
   status: 'pending' | 'in_progress' | 'done'
   startTime?: string
   endTime?: string
@@ -72,6 +74,8 @@ export interface Idea {
   emoji?: string
   shared?: boolean
   createdBy?: string
+  createdByName?: string | null
+  createdByAvatar?: string | null
 
   notesCount?: number
 }
@@ -87,6 +91,8 @@ export interface Post {
   mediaUrl?: string
   createdAt: string
   feedback?: string
+  createdByName?: string | null
+  createdByAvatar?: string | null
 }
 
 export interface MarketingMilestone {

@@ -349,6 +349,12 @@ export async function initDB() {
 
   // Migration: add profile_photo to users
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_photo TEXT`)
+
+  // Migration: add accent_color to users (per-user override; falls back to clients.color)
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS accent_color TEXT`)
+
+  // Migration: add created_by to posts (records which user originated the post)
+  await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS created_by TEXT`)
 }
 
 export async function seedDB() {

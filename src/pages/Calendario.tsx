@@ -26,6 +26,7 @@ import {
 import type { TodoItem } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
+import CreatorBadge from '../components/CreatorBadge'
 import { useAuthStore } from '../store/useAuthStore'
 import { useStore } from '../store/useStore'
 
@@ -119,6 +120,8 @@ function EventModal({
     todoId: string
     milestoneId: string
     isShared: boolean
+    createdByName?: string | null
+    createdByAvatar?: string | null
   }
   users: CalendarUser[]
   todos: TodoItem[]
@@ -220,6 +223,14 @@ function EventModal({
             <X size={18} />
           </button>
         </div>
+
+        {/* Creator */}
+        {mode === 'edit' && initial.createdByName && (
+          <div className="flex items-center gap-2 mb-2 px-5 text-xs text-ink-400">
+            <span>{t('common:common.createdBy')}:</span>
+            <CreatorBadge name={initial.createdByName} avatar={initial.createdByAvatar} size="md" variant="full" />
+          </div>
+        )}
 
         <div className="p-5 space-y-4">
           {/* Title */}
@@ -327,7 +338,7 @@ function EventModal({
                       >
                         <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${participantIds.includes(u.id) ? '' : 'border-ink-500'}`}
                           style={participantIds.includes(u.id) ? { background: 'rgb(var(--accent))', borderColor: 'rgb(var(--accent))' } : {}}>
-                          {participantIds.includes(u.id) && <Check size={10} className="text-white" />}
+                          {participantIds.includes(u.id) && <Check size={10} style={{ color: 'var(--accent-text)' }} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate text-white">{u.name}</p>
@@ -591,6 +602,8 @@ export default function Calendario() {
       todoId: ev.todoId || '',
       milestoneId: ev.milestoneId || '',
       isShared: ev.isShared,
+      createdByName: ev.createdByName ?? null,
+      createdByAvatar: ev.createdByAvatar ?? null,
     })
     setModalOpen(true)
   }, [])

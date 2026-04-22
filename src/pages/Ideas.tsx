@@ -13,6 +13,7 @@ import { ideaStatusConfig, localToday, getLocale } from '../lib/utils'
 import type { Idea, IdeaStatus } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
+import CreatorBadge from '../components/CreatorBadge'
 
 const statusColumnKeys: { key: IdeaStatus; labelKey: string; icon: ReactNode }[] = [
   { key: 'brainstorm',  labelKey: 'ideas.columns.brainstorm',    icon: <Zap size={18} /> },
@@ -97,11 +98,16 @@ function IdeaCard({ idea, onUpdate, onDelete, clientLabel, onOpenDetail, onStart
         >
           {statusColumns.map(s => <option key={s.key} value={s.key} className="bg-ink-800">{s.label}</option>)}
         </select>
-        {(idea.notesCount ?? 0) > 0 && (
-          <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-white text-[9px] font-bold rounded-full" style={{ background: 'rgb(var(--accent))' }}>
-            {idea.notesCount}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {idea.createdByName && (
+            <CreatorBadge name={idea.createdByName} avatar={idea.createdByAvatar} size="sm" variant="compact" />
+          )}
+          {(idea.notesCount ?? 0) > 0 && (
+            <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center text-[9px] font-bold rounded-full" style={{ background: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
+              {idea.notesCount}
+            </span>
+          )}
+        </div>
       </div>
     </motion.div>
   )
@@ -441,6 +447,13 @@ export default function Ideas() {
                   </div>
                 </div>
 
+                {detailIdea.createdByName && (
+                  <div className="flex items-center gap-2 mb-4 text-xs text-ink-400">
+                    <span>{t('common:common.createdBy')}:</span>
+                    <CreatorBadge name={detailIdea.createdByName} avatar={detailIdea.createdByAvatar} size="md" variant="full" />
+                  </div>
+                )}
+
                 {detailIdea.description && (
                   <p className="text-sm text-ink-200 mb-4 leading-relaxed">{detailIdea.description}</p>
                 )}
@@ -527,7 +540,7 @@ export default function Ideas() {
                     onKeyDown={e => { if (e.key === 'Enter' && newNoteContent.trim()) handleSendNote() }}
                     className="input-dark text-sm flex-1" />
                   <button onClick={handleSendNote} disabled={!newNoteContent.trim()}
-                    className="px-3 py-2 disabled:opacity-30 text-white rounded-xl transition-all" style={{ background: 'rgb(var(--accent))' }}>
+                    className="px-3 py-2 disabled:opacity-30 rounded-xl transition-all" style={{ background: 'rgb(var(--accent))', color: 'var(--accent-text)' }}>
                     <Send size={14} />
                   </button>
                 </div>

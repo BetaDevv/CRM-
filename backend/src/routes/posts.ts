@@ -42,10 +42,22 @@ function parsePost(p: any) {
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     if (req.user!.role === 'client') {
-      const { rows } = await pool.query('SELECT * FROM posts WHERE client_id = $1 ORDER BY created_at DESC', [req.user!.clientId])
+      const { rows } = await pool.query(
+        `SELECT p.*, u_creator.name AS created_by_name, u_creator.avatar AS created_by_avatar
+         FROM posts p
+         LEFT JOIN users u_creator ON u_creator.id = p.created_by
+         WHERE p.client_id = $1
+         ORDER BY p.created_at DESC`,
+        [req.user!.clientId]
+      )
       res.json(rows.map(parsePost))
     } else {
-      const { rows } = await pool.query('SELECT * FROM posts ORDER BY created_at DESC')
+      const { rows } = await pool.query(
+        `SELECT p.*, u_creator.name AS created_by_name, u_creator.avatar AS created_by_avatar
+         FROM posts p
+         LEFT JOIN users u_creator ON u_creator.id = p.created_by
+         ORDER BY p.created_at DESC`
+      )
       res.json(rows.map(parsePost))
     }
   } catch {
@@ -60,9 +72,9 @@ router.post('/', requireAdmin, upload.array('images', 4), async (req: AuthReques
     const mediaUrls = files.map(f => `/uploads/${f.filename}`)
     const id = uuid()
     const { rows } = await pool.query(
-      `INSERT INTO posts (id, client_id, title, content, platform, scheduled_date, status, media_urls, type)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, POST_STATUS.PENDING, JSON.stringify(mediaUrls), type || 'post']
+      `INSERT INTO posts (id, client_id, title, content, platform, scheduled_date, status, media_urls, type, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, POST_STATUS.PENDING, JSON.stringify(mediaUrls), type || 'post', req.user!.userId]
     )
     logActivity({ type: 'post_created', description: `Nuevo post creado: ${title}`, entityType: 'post', entityId: id })
     notifyClient(client_id, { type: 'post_pending', title: 'Post pendiente de aprobación', description: `Tienes un nuevo post para revisar: ${title}`, entityType: 'post', entityId: id })

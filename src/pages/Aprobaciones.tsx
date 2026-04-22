@@ -9,6 +9,7 @@ import type { PostTemplate } from '../lib/api'
 import type { PostStatus } from '../types'
 import { useTranslation, Trans } from 'react-i18next'
 import T from '../components/TranslatedText'
+import CreatorBadge from '../components/CreatorBadge'
 
 function PlatformBadge({ platform, size = 'md' }: { platform: string; size?: 'sm' | 'md' }) {
   const cfg = platformConfig[platform] || { label: platform, short: platform.slice(0, 2), color: '#6b7280' }
@@ -68,6 +69,9 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         <div className="flex items-center gap-2 mb-3">
           {post.type === 'design' ? <Image size={13} className="text-ink-400" /> : <FileText size={13} className="text-ink-400" />}
           <span className="text-xs text-ink-400">{post.type === 'design' ? t('admin:approvals.designArt') : t('admin:approvals.textPost')}</span>
+          {post.created_by_name && (
+            <CreatorBadge name={post.created_by_name} avatar={post.created_by_avatar} size="sm" variant="compact" className="ml-auto" />
+          )}
         </div>
 
         {/* Social preview */}
@@ -230,6 +234,9 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
             <span className="flex items-center gap-1 capitalize">{platformConfig[post.platform]?.label || post.platform}</span>
             <span className="flex items-center gap-1"><Calendar size={11} /> {formatDate(post.scheduled_date)}</span>
             {post.type === 'design' && <span className="flex items-center gap-1"><Image size={11} /> {t('admin:approvals.design')}</span>}
+            {post.created_by_name && (
+              <CreatorBadge name={post.created_by_name} avatar={post.created_by_avatar} size="sm" variant="compact" className="ml-auto" />
+            )}
           </div>
         </div>
 
@@ -854,8 +861,8 @@ export default function Aprobaciones() {
                 <div className="flex gap-2 p-1 bg-ink-800/50 rounded-xl">
                   {[{ k: 'post', l: t('admin:approvals.publication') }, { k: 'design', l: t('admin:approvals.design') }].map(opt => (
                     <button key={opt.k} onClick={() => setForm(p => ({ ...p, type: opt.k }))}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${form.type === opt.k ? 'text-white' : 'text-ink-300 hover:text-white'}`}
-                      style={form.type === opt.k ? { background: 'rgb(var(--accent))' } : {}}>
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${form.type === opt.k ? '' : 'text-ink-300 hover:text-white'}`}
+                      style={form.type === opt.k ? { background: 'rgb(var(--accent))', color: 'var(--accent-text)' } : {}}>
                       {opt.l}
                     </button>
                   ))}

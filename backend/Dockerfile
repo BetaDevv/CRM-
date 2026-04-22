@@ -1,8 +1,10 @@
 FROM node:22.19.0-alpine
 
 
-# Directorio de trabajo: Define un directorio de trabajo en el contenedor:
-WORKDIR /usr/src/app
+# Directorio de trabajo: replica el layout de dev (CRM/backend/) para que las rutas
+# relativas en el código (__dirname + '../../uploads') caigan en /usr/src/app/uploads,
+# que es donde el bind mount del host persiste los archivos.
+WORKDIR /usr/src/app/backend
 
 
 # Copiar archivos: Copia el archivo de configuración del paquete y tus archivos de aplicación al contenedor:

@@ -832,3 +832,14 @@ export async function uploadProfilePhoto(file: File) {
   const { data } = await api.post('/users/me/photo', form)
   return data
 }
+
+// --- Language preference ---
+
+export type AppLanguage = 'es' | 'en' | 'de'
+
+/** Persists the authenticated user's language preference server-side.
+ *  Pass `null` to clear (falls back to browser detection on next login). */
+export async function updateMyLanguage(language: AppLanguage | null): Promise<{ language: AppLanguage | null }> {
+  const { data } = await api.patch('/users/me/language', { language })
+  return data
+}

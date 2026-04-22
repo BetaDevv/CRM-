@@ -33,11 +33,38 @@ const uploadPhoto = multer({
 router.get('/me', async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, client_id, profile_photo, accent_color, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, client_id, profile_photo, accent_color, language, created_at FROM users WHERE id = $1',
       [req.user?.userId]
     )
     if (result.rows.length === 0) { res.status(404).json({ error: 'User not found' }); return }
     res.json(result.rows[0])
+  } catch {
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// PATCH /api/users/me/language — set the current user's language preference
+// Body: { language: 'es' | 'en' | 'de' | null }. Passing null clears the preference
+// (falls back to browser detection on next login).
+const ALLOWED_LANGUAGES = ['es', 'en', 'de'] as const
+router.patch('/me/language', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId
+    if (!userId) { res.status(401).json({ error: 'No autenticado' }); return }
+
+    const raw = req.body?.language
+    const normalized: string | null =
+      (raw === null || raw === undefined || (typeof raw === 'string' && raw.trim() === ''))
+        ? null
+        : String(raw).trim()
+
+    if (normalized !== null && !ALLOWED_LANGUAGES.includes(normalized as typeof ALLOWED_LANGUAGES[number])) {
+      res.status(400).json({ error: `Invalid language. Allowed: ${ALLOWED_LANGUAGES.join(', ')} or null` })
+      return
+    }
+
+    await pool.query('UPDATE users SET language = $1 WHERE id = $2', [normalized, userId])
+    res.json({ language: normalized })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

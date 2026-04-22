@@ -355,6 +355,10 @@ export async function initDB() {
 
   // Migration: add created_by to posts (records which user originated the post)
   await pool.query(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS created_by TEXT`)
+
+  // Migration: add language preference to users (per-user, nullable — null = use browser detection)
+  // Allowed values: 'es' | 'en' | 'de' | NULL
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT`)
 }
 
 export async function seedDB() {

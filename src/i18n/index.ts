@@ -38,4 +38,13 @@ i18n
     },
   })
 
+// Keep <html lang> in sync with the active i18n language so any code (or
+// third-party lib) reading document.documentElement.lang stays correct.
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = i18n.language
+  i18n.on('languageChanged', (lng) => {
+    document.documentElement.lang = lng
+  })
+}
+
 export default i18n

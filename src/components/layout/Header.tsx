@@ -4,7 +4,7 @@ import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, Thum
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '../../store/useThemeStore'
-import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateMyAccentColor } from '../../lib/api'
+import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateMyAccentColor, updateMyLanguage, type AppLanguage } from '../../lib/api'
 import type { Notification } from '../../lib/api'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useAccentStore } from '../../store/useAccentStore'
@@ -313,7 +313,19 @@ export default function Header() {
                 {languages.map(lang => (
                   <button
                     key={lang.code}
-                    onClick={() => { i18n.changeLanguage(lang.code); setShowLangMenu(false) }}
+                    onClick={async () => {
+                      const code = lang.code as AppLanguage
+                      // 1. Update i18n immediately (keeps localStorage in sync via the detector)
+                      i18n.changeLanguage(code)
+                      setShowLangMenu(false)
+                      // 2. Persist server-side so it survives logout/device change
+                      try {
+                        await updateMyLanguage(code)
+                        updateUser({ language: code })
+                      } catch (err) {
+                        console.error('Failed to persist language preference', err)
+                      }
+                    }}
                     className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-ink-800 transition-colors ${i18n.language === lang.code ? '' : 'text-ink-300'}`}
                     style={i18n.language === lang.code ? { color: 'var(--accent-light)' } : undefined}
                   >

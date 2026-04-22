@@ -30,7 +30,7 @@ router.post('/login', async (req: Request, res: Response) => {
       clientId: user.client_id,
       name: user.name,
     }
-    res.json({ token: signToken(payload), user: { id: user.id, email: user.email, role: user.role, name: user.name, clientId: user.client_id, profile_photo: user.profile_photo || null } })
+    res.json({ token: signToken(payload), user: { id: user.id, email: user.email, role: user.role, name: user.name, clientId: user.client_id, profile_photo: user.profile_photo || null, language: user.language || null } })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
   }

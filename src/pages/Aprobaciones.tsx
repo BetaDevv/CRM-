@@ -36,6 +36,11 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
   const [showFeedback, setShowFeedback] = useState(false)
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
   const cfg = postStatusConfig[post.status as PostStatus]
+  const isPending = post.status === 'pending'
+  const pillStyle = isPending
+    ? { color: 'var(--accent-light)', background: 'rgb(var(--accent) / 0.15)' }
+    : { color: cfg.color, background: cfg.bg }
+  const borderColor = isPending ? 'rgb(var(--accent))' : cfg.color
   const hasImages = post.media_urls?.length > 0
 
   return (
@@ -43,7 +48,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
       className="glass-card overflow-hidden"
     >
       {/* Status bar */}
-      <div className="h-1 w-full" style={{ background: cfg.color }} />
+      <div className="h-1 w-full" style={{ background: borderColor }} />
 
       {/* Header */}
       <div className="p-5 border-b border-white/5">
@@ -57,8 +62,8 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={{ color: cfg.color, background: cfg.bg }}>
-            {cfg.label}
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0" style={pillStyle}>
+            {t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}
           </span>
         </div>
       </div>
@@ -202,6 +207,10 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
   const { t } = useTranslation(['admin', 'common'])
   const [lightboxImg, setLightboxImg] = useState<string | null>(null)
   const cfg = postStatusConfig[post.status as PostStatus]
+  const isPending = post.status === 'pending'
+  const pillStyle = isPending
+    ? { color: 'var(--accent-light)', background: 'rgb(var(--accent) / 0.15)' }
+    : { color: cfg.color, background: cfg.bg }
   const hasImages = post.media_urls?.length > 0
 
   return (
@@ -218,7 +227,7 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={pillStyle}>{t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}</span>
             <button onClick={() => onEdit(post)} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-500 hover:text-white transition-colors">
               <Pencil size={14} />
             </button>

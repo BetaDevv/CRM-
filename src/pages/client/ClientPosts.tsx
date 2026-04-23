@@ -48,10 +48,15 @@ export default function ClientPosts() {
         </div>
       ) : posts.map(post => {
         const cfg = postStatusConfig[post.status as PostStatus]
+        const isPending = post.status === 'pending'
+        const pillStyle = isPending
+          ? { color: 'var(--accent-light)', background: 'rgb(var(--accent) / 0.15)' }
+          : { color: cfg.color, background: cfg.bg }
+        const borderColor = isPending ? 'rgb(var(--accent))' : cfg.color
         const fb = feedbackState[post.id]
         return (
           <motion.div key={post.id} layout className="glass-card overflow-hidden">
-            <div className="h-1" style={{ background: cfg.color }} />
+            <div className="h-1" style={{ background: borderColor }} />
             <div className="p-5">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
@@ -65,7 +70,7 @@ export default function ClientPosts() {
                   {post.created_by_name && (
                     <CreatorBadge name={post.created_by_name} avatar={post.created_by_avatar} size="sm" variant="compact" />
                   )}
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ color: cfg.color, background: cfg.bg }}>{cfg.label}</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={pillStyle}>{t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}</span>
                 </div>
               </div>
 

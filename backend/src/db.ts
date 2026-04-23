@@ -584,20 +584,23 @@ export async function seedDB() {
   await seedDemoGA4('c3', 250, 500, 180, 400, 500, 1200, 35, 50, 140, 260, 60, 160)
 
   // Seed notifications
+  // Each row includes i18n_key + i18n_params so the frontend can translate the body
+  // at render time across es/en/de. `description` remains Spanish as a fallback for
+  // legacy clients that don't support i18n fields.
   const notifSeed = [
-    { id: 'notif1', user_id: 'u_admin', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'TechNova tiene un post pendiente para LinkedIn', entity_type: 'post', entity_id: 'post1', minutes_ago: 15 },
-    { id: 'notif2', user_id: 'u_admin', type: 'prospect_new', title: 'Nuevo prospecto', description: 'Nuevo prospecto: Moda Élite desde Web', entity_type: 'prospect', entity_id: 'p4', minutes_ago: 60 },
-    { id: 'notif3', user_id: 'u_admin', type: 'post_approved', title: 'Post aprobado', description: 'Bloom Wellness aprobó el post: Tip de bienestar lunes', entity_type: 'post', entity_id: 'post2', minutes_ago: 180 },
-    { id: 'notif4', user_id: 'u_admin', type: 'milestone_upcoming', title: 'Hito próximo', description: 'TechNova: Lanzamiento Blog Corporativo en 5 días', entity_type: 'plan', entity_id: 'mp1', minutes_ago: 360 },
-    { id: 'notif5', user_id: 'u_client1', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'Tienes un nuevo post para revisar: Lanzamiento nueva feature cloud', entity_type: 'post', entity_id: 'post1', minutes_ago: 20 },
-    { id: 'notif6', user_id: 'u_client1', type: 'post_pending', title: 'Post en revisión', description: 'Tu post "Caso de éxito cliente enterprise" necesita cambios', entity_type: 'post', entity_id: 'post3', minutes_ago: 120 },
+    { id: 'notif1', user_id: 'u_admin', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'TechNova tiene un post pendiente para LinkedIn', entity_type: 'post', entity_id: 'post1', minutes_ago: 15, i18n_key: 'notifications.body.postPendingForClient', i18n_params: { clientName: 'TechNova', platform: 'LinkedIn' } },
+    { id: 'notif2', user_id: 'u_admin', type: 'prospect_new', title: 'Nuevo prospecto', description: 'Nuevo prospecto: Moda Élite desde Web', entity_type: 'prospect', entity_id: 'p4', minutes_ago: 60, i18n_key: 'notifications.body.prospectNewFromSource', i18n_params: { company: 'Moda Élite', source: 'Web' } },
+    { id: 'notif3', user_id: 'u_admin', type: 'post_approved', title: 'Post aprobado', description: 'Bloom Wellness aprobó el post: Tip de bienestar lunes', entity_type: 'post', entity_id: 'post2', minutes_ago: 180, i18n_key: 'notifications.body.postApproved', i18n_params: { clientName: 'Bloom Wellness', title: 'Tip de bienestar lunes' } },
+    { id: 'notif4', user_id: 'u_admin', type: 'milestone_upcoming', title: 'Hito próximo', description: 'TechNova: Lanzamiento Blog Corporativo en 5 días', entity_type: 'plan', entity_id: 'mp1', minutes_ago: 360, i18n_key: 'notifications.body.milestoneUpcoming', i18n_params: { clientName: 'TechNova', title: 'Lanzamiento Blog Corporativo', days: 5 } },
+    { id: 'notif5', user_id: 'u_client1', type: 'post_pending', title: 'Post pendiente de aprobación', description: 'Tienes un nuevo post para revisar: Lanzamiento nueva feature cloud', entity_type: 'post', entity_id: 'post1', minutes_ago: 20, i18n_key: 'notifications.body.postPending', i18n_params: { title: 'Lanzamiento nueva feature cloud' } },
+    { id: 'notif6', user_id: 'u_client1', type: 'post_revision', title: 'Post en revisión', description: 'Tu post "Caso de éxito cliente enterprise" necesita cambios', entity_type: 'post', entity_id: 'post3', minutes_ago: 120, i18n_key: 'notifications.body.postRevision', i18n_params: { title: 'Caso de éxito cliente enterprise' } },
   ]
   for (const n of notifSeed) {
     const createdAt = new Date(now.getTime() - n.minutes_ago * 60 * 1000)
     await pool.query(
-      `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING`,
-      [n.id, n.user_id, n.type, n.title, n.description, n.entity_type, n.entity_id, createdAt.toISOString()]
+      `INSERT INTO notifications (id, user_id, type, title, description, entity_type, entity_id, i18n_key, i18n_params, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING`,
+      [n.id, n.user_id, n.type, n.title, n.description, n.entity_type, n.entity_id, n.i18n_key, JSON.stringify(n.i18n_params), createdAt.toISOString()]
     )
   }
 

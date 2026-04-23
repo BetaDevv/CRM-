@@ -64,7 +64,11 @@
       "postPending": "Du hast einen neuen Beitrag zur Überprüfung: {{title}}",
       "postApproved": "{{clientName}} hat den Beitrag genehmigt: {{title}}",
       "postRejected": "{{clientName}} hat den Beitrag abgelehnt: {{title}}",
+      "postRevision": "Dein Beitrag \"{{title}}\" benötigt Änderungen",
       "prospectNew": "Neuer Interessent: {{company}}",
+      "prospectNewFromSource": "Neuer Interessent: {{company}} von {{source}}",
+      "milestoneUpcoming": "{{clientName}}: {{title}} in {{days}} Tagen",
+      "postPendingForClient": "{{clientName}} hat einen Beitrag ausstehend für {{platform}}",
       "eventNote": "Der Kunde hat eine Notiz zum Ereignis hinzugefügt: {{title}}"
     }
   },
@@ -121,6 +125,12 @@
     "done": "Abgeschlossen",
     "active": "Aktiv",
     "inactive": "Inaktiv"
+  },
+  "postStatus": {
+    "pending": "Ausstehend",
+    "approved": "Genehmigt",
+    "rejected": "Abgelehnt",
+    "revision": "In Überarbeitung"
   },
   "priority": {
     "high": "Hoch",

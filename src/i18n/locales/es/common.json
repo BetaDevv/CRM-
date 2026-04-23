@@ -64,7 +64,11 @@
       "postPending": "Tienes un nuevo post para revisar: {{title}}",
       "postApproved": "{{clientName}} aprobó el post: {{title}}",
       "postRejected": "{{clientName}} rechazó el post: {{title}}",
+      "postRevision": "Tu post \"{{title}}\" necesita cambios",
       "prospectNew": "Nuevo prospecto: {{company}}",
+      "prospectNewFromSource": "Nuevo prospecto: {{company}} desde {{source}}",
+      "milestoneUpcoming": "{{clientName}}: {{title}} en {{days}} días",
+      "postPendingForClient": "{{clientName}} tiene un post pendiente para {{platform}}",
       "eventNote": "El cliente agregó una nota al evento: {{title}}"
     }
   },
@@ -121,6 +125,12 @@
     "done": "Completado",
     "active": "Activo",
     "inactive": "Inactivo"
+  },
+  "postStatus": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "revision": "En revisión"
   },
   "priority": {
     "high": "Alta",

@@ -123,7 +123,8 @@ export default function ClientDashboard() {
                   style={{ background: 'var(--accent-hex)' }} />
                 <div>
                   <p className="text-sm text-white leading-snug">{translateActivity(a)}</p>
-                  <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>
+                  {/* TEMPORARILY DISABLED — to reactivate, remove the `false &&` below */}
+                  {false && <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>}
                 </div>
               </motion.div>
             ))

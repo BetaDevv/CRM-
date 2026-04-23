@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
 import { useAuthStore } from '../../store/useAuthStore'
 import { api } from '../../lib/api'
-import { formatDate, categoryColors } from '../../lib/utils'
+import { formatDate } from '../../lib/utils'
 
 export default function ClientPlan() {
   const { t } = useTranslation(['client', 'common'])
@@ -85,15 +85,14 @@ export default function ClientPlan() {
             <h4 className="font-semibold text-white mb-5 flex items-center gap-2"><Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:plan.milestonesTimeline')}</h4>
             <div className="space-y-0">
               {plan.milestones?.map((m: any, i: number) => {
-                const color = categoryColors[m.category] || 'var(--accent-hex)'
                 const isLast = i === plan.milestones.length - 1
                 return (
                   <div key={m.id} className="flex gap-4">
                     <div className="flex flex-col items-center">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 z-10" style={{ background: m.completed ? color : 'transparent', borderColor: color, boxShadow: m.completed ? `0 0 12px ${color}40` : 'none' }}>
-                        {m.completed ? <Check size={14} className="text-white" /> : <div className="w-2 h-2 rounded-full" style={{ background: categoryColors[m.category] || 'var(--accent-hex)' }} />}
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 flex-shrink-0 z-10" style={{ background: m.completed ? 'rgb(var(--accent))' : 'transparent', borderColor: 'rgb(var(--accent))', boxShadow: m.completed ? '0 0 12px rgb(var(--accent) / 0.25)' : 'none' }}>
+                        {m.completed ? <Check size={14} style={{ color: 'var(--accent-text)' }} /> : <div className="w-2 h-2 rounded-full" style={{ background: 'rgb(var(--accent))' }} />}
                       </div>
-                      {!isLast && <div className="w-0.5 flex-1 mt-1" style={{ background: m.completed ? color + '60' : 'rgba(255,255,255,0.06)' }} />}
+                      {!isLast && <div className="w-0.5 flex-1 mt-1" style={{ background: m.completed ? 'rgb(var(--accent) / 0.37)' : 'rgba(255,255,255,0.06)' }} />}
                     </div>
                     <div className={`flex-1 pb-5 ${isLast ? 'pb-0' : ''}`}>
                       <div className={`p-3.5 rounded-xl border transition-all ${m.completed ? 'bg-ink-800/20 border-white/3 opacity-60' : 'bg-ink-800/40 border-white/5'}`}>

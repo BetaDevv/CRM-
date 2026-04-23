@@ -251,7 +251,6 @@ function SortableChip({ id, title, children }: SortableChipProps) {
       ref={setNodeRef}
       style={style}
       title={title}
-      aria-roledescription="sortable"
       className={`flex-shrink-0 ${isDragging ? 'ring-2 ring-white/20 rounded-2xl' : ''}`}
       {...attributes}
       {...listeners}

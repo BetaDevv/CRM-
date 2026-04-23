@@ -836,6 +836,13 @@ export async function importPlausible(
   return data
 }
 
+// --- Client reordering (global sort_order) ---
+
+/** Persists the global order of clients. Admin only. */
+export async function reorderClients(ids: string[]): Promise<void> {
+  await api.patch('/clients/reorder', { ids })
+}
+
 // --- Client Settings API ---
 
 export interface MyClientSettings {

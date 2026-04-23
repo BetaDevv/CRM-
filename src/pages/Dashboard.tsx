@@ -97,15 +97,6 @@ export default function Dashboard() {
       .finally(() => setActivityLoading(false))
   }, [])
 
-  function activityColor(type: string): string {
-    if (type.startsWith('prospect')) return '#60a5fa'
-    if (type.startsWith('client')) return '#34d399'
-    if (type.startsWith('post')) return 'var(--accent-hex)'
-    if (type.startsWith('idea')) return '#a78bfa'
-    if (type.startsWith('todo')) return '#f59e0b'
-    return '#9ca3af'
-  }
-
   function timeAgo(dateStr: string): string {
     const now = Date.now()
     const then = new Date(dateStr).getTime()
@@ -252,10 +243,11 @@ export default function Dashboard() {
                   className="flex items-start gap-3"
                 >
                   <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
-                    style={{ background: activityColor(a.type) }} />
+                    style={{ background: 'rgb(var(--accent))' }} />
                   <div>
                     <p className="text-sm text-white leading-snug">{translateActivity(a)}</p>
-                    <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>
+                    {/* TEMPORARILY DISABLED — to reactivate, remove the `false &&` below */}
+                    {false && <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>}
                   </div>
                 </motion.div>
               ))

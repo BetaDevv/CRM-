@@ -360,6 +360,21 @@ export async function initDB() {
   // Allowed values: 'es' | 'en' | 'de' | NULL
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT`)
 
+  // Migration: global client ordering for the admin client strip (Metricas, PlanMarketing, etc.)
+  // Shared across admins; persists across reloads.
+  await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0`)
+  {
+    // Backfill any rows with sort_order=0 using alphabetical ORDER BY company (one-shot).
+    const { rows: needBackfill } = await pool.query(
+      'SELECT id FROM clients WHERE sort_order IS NULL OR sort_order = 0 ORDER BY company ASC'
+    )
+    if (needBackfill.length > 1) {
+      for (let i = 0; i < needBackfill.length; i++) {
+        await pool.query('UPDATE clients SET sort_order = $1 WHERE id = $2', [i + 1, needBackfill[i].id])
+      }
+    }
+  }
+
   // Web (Plausible) dimensional breakdowns: top pages, channels, sources, devices, countries.
   // Time-series (visitors/pageviews/visits/bounce_rate/visit_duration) lives in metric_snapshots
   // with platform='web' — here we store the non-temporal aggregates.

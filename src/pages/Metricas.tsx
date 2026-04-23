@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { api, importMetrics, importPlausible } from '../lib/api'
+import { api, importMetrics, importPlausible, reorderClients } from '../lib/api'
+import { ClientStrip } from '../components/ClientStrip'
+import type { Client } from '../types'
 import { localToday, getLocale } from '../lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { JSX } from 'react'
@@ -107,7 +109,7 @@ function ConnectCTA({ platform, clientId, color, icon }: { platform: string; cli
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function Metricas() {
   const { t } = useTranslation(['admin', 'common'])
-  const { clients } = useStore()
+  const { clients, setClients } = useStore()
   const { isAdmin, user } = useAuthStore()
   const [selectedClientId, setSelectedClientId] = useState('')
   const [activePlatform, setActivePlatform] = useState<Platform>('linkedin')
@@ -254,20 +256,32 @@ export default function Metricas() {
 
       {/* Client selector — admin only */}
       {isAdmin() && (
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-          {activeClients.map(c => (
-            <motion.button key={c.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setSelectedClientId(c.id)}
-              className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
-                ${selectedClientId === c.id ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
-              style={selectedClientId === c.id ? { background: c.color + '20', borderColor: c.color + '60', color: c.color } : {}}>
+        <ClientStrip<Client>
+          clients={activeClients}
+          selectedId={selectedClientId}
+          onSelect={setSelectedClientId}
+          getId={c => c.id}
+          onReorder={async orderedIds => {
+            await reorderClients(orderedIds)
+            // Optimistic global update so Dashboard, Clientes, etc. reflect the new order immediately.
+            const byId = new Map(clients.map(c => [c.id, c]))
+            const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean) as Client[]
+            // Preserve any clients that weren't in the filtered list (e.g. inactive) by appending them.
+            const missing = clients.filter(c => !orderedIds.includes(c.id))
+            setClients([...reordered, ...missing])
+          }}
+          renderItem={(c, active) => (
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200
+                ${active ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
+              style={active ? { background: c.color + '20', borderColor: c.color + '60', color: c.color } : {}}>
               <div className="w-5 h-5 rounded-md flex items-center justify-center text-xs font-bold text-white" style={{ background: c.color }}>
                 {c.company.slice(0, 1)}
               </div>
               {c.company}
-            </motion.button>
-          ))}
-        </div>
+            </motion.div>
+          )}
+        />
       )}
 
       {loading && (

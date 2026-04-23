@@ -24,6 +24,7 @@ interface CRMState {
   addClient: (c: Client) => void
   updateClient: (id: string, data: Partial<Client>) => void
   deleteClient: (id: string) => void
+  setClients: (clients: Client[]) => void
 
   // Todos
   addTodo: (t: TodoItem) => void
@@ -268,6 +269,7 @@ export const useStore = create<CRMState>()(
       addClient: (c) => set((s) => ({ clients: [...s.clients, c] })),
       updateClient: (id, data) => set((s) => ({ clients: s.clients.map(c => c.id === id ? { ...c, ...data } : c) })),
       deleteClient: (id) => set((s) => ({ clients: s.clients.filter(c => c.id !== id) })),
+      setClients: (clients) => set({ clients }),
 
       addTodo: (t) => set((s) => ({ todos: [...s.todos, t] })),
       updateTodo: (id, data) => set((s) => ({ todos: s.todos.map(t => t.id === id ? { ...t, ...data } : t) })),

@@ -41,7 +41,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       const { rows } = await pool.query('SELECT * FROM clients WHERE id = $1', [req.user!.clientId])
       res.json(rows.length ? [parseClient(rows[0])] : [])
     } else {
-      const { rows } = await pool.query('SELECT * FROM clients ORDER BY company')
+      const { rows } = await pool.query('SELECT * FROM clients ORDER BY sort_order ASC, company ASC')
       res.json(rows.map(parseClient))
     }
   } catch {
@@ -90,10 +90,12 @@ router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency, accent_color } = req.body
     const id = uuid()
+    const { rows: maxRows } = await pool.query('SELECT COALESCE(MAX(sort_order), 0) AS max FROM clients')
+    const nextSortOrder = (parseInt(maxRows[0]?.max ?? '0', 10) || 0) + 1
     const { rows } = await pool.query(
-      `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency, accent_color)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
-      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#EA580C', description || null, currency || 'USD', accent_color || null]
+      `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency, accent_color, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING *`,
+      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#EA580C', description || null, currency || 'USD', accent_color || null, nextSortOrder]
     )
     logActivity({ type: 'client_created', description: `Nuevo cliente: ${company}`, entityType: 'client', entityId: id })
     res.status(201).json(parseClient(rows[0]))
@@ -141,6 +143,45 @@ router.delete('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     res.json({ ok: true })
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// ─── Reorder (global client ordering) ─────────────────────────────────────────
+// PATCH /api/clients/reorder — admin only. Body: { ids: string[] }
+// Sets sort_order = index + 1 for each ID. Validates existence and uniqueness.
+router.patch('/reorder', requireAdmin, async (req: AuthRequest, res: Response) => {
+  const client = await pool.connect()
+  try {
+    const { ids } = req.body as { ids?: unknown }
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every(id => typeof id === 'string' && id.length > 0)) {
+      res.status(400).json({ error: 'ids must be a non-empty array of strings' })
+      return
+    }
+    const unique = new Set(ids as string[])
+    if (unique.size !== ids.length) {
+      res.status(400).json({ error: 'ids must be unique' })
+      return
+    }
+    const { rows: existing } = await pool.query<{ id: string }>(
+      'SELECT id FROM clients WHERE id = ANY($1::text[])',
+      [ids]
+    )
+    if (existing.length !== ids.length) {
+      res.status(400).json({ error: 'One or more client ids do not exist' })
+      return
+    }
+
+    await client.query('BEGIN')
+    for (let i = 0; i < (ids as string[]).length; i++) {
+      await client.query('UPDATE clients SET sort_order = $1 WHERE id = $2', [i + 1, (ids as string[])[i]])
+    }
+    await client.query('COMMIT')
+    res.json({ ok: true, count: (ids as string[]).length })
+  } catch {
+    try { await client.query('ROLLBACK') } catch { /* noop */ }
+    res.status(500).json({ error: 'Error interno del servidor' })
+  } finally {
+    client.release()
   }
 })
 

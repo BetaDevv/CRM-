@@ -582,5 +582,9 @@
   "documents.uploadModal.errorUploading": "Error al subir archivos",
   "documents.uploadModal.someFilesSkipped": "Algunos archivos fueron omitidos. Formatos permitidos: {{formats}}",
   "documents.download": "Descargar",
-  "documents.noPreview": "Vista previa no disponible para este tipo de archivo"
+  "documents.noPreview": "Vista previa no disponible para este tipo de archivo",
+  "components.clientStrip.scrollLeft": "Desplazar a la izquierda",
+  "components.clientStrip.scrollRight": "Desplazar a la derecha",
+  "components.clientStrip.dragToReorder": "Mantené presionado y arrastrá para reordenar",
+  "components.clientStrip.reorderError": "Error al guardar el orden"
 }

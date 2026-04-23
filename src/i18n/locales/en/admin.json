@@ -582,5 +582,9 @@
   "documents.uploadModal.errorUploading": "Error uploading files",
   "documents.uploadModal.someFilesSkipped": "Some files were skipped. Allowed formats: {{formats}}",
   "documents.download": "Download",
-  "documents.noPreview": "Preview not available for this file type"
+  "documents.noPreview": "Preview not available for this file type",
+  "components.clientStrip.scrollLeft": "Scroll left",
+  "components.clientStrip.scrollRight": "Scroll right",
+  "components.clientStrip.dragToReorder": "Hold and drag to reorder",
+  "components.clientStrip.reorderError": "Error saving order"
 }

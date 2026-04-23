@@ -7,10 +7,11 @@ import {
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { categoryColors, formatDate } from '../lib/utils'
-import { api } from '../lib/api'
-import type { MarketingMilestone } from '../types'
+import { api, reorderClients } from '../lib/api'
+import type { MarketingMilestone, Client } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
+import { ClientStrip } from '../components/ClientStrip'
 
 function useCategoryLabels() {
   const { t } = useTranslation(['admin'])
@@ -526,7 +527,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
 export default function PlanMarketing() {
   const { t } = useTranslation(['admin', 'common'])
   const categoryLabels = useCategoryLabels()
-  const { clients } = useStore()
+  const { clients, setClients } = useStore()
   const { isAdmin } = useAuthStore()
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -630,19 +631,30 @@ export default function PlanMarketing() {
       </div>
 
       {clientsWithPlans.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-          {clientsWithPlans.map(c => (
-            <motion.button key={c.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setSelectedClientId(c.id)}
-              className={`flex-shrink-0 flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200 ${selectedClientId === c.id ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
-              style={selectedClientId === c.id ? { background: c.color + '20', borderColor: c.color + '60', color: c.color } : {}}>
+        <ClientStrip<Client>
+          clients={clientsWithPlans}
+          selectedId={selectedClientId}
+          onSelect={setSelectedClientId}
+          getId={c => c.id}
+          onReorder={async orderedIds => {
+            await reorderClients(orderedIds)
+            // Apply the new relative order of visible clients to the global list.
+            const byId = new Map(clients.map(c => [c.id, c]))
+            const reordered = orderedIds.map(id => byId.get(id)).filter(Boolean) as Client[]
+            const missing = clients.filter(c => !orderedIds.includes(c.id))
+            setClients([...reordered, ...missing])
+          }}
+          renderItem={(c, active) => (
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border text-sm font-medium transition-all duration-200 ${active ? 'text-white' : 'border-white/10 text-ink-300 bg-ink-800/40'}`}
+              style={active ? { background: c.color + '20', borderColor: c.color + '60', color: c.color } : {}}>
               <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-white" style={{ background: c.color }}>
                 {c.company.slice(0, 1)}
               </div>
               {c.company}
-            </motion.button>
-          ))}
-        </div>
+            </motion.div>
+          )}
+        />
       )}
 
       {loading && (

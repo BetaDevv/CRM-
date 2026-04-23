@@ -147,7 +147,8 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => setShowFeedback(v => !v)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-sm font-semibold hover:bg-amber-500/20 transition-all">
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                 <RotateCcw size={14} /> {t('admin:approvals.requestChanges')}
               </motion.button>
             </div>
@@ -157,7 +158,8 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
                   <div className="flex gap-2 pt-1">
                     <input type="text" placeholder={t('admin:approvals.changeFeedback')} value={feedback} onChange={e => setFeedback(e.target.value)} className="input-dark text-sm flex-1" />
                     <button onClick={() => { onStatusUpdate(post.id, 'revision', feedback); setShowFeedback(false) }}
-                      className="px-4 py-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-all">
+                      className="px-4 py-2.5 rounded-xl transition-all"
+                      style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                       <Send size={15} />
                     </button>
                   </div>

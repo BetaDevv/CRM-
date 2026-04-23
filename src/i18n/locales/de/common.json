@@ -52,6 +52,22 @@
       "eventNote": "Kundennotiz zum Ereignis"
     }
   },
+  "notifications": {
+    "itemType": {
+      "todo": "Aufgabe",
+      "idea": "Idee"
+    },
+    "body": {
+      "todoCompleted": "Aufgabe \"{{title}}\" wurde als erledigt markiert",
+      "noteAddedOnOwn": "{{authorName}}: {{preview}}",
+      "noteAddedOnShared": "{{authorName}}: {{preview}}",
+      "postPending": "Du hast einen neuen Beitrag zur Überprüfung: {{title}}",
+      "postApproved": "{{clientName}} hat den Beitrag genehmigt: {{title}}",
+      "postRejected": "{{clientName}} hat den Beitrag abgelehnt: {{title}}",
+      "prospectNew": "Neuer Interessent: {{company}}",
+      "eventNote": "Der Kunde hat eine Notiz zum Ereignis hinzugefügt: {{title}}"
+    }
+  },
   "pageTitles": {
     "dashboard": { "title": "Dashboard", "subtitle": "Willkommen zurück" },
     "prospects": { "title": "Interessenten", "subtitle": "Neue Geschäftspipeline" },

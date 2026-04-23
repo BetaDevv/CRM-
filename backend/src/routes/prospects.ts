@@ -27,7 +27,15 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       [id, company, contact, email, phone || null, industry || null, budget || null, status || 'new', source || 'Web', notes || null, probability ?? 0]
     )
     logActivity({ type: 'prospect_created', description: `Nuevo prospecto: ${company}`, entityType: 'prospect', entityId: id })
-    notifyAdmins({ type: 'prospect_new', title: 'Nuevo prospecto', description: `Nuevo prospecto: ${company}`, entityType: 'prospect', entityId: id })
+    notifyAdmins({
+      type: 'prospect_new',
+      title: 'Nuevo prospecto',
+      description: `Nuevo prospecto: ${company}`,
+      entityType: 'prospect',
+      entityId: id,
+      i18nKey: 'notifications.body.prospectNew',
+      i18nParams: { company },
+    })
     res.status(201).json(rows[0])
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' })

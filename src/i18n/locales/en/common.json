@@ -52,6 +52,22 @@
       "eventNote": "Client note on event"
     }
   },
+  "notifications": {
+    "itemType": {
+      "todo": "task",
+      "idea": "idea"
+    },
+    "body": {
+      "todoCompleted": "Task \"{{title}}\" was marked as complete",
+      "noteAddedOnOwn": "{{authorName}}: {{preview}}",
+      "noteAddedOnShared": "{{authorName}}: {{preview}}",
+      "postPending": "You have a new post to review: {{title}}",
+      "postApproved": "{{clientName}} approved the post: {{title}}",
+      "postRejected": "{{clientName}} rejected the post: {{title}}",
+      "prospectNew": "New prospect: {{company}}",
+      "eventNote": "The client added a note to the event: {{title}}"
+    }
+  },
   "pageTitles": {
     "dashboard": { "title": "Dashboard", "subtitle": "Welcome back" },
     "prospects": { "title": "Prospects", "subtitle": "New business pipeline" },

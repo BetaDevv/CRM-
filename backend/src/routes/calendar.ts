@@ -367,6 +367,8 @@ router.patch('/events/:id/client-note', async (req: AuthRequest, res: Response) 
         description: `El cliente agregó una nota al evento: ${event.title}`,
         entityType: 'event',
         entityId: eventId,
+        i18nKey: 'notifications.body.eventNote',
+        i18nParams: { title: event.title },
       }).catch(err => console.error('Error creating notification:', err))
     }
 

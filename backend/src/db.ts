@@ -247,6 +247,10 @@ export async function initDB() {
   // Migration: add client_note to events
   await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS client_note TEXT`)
 
+  // Migration: i18n key + params for notification bodies (title stays as-is, type already maps to a key on the frontend)
+  await pool.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS i18n_key TEXT`)
+  await pool.query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS i18n_params TEXT`)
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS post_templates (
       id TEXT PRIMARY KEY,

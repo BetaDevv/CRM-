@@ -52,6 +52,22 @@
       "eventNote": "Nota de cliente en evento"
     }
   },
+  "notifications": {
+    "itemType": {
+      "todo": "tarea",
+      "idea": "idea"
+    },
+    "body": {
+      "todoCompleted": "La tarea \"{{title}}\" ha sido marcada como completada",
+      "noteAddedOnOwn": "{{authorName}}: {{preview}}",
+      "noteAddedOnShared": "{{authorName}}: {{preview}}",
+      "postPending": "Tienes un nuevo post para revisar: {{title}}",
+      "postApproved": "{{clientName}} aprobó el post: {{title}}",
+      "postRejected": "{{clientName}} rechazó el post: {{title}}",
+      "prospectNew": "Nuevo prospecto: {{company}}",
+      "eventNote": "El cliente agregó una nota al evento: {{title}}"
+    }
+  },
   "pageTitles": {
     "dashboard": { "title": "Dashboard", "subtitle": "Bienvenido de vuelta" },
     "prospects": { "title": "Prospectos", "subtitle": "Pipeline de nuevos negocios" },

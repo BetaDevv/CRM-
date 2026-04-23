@@ -162,43 +162,47 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-5">{t('admin:metrics.audienceSeniority')}</h4>
-          <ResponsiveContainer width="100%" height={140}>
-            <PieChart>
-              <Pie data={data.demographics?.seniority || []} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3}>
-                {(data.demographics?.seniority || []).map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-            {(data.demographics?.seniority || []).map((s: any, i: number) => (
-              <div key={i} className="flex items-center gap-1.5 text-xs text-ink-300">
-                <div className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
-                {s.label} <span className="text-ink-500">({s.value}%)</span>
-              </div>
-            ))}
+        {data.demographics?.seniority?.length > 0 && (
+          <div className="glass-card p-5">
+            <h4 className="font-semibold text-white mb-5">{t('admin:metrics.audienceSeniority')}</h4>
+            <ResponsiveContainer width="100%" height={140}>
+              <PieChart>
+                <Pie data={data.demographics.seniority} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={3}>
+                  {data.demographics.seniority.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+              {data.demographics.seniority.map((s: any, i: number) => (
+                <div key={i} className="flex items-center gap-1.5 text-xs text-ink-300">
+                  <div className="w-2 h-2 rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                  {s.label} <span className="text-ink-500">({s.value}%)</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="glass-card p-5">
-          <h4 className="font-semibold text-white mb-4">{t('admin:metrics.followerIndustry')}</h4>
-          <div className="space-y-2.5">
-            {(data.demographics?.industry || []).map((item: any, i: number) => (
-              <div key={i}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-ink-300">{item.label}</span>
-                  <span className="text-xs font-medium text-white">{item.value}%</span>
+        {data.demographics?.industry?.length > 0 && (
+          <div className="glass-card p-5">
+            <h4 className="font-semibold text-white mb-4">{t('admin:metrics.followerIndustry')}</h4>
+            <div className="space-y-2.5">
+              {data.demographics.industry.map((item: any, i: number) => (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-ink-300">{item.label}</span>
+                    <span className="text-xs font-medium text-white">{item.value}%</span>
+                  </div>
+                  <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }} transition={{ duration: 0.8, delay: i * 0.1 }}
+                      className="h-full rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
+                  </div>
                 </div>
-                <div className="h-1.5 bg-ink-700 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }} transition={{ duration: 0.8, delay: i * 0.1 }}
-                    className="h-full rounded-full" style={{ background: CHART_COLORS[i % CHART_COLORS.length] }} />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {data.topPosts?.length > 0 && (

@@ -485,14 +485,34 @@ export default function Header() {
                           <p className="text-sm font-medium leading-snug" style={{ color: 'rgb(var(--ink-100))' }}>
                             {NOTIF_TITLE_KEY[n.type] ? t(NOTIF_TITLE_KEY[n.type]) : n.title}
                           </p>
-                          {n.description && (
-                            <p className="text-xs mt-0.5 leading-relaxed truncate" style={{ color: 'rgb(var(--ink-300))' }}>
-                              {n.description}
+                          {(() => {
+                            // New notifications ship with `i18n_key` + `i18n_params` so we can translate at render time.
+                            // Legacy notifications (created before this migration) fall back to the raw Spanish `description`.
+                            if (n.i18n_key) {
+                              let params: Record<string, unknown> = {}
+                              try { params = JSON.parse(n.i18n_params || '{}') } catch { /* keep empty */ }
+                              // Some params are themselves i18n keys (e.g. `itemTypeKey`); resolve them first.
+                              if (typeof params.itemTypeKey === 'string') {
+                                params.itemType = t(params.itemTypeKey as string)
+                              }
+                              return (
+                                <p className="text-xs mt-0.5 leading-relaxed truncate" style={{ color: 'rgb(var(--ink-300))' }}>
+                                  {t(n.i18n_key, params)}
+                                </p>
+                              )
+                            }
+                            return n.description ? (
+                              <p className="text-xs mt-0.5 leading-relaxed truncate" style={{ color: 'rgb(var(--ink-300))' }}>
+                                {n.description}
+                              </p>
+                            ) : null
+                          })()}
+                          {/* TEMPORARILY DISABLED — to reactivate, remove the `false &&` below */}
+                          {false && (
+                            <p className="text-[11px] mt-1" style={{ color: 'rgb(var(--ink-400))' }}>
+                              <TimeAgo dateStr={n.created_at} />
                             </p>
                           )}
-                          <p className="text-[11px] mt-1" style={{ color: 'rgb(var(--ink-400))' }}>
-                            <TimeAgo dateStr={n.created_at} />
-                          </p>
                         </div>
 
                         {/* Mark as read icon */}

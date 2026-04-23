@@ -54,19 +54,19 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
           onClick={onToggle}
           className="relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer z-10 flex-shrink-0 border-2 transition-all duration-300"
           style={{
-            background: milestone.completed ? color : 'transparent',
-            borderColor: color,
-            boxShadow: milestone.completed ? `0 0 16px ${color}50` : 'none',
+            background: milestone.completed ? 'rgb(var(--accent))' : 'transparent',
+            borderColor: 'rgb(var(--accent))',
+            boxShadow: milestone.completed ? '0 0 16px rgb(var(--accent) / 0.3)' : 'none',
           }}
         >
           {milestone.completed
-            ? <Check size={16} className="text-white" />
-            : <span style={{ color }}><CategoryIcon category={milestone.category} size={14} /></span>
+            ? <Check size={16} style={{ color: 'var(--accent-text)' }} />
+            : <span style={{ color: 'var(--accent-light)' }}><CategoryIcon category={milestone.category} size={14} /></span>
           }
         </motion.div>
         {!isLast && (
           <div className="w-0.5 flex-1 mt-1" style={{
-            background: milestone.completed ? `linear-gradient(to bottom, ${color}, ${color}40)` : 'rgba(255,255,255,0.06)',
+            background: milestone.completed ? 'linear-gradient(to bottom, rgb(var(--accent)), rgb(var(--accent) / 0.25))' : 'rgba(255,255,255,0.06)',
           }} />
         )}
       </div>

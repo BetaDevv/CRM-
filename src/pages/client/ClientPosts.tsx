@@ -96,7 +96,8 @@ export default function ClientPosts() {
                       <ThumbsUp size={16} fill="currentColor" /> {t('client:posts.approve')}
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleFeedback(post.id)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-sm font-bold hover:bg-amber-500/20 transition-all">
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
+                      style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                       <RotateCcw size={14} /> {t('client:posts.requestChanges')}
                     </motion.button>
                   </div>
@@ -106,7 +107,8 @@ export default function ClientPosts() {
                         <div className="flex gap-2 pt-1">
                           <input type="text" placeholder={t('client:posts.feedbackPlaceholder')} value={fb.text} onChange={e => setFeedbackState(prev => ({ ...prev, [post.id]: { ...prev[post.id], text: e.target.value } }))} className="input-dark text-sm flex-1" />
                           <button onClick={() => handleStatusUpdate(post.id, 'revision', fb.text)}
-                            className="px-4 py-2.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20">
+                            className="px-4 py-2.5 rounded-xl transition-all"
+                            style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                             <Send size={15} />
                           </button>
                         </div>

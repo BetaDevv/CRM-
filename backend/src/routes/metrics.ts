@@ -99,20 +99,12 @@ function computeLinkedIn(snaps: any[], days: number) {
       page_views: pageViews.map(m => ({ date: toDate(m.snapshot_date), value: Math.round(parseFloat(m.value)) })),
       engagement: engagement.map(m => ({ date: toDate(m.snapshot_date), value: parseFloat(parseFloat(m.value).toFixed(2)) })),
     },
-    topPosts: [
-      { id: 1, title: 'Lanzamiento suite cloud — resultados Q1', impressions: 4820, engagement: 6.2, reactions: 142, comments: 38, shares: 24, date: '2025-02-28' },
-      { id: 2, title: '5 tendencias cloud para PYMES en 2025', impressions: 3940, engagement: 5.8, reactions: 118, comments: 29, shares: 31, date: '2025-02-21' },
-      { id: 3, title: 'Caso de éxito: migración en 30 días', impressions: 3200, engagement: 5.1, reactions: 97, comments: 22, shares: 18, date: '2025-02-14' },
-    ],
+    // LinkedIn Page Analytics export does not expose topPosts or demographics.
+    // Community Management API approval is pending — returning empty arrays until real data is wired.
+    topPosts: [],
     demographics: {
-      seniority: [
-        { label: 'Senior', value: 34 }, { label: 'Manager', value: 28 },
-        { label: 'Director', value: 18 }, { label: 'VP', value: 12 }, { label: 'CXO', value: 8 },
-      ],
-      industry: [
-        { label: 'Tecnología', value: 42 }, { label: 'Finanzas', value: 18 },
-        { label: 'Consultoría', value: 14 }, { label: 'Manufactura', value: 12 }, { label: 'Otros', value: 14 },
-      ],
+      seniority: [],
+      industry: [],
     },
   }
 }

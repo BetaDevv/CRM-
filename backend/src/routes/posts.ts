@@ -77,7 +77,15 @@ router.post('/', requireAdmin, upload.array('images', 4), async (req: AuthReques
       [id, client_id, title, content || null, platform || 'linkedin', scheduled_date || null, POST_STATUS.PENDING, JSON.stringify(mediaUrls), type || 'post', req.user!.userId]
     )
     logActivity({ type: 'post_created', description: `Nuevo post creado: ${title}`, entityType: 'post', entityId: id })
-    notifyClient(client_id, { type: 'post_pending', title: 'Post pendiente de aprobación', description: `Tienes un nuevo post para revisar: ${title}`, entityType: 'post', entityId: id })
+    notifyClient(client_id, {
+      type: 'post_pending',
+      title: 'Post pendiente de aprobación',
+      description: `Tienes un nuevo post para revisar: ${title}`,
+      entityType: 'post',
+      entityId: id,
+      i18nKey: 'notifications.body.postPending',
+      i18nParams: { title },
+    })
 
     // Email notification to client (fire and forget)
     pool.query('SELECT u.email, u.name FROM users u WHERE u.client_id = $1 AND u.role = $2', [client_id, 'client'])
@@ -125,10 +133,20 @@ router.patch('/:id/status', async (req: AuthRequest, res: Response) => {
       const clientName = clientRows[0]?.company || 'Cliente'
 
       if (status === POST_STATUS.APPROVED || status === POST_STATUS.REJECTED) {
-        const notifType = status === POST_STATUS.APPROVED ? NOTIFICATION_TYPE.POST_APPROVED : NOTIFICATION_TYPE.POST_REJECTED
-        const notifTitle = status === POST_STATUS.APPROVED ? 'Post aprobado' : 'Post rechazado'
-        const notifDesc = `${clientName} ${status === POST_STATUS.APPROVED ? 'aprobó' : 'rechazó'} el post: ${post.title}`
-        notifyAdmins({ type: notifType, title: notifTitle, description: notifDesc, entityType: 'post', entityId: req.params.id })
+        const isApproved = status === POST_STATUS.APPROVED
+        const notifType = isApproved ? NOTIFICATION_TYPE.POST_APPROVED : NOTIFICATION_TYPE.POST_REJECTED
+        const notifTitle = isApproved ? 'Post aprobado' : 'Post rechazado'
+        const notifDesc = `${clientName} ${isApproved ? 'aprobó' : 'rechazó'} el post: ${post.title}`
+        const notifI18nKey = isApproved ? 'notifications.body.postApproved' : 'notifications.body.postRejected'
+        notifyAdmins({
+          type: notifType,
+          title: notifTitle,
+          description: notifDesc,
+          entityType: 'post',
+          entityId: req.params.id,
+          i18nKey: notifI18nKey,
+          i18nParams: { clientName, title: post.title },
+        })
       }
 
       // Email notification to all admins (fire and forget)

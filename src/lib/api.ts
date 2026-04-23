@@ -718,6 +718,10 @@ export interface Notification {
   entity_id: string | null
   is_read: number
   created_at: string
+  /** Optional i18n key for the body. If present, frontend translates it with `i18n_params` and ignores `description`. */
+  i18n_key?: string | null
+  /** JSON-stringified params for `i18n_key` interpolation. */
+  i18n_params?: string | null
 }
 
 export async function getNotifications(): Promise<Notification[]> {

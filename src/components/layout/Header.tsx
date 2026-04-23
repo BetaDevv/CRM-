@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, ThumbsUp, ThumbsDown, Target, Clock, Camera } from 'lucide-react'
+import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, ThumbsUp, ThumbsDown, Target, Clock, Camera, Calendar, Loader2 } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '../../store/useThemeStore'
-import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateMyAccentColor, updateMyLanguage, type AppLanguage } from '../../lib/api'
+import { getNotifications, getUnreadCount, markNotificationRead, markAllNotificationsRead, updateMyProfile, uploadProfilePhoto, updateMyAccentColor, updateMyLanguage, getGoogleCalendarStatus, connectGoogleCalendar, disconnectGoogleCalendar, getMicrosoftCalendarStatus, connectMicrosoftCalendar, disconnectMicrosoftCalendar, type AppLanguage } from '../../lib/api'
 import type { Notification } from '../../lib/api'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useAccentStore } from '../../store/useAccentStore'
@@ -124,6 +124,11 @@ export default function Header() {
   const [showProfile, setShowProfile] = useState(false)
   const [profileName, setProfileName] = useState(user?.name || '')
   const [profileSaving, setProfileSaving] = useState(false)
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [microsoftConnected, setMicrosoftConnected] = useState(false)
+  const [microsoftLoading, setMicrosoftLoading] = useState(false)
+  const isClient = user?.role === 'client'
   const [searchQuery, setSearchQuery] = useState('')
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -135,6 +140,40 @@ export default function Header() {
   useEffect(() => {
     if (showProfile) setProfileName(user?.name || '')
   }, [showProfile, user?.name])
+
+  // Load calendar connection status when profile modal opens (client only)
+  useEffect(() => {
+    if (showProfile && isClient) {
+      getGoogleCalendarStatus().then(s => setGoogleConnected(s.connected)).catch(() => {})
+      getMicrosoftCalendarStatus().then(s => setMicrosoftConnected(s.connected)).catch(() => {})
+    }
+  }, [showProfile, isClient])
+
+  async function handleGoogleConnect() {
+    setGoogleLoading(true)
+    try {
+      if (googleConnected) {
+        await disconnectGoogleCalendar()
+        setGoogleConnected(false)
+      } else {
+        const url = await connectGoogleCalendar()
+        window.location.href = url
+      }
+    } catch { /* silently fail */ } finally { setGoogleLoading(false) }
+  }
+
+  async function handleMicrosoftConnect() {
+    setMicrosoftLoading(true)
+    try {
+      if (microsoftConnected) {
+        await disconnectMicrosoftCalendar()
+        setMicrosoftConnected(false)
+      } else {
+        const url = await connectMicrosoftCalendar()
+        window.location.href = url
+      }
+    } catch { /* silently fail */ } finally { setMicrosoftLoading(false) }
+  }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -502,7 +541,7 @@ export default function Header() {
             onMouseDown={() => setShowProfile(false)}
           >
             <motion.div
-              className="border rounded-2xl p-6 max-w-md w-full mx-4"
+              className="border rounded-2xl p-6 max-w-md w-full mx-4 max-h-[85vh] overflow-y-auto thin-scrollbar"
               style={{ backgroundColor: 'rgb(var(--ink-900))', borderColor: 'rgb(var(--ink-700))' }}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -605,6 +644,61 @@ export default function Header() {
                   </p>
                 )}
               </div>
+
+              {/* Calendar integrations — client only */}
+              {isClient && (
+                <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+                  <p className="text-xs font-medium mb-2" style={{ color: 'rgb(var(--ink-300))' }}>
+                    {t('header.calendarIntegrations')}
+                  </p>
+
+                  {/* Google Calendar */}
+                  <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800))' }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: 'rgb(var(--ink-100))' }}>{t('header.googleCalendar')}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'rgb(var(--ink-400))' }}>
+                        {googleConnected ? t('header.calendarConnected') : t('header.calendarDisconnected')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleGoogleConnect}
+                      disabled={googleLoading}
+                      className={`flex items-center gap-1.5 text-xs py-2 px-3 rounded-xl font-medium transition-all flex-shrink-0 ${
+                        googleConnected
+                          ? 'bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
+                          : ''
+                      }`}
+                      style={!googleConnected ? { backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' } : undefined}
+                    >
+                      {googleLoading ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
+                      {googleConnected ? t('header.disconnect') : t('header.connect')}
+                    </button>
+                  </div>
+
+                  {/* Microsoft / Outlook Calendar */}
+                  <div className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: 'rgb(var(--ink-800))' }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: 'rgb(var(--ink-100))' }}>{t('header.outlookCalendar')}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'rgb(var(--ink-400))' }}>
+                        {microsoftConnected ? t('header.calendarConnected') : t('header.calendarDisconnected')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleMicrosoftConnect}
+                      disabled={microsoftLoading}
+                      className={`flex items-center gap-1.5 text-xs py-2 px-3 rounded-xl font-medium transition-all flex-shrink-0 ${
+                        microsoftConnected
+                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20'
+                          : ''
+                      }`}
+                      style={!microsoftConnected ? { backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' } : undefined}
+                    >
+                      {microsoftLoading ? <Loader2 size={14} className="animate-spin" /> : <Calendar size={14} />}
+                      {microsoftConnected ? t('header.disconnect') : t('header.connect')}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Buttons */}
               <div className="flex gap-3 mt-6">

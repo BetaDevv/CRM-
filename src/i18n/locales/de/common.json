@@ -14,7 +14,6 @@
     "users": "Benutzer",
     "portal": "Portal",
     "plan": "Strategieplan",
-    "activity": "Aktivität",
     "collapse": "Einklappen"
   },
   "header": {
@@ -34,6 +33,13 @@
     "accentColor": "Akzentfarbe",
     "usingClientDefault": "Team-Standardfarbe",
     "resetAccent": "Zurücksetzen",
+    "calendarIntegrations": "Kalender-Integrationen",
+    "googleCalendar": "Google Calendar",
+    "outlookCalendar": "Outlook Calendar",
+    "calendarConnected": "Verbunden",
+    "calendarDisconnected": "Nicht verbunden",
+    "connect": "Verbinden",
+    "disconnect": "Trennen",
     "notif": {
       "todoCompleted": "Aufgabe erledigt",
       "noteAdded": "Neue Notiz",

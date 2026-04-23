@@ -782,6 +782,60 @@ export async function deleteApiKey(id: string): Promise<void> {
   await api.delete(`/api-keys/${id}`)
 }
 
+// --- Metrics Import API ---
+
+export interface ImportMetricsResponse {
+  imported: number
+  skipped: number
+  errors: string[]
+  dateRange: { min: string; max: string } | null
+  sheetsProcessed?: string[]
+}
+
+export type ImportKind = 'content' | 'visitors' | 'followers'
+
+export async function importMetrics(
+  clientId: string,
+  platform: string,
+  kind: ImportKind,
+  file: File
+): Promise<ImportMetricsResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('client_id', clientId)
+  formData.append('platform', platform)
+  formData.append('kind', kind)
+  const { data } = await api.post('/metrics/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  })
+  return data
+}
+
+// --- Plausible (Web) Metrics Import API ---
+
+export interface ImportPlausibleResponse {
+  timeSeriesRows: number
+  dimensionRows: number
+  filesProcessed: string[]
+  errors: string[]
+  dateRange: { min: string; max: string } | null
+}
+
+export async function importPlausible(
+  clientId: string,
+  file: File
+): Promise<ImportPlausibleResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('client_id', clientId)
+  const { data } = await api.post('/metrics/import-plausible', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000,
+  })
+  return data
+}
+
 // --- Client Settings API ---
 
 export interface MyClientSettings {

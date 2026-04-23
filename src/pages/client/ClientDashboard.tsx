@@ -13,16 +13,6 @@ function formatShort(n: number): string {
   return n.toString()
 }
 
-function activityColor(type: string): string {
-  const map: Record<string, string> = {
-    post_created: 'var(--accent-hex)', post_approved: '#34d399', post_rejected: '#f87171',
-    post_pending: '#fbbf24', todo_created: 'var(--accent-hex)', todo_toggled: '#34d399',
-    idea_created: '#a78bfa', note_added: '#60a5fa', client_updated: '#60a5fa',
-    event_created: '#f59e0b', document_uploaded: '#14b8a6',
-  }
-  return map[type] || 'var(--accent-hex)'
-}
-
 export default function ClientDashboard() {
   const { t } = useTranslation(['client', 'common', 'admin'])
   const { user } = useAuthStore()
@@ -130,7 +120,7 @@ export default function ClientDashboard() {
                 className="flex items-start gap-3"
               >
                 <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse"
-                  style={{ background: activityColor(a.type) }} />
+                  style={{ background: 'var(--accent-hex)' }} />
                 <div>
                   <p className="text-sm text-white leading-snug">{translateActivity(a)}</p>
                   <p className="text-xs text-ink-400 mt-0.5">{timeAgo(a.created_at)}</p>

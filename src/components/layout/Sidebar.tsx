@@ -34,7 +34,6 @@ const clientNav = [
   { path: '/portal/aprobaciones', icon: ThumbsUp,       labelKey: 'nav.approvals' },
   { path: '/portal/ideas',       icon: Lightbulb,       labelKey: 'nav.ideas' },
   { path: '/portal/todo',        icon: CheckSquare,     labelKey: 'nav.todo' },
-  { path: '/portal/actividad',   icon: CalendarDays,    labelKey: 'nav.activity' },
   { path: '/portal/metricas',    icon: BarChart2,       labelKey: 'nav.metrics' },
   { path: '/portal/documentos', icon: FolderOpen,      labelKey: 'nav.documents' },
 ]

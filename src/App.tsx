@@ -18,7 +18,6 @@ import Documentos from './pages/Documentos'
 import ClientDashboard from './pages/client/ClientDashboard'
 import ClientPlan from './pages/client/ClientPlan'
 import ClientPosts from './pages/client/ClientPosts'
-import ClientActividad from './pages/client/ClientActividad'
 import ClientMetricas from './pages/client/ClientMetricas'
 import ClientDocumentos from './pages/client/ClientDocumentos'
 import ClientTodos from './pages/client/ClientTodos'
@@ -75,7 +74,6 @@ function AppRoutes() {
         <Route index element={<ClientDashboard />} />
         <Route path="plan" element={<ClientPlan />} />
         <Route path="aprobaciones" element={<ClientPosts />} />
-        <Route path="actividad" element={<ClientActividad />} />
         <Route path="metricas" element={<ClientMetricas />} />
         <Route path="documentos" element={<ClientDocumentos />} />
         <Route path="todo" element={<ClientTodos />} />

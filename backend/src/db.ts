@@ -359,6 +359,27 @@ export async function initDB() {
   // Migration: add language preference to users (per-user, nullable — null = use browser detection)
   // Allowed values: 'es' | 'en' | 'de' | NULL
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT`)
+
+  // Web (Plausible) dimensional breakdowns: top pages, channels, sources, devices, countries.
+  // Time-series (visitors/pageviews/visits/bounce_rate/visit_duration) lives in metric_snapshots
+  // with platform='web' — here we store the non-temporal aggregates.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS web_dimensions (
+      id TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+      dimension_type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      visitors NUMERIC DEFAULT 0,
+      pageviews NUMERIC DEFAULT 0,
+      bounce_rate NUMERIC DEFAULT 0,
+      visit_duration NUMERIC DEFAULT 0,
+      extra TEXT DEFAULT '{}',
+      imported_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(client_id, dimension_type, name)
+    );
+    CREATE INDEX IF NOT EXISTS idx_web_dimensions_lookup
+      ON web_dimensions(client_id, dimension_type);
+  `)
 }
 
 export async function seedDB() {

@@ -30,28 +30,6 @@
     "revisionSent": "Changes sent — the team is applying them",
     "rejected": "Post rejected"
   },
-  "activity": {
-    "syncGoogle": "Sync with Google Calendar",
-    "calendarConnected": "Your calendar is connected",
-    "calendarDisconnected": "Receive all your events in your personal calendar",
-    "disconnect": "Disconnect",
-    "connectGoogle": "Connect Google Calendar",
-    "activityLog": "Activity Log",
-    "noEvents": "You have no scheduled events",
-    "description": "Description",
-    "participants": "Participants",
-    "linkedToTask": "Linked to task",
-    "yourNote": "Your note",
-    "editNote": "Edit note",
-    "addNote": "Add note",
-    "noteForEvent": "Note for event",
-    "notePlaceholder": "Write your note here...",
-    "saveNote": "Save note",
-    "syncMicrosoft": "Microsoft Calendar",
-    "connectMicrosoft": "Connect Outlook",
-    "microsoftConnected": "Outlook calendar connected",
-    "microsoftDisconnected": "Sync your Outlook events"
-  },
   "metrics": {
     "noMetrics": "No metrics available yet",
     "noMetricsSubtitle": "The NextGenCRM team will set up integrations with you.",

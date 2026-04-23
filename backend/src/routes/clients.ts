@@ -50,7 +50,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 })
 
 // GET /api/clients/me/settings — Get current client's settings (for portal)
-// Returns resolved accent_color using fallback: user.accent_color → client.accent_color → '#DC143C'
+// Returns resolved accent_color using fallback: user.accent_color → client.accent_color → '#EA580C'
 // Also exposes raw user_accent_color and client_accent_color so UI can tell if user overrode.
 router.get('/me/settings', async (req: AuthRequest, res: Response) => {
   try {
@@ -65,7 +65,7 @@ router.get('/me/settings', async (req: AuthRequest, res: Response) => {
     )
     if (!rows.length) { res.status(404).json({ error: 'Not found' }); return }
     const row = rows[0]
-    const resolved = row.user_accent_color || row.client_accent_color || '#DC143C'
+    const resolved = row.user_accent_color || row.client_accent_color || '#EA580C'
     res.json({
       company: row.company,
       avatar_url: row.avatar_url,
@@ -93,7 +93,7 @@ router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
     const { rows } = await pool.query(
       `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description, currency, accent_color)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
-      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#DC143C', description || null, currency || 'USD', accent_color || null]
+      [id, company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', start_date || new Date().toISOString().split('T')[0], color || '#EA580C', description || null, currency || 'USD', accent_color || null]
     )
     logActivity({ type: 'client_created', description: `Nuevo cliente: ${company}`, entityType: 'client', entityId: id })
     res.status(201).json(parseClient(rows[0]))
@@ -109,7 +109,7 @@ router.put('/:id', requireAdmin, async (req: AuthRequest, res: Response) => {
     const { rows } = await pool.query(
       `UPDATE clients SET company=$1, contact=$2, email=$3, phone=$4, industry=$5, monthly_fee=$6,
        services=$7, status=$8, color=$9, description=$10, linkedin_connected=$11, start_date=$12, currency=$13, accent_color=$14 WHERE id=$15 RETURNING *`,
-      [company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', color || '#DC143C', description || null, linkedin_connected ? 1 : 0, start_date || null, currency || 'USD', accent_color || null, id]
+      [company, contact, email, phone || null, industry || null, monthly_fee || 0, JSON.stringify(services || []), status || 'active', color || '#EA580C', description || null, linkedin_connected ? 1 : 0, start_date || null, currency || 'USD', accent_color || null, id]
     )
     if (!rows.length) { res.status(404).json({ error: 'Cliente no encontrado' }); return }
     logActivity({ type: 'client_updated', description: `Cliente actualizado: ${company}`, entityType: 'client', entityId: id })

@@ -70,7 +70,7 @@ function TodoCardContent({
             <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ color: cfg.color, background: cfg.bg }}>
               {t(`common:priority.${todo.priority}`)}
             </span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300"><T text={todo.category} /></span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-ink-300">{categoryKeys[todo.category] ? t(`common:${categoryKeys[todo.category]}`) : todo.category}</span>
             {todo.startTime && (
               <span className="text-xs text-ink-400 flex items-center gap-1">
                 <Clock size={10} />
@@ -432,7 +432,7 @@ export default function ClientTodos() {
             className={`text-xs px-3 py-1.5 rounded-full border transition-all ${filterCat === c ? '' : 'border-white/10 text-ink-300'}`}
             style={filterCat === c ? { borderColor: 'var(--accent-light)', backgroundColor: 'rgb(var(--accent) / 0.2)', color: 'var(--accent-light)' } : {}}
           >
-            {c}
+            {t(`common:${categoryKeys[c]}`)}
           </button>
         ))}
       </div>
@@ -614,7 +614,7 @@ export default function ClientTodos() {
                       onChange={e => setForm(prev => ({ ...prev, category: e.target.value }))}
                       className="input-dark text-sm"
                     >
-                      {categories.map(c => <option key={c} value={c} className="bg-ink-800">{c}</option>)}
+                      {categories.map(c => <option key={c} value={c} className="bg-ink-800">{t(`common:${categoryKeys[c]}`)}</option>)}
                     </select>
                   </div>
                 </div>

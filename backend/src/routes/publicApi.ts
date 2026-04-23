@@ -232,7 +232,7 @@ router.post('/clients', requireAdminKey, async (req: ApiKeyRequest, res: Respons
       `INSERT INTO clients (id, company, contact, email, phone, industry, monthly_fee, services, status, start_date, color, description)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
       [id, company, contact, email, phone || null, industry || null, monthly_fee || 0,
-       JSON.stringify(services || []), status || 'active', start_date || null, color || '#DC143C', description || null]
+       JSON.stringify(services || []), status || 'active', start_date || null, color || '#EA580C', description || null]
     )
     res.status(201).json(rows[0])
   } catch (err) {

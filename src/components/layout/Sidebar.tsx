@@ -62,16 +62,16 @@ export default function Sidebar() {
       // Admin: no client, but they can still set a per-user override. Resolve via /users/me.
       getMyProfile().then((u: any) => {
         const userRaw = u?.accent_color ?? null
-        const resolved = userRaw || '#DC143C'
+        const resolved = userRaw || '#EA580C'
         useAccentStore.getState().setAccent(resolved, userRaw, null)
       }).catch(() => {
-        useAccentStore.getState().setAccent('#DC143C', null, null)
+        useAccentStore.getState().setAccent('#EA580C', null, null)
       })
     }
   }, [isClient])
 
   const handleLogout = () => {
-    useAccentStore.getState().setAccent('#DC143C', null, null)
+    useAccentStore.getState().setAccent('#EA580C', null, null)
     logout()
     navigate('/login')
   }

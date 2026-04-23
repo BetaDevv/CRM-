@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { useStore } from '../store/useStore'
 import T from '../components/TranslatedText'
 
-const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
+const clientColors = ['#EA580C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
 
 // ─── Avatar helper ─────────────────────────────────────────────────────────────
 function ClientAvatar({
@@ -157,7 +157,7 @@ function ClientModal({
     currency:    initial?.currency || 'USD',
     services:    (initial?.services || []).join(', '),
     description: initial?.description || '',
-    color:       initial?.color       || '#DC143C',
+    color:       initial?.color       || '#EA580C',
     status:      initial?.status      || 'active',
     start_date:  initial?.startDate || initial?.start_date || localToday(),
   })

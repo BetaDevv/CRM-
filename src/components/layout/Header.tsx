@@ -580,7 +580,7 @@ export default function Header() {
                         }
                       }}
                       className="input-dark text-sm font-mono"
-                      placeholder="#DC143C"
+                      placeholder="#EA580C"
                     />
                   </div>
                   <button
@@ -592,7 +592,7 @@ export default function Header() {
                 </div>
                 {/* Preview swatches */}
                 <div className="flex gap-1.5 mt-2">
-                  {['#DC143C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444'].map(c => (
+                  {['#EA580C', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#EF4444'].map(c => (
                     <button key={c} onClick={() => applyUserAccent(c)}
                       className="w-6 h-6 rounded-lg transition-transform hover:scale-110"
                       style={{ background: c, boxShadow: accentColor === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : 'none' }}

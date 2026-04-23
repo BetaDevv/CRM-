@@ -16,11 +16,11 @@ import { localToday, getLocale } from '../lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { JSX } from 'react'
 
-const CRIMSON = '#DC143C'
+const CRIMSON = '#EA580C'
 const META_COLOR = '#1877F2'
 const GA4_COLOR = '#E37400'
 const IG_COLOR = '#E1306C'
-const CHART_COLORS = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA']
+const CHART_COLORS = ['#EA580C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA']
 
 type Platform = 'linkedin' | 'meta' | 'tiktok' | 'ga4'
 

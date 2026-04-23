@@ -196,10 +196,19 @@ export default function Dashboard() {
                 transition={{ delay: i * 0.1 }}
                 className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
-                  style={{ background: c.color + '33', border: `1px solid ${c.color}44` }}>
-                  {c.company.slice(0, 2).toUpperCase()}
-                </div>
+                {(c.avatar || c.avatar_url) ? (
+                  <img
+                    src={c.avatar || c.avatar_url}
+                    alt={c.company}
+                    className="w-10 h-10 rounded-xl object-cover flex-shrink-0"
+                    style={{ border: `1px solid ${c.color}44` }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+                    style={{ background: c.color + '33', border: `1px solid ${c.color}44` }}>
+                    {c.company.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-white text-sm truncate"><T text={c.company} /></p>
                   <p className="text-xs text-ink-300 truncate">{c.services.join(' · ')}</p>

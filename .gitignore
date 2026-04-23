@@ -16,6 +16,12 @@ backend/.env
 uploads/
 backend/uploads/
 
+# Ensure public/ favicon + logo assets always ship (defensive allowlist)
+!public/
+!public/*.png
+!public/*.svg
+!public/*.ico
+
 # Logs
 logs
 *.log

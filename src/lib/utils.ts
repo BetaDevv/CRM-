@@ -47,7 +47,7 @@ export const prospectStatusConfig: Record<ProspectStatus, { label: string; color
 }
 
 export const priorityConfig: Record<Priority, { color: string; bg: string }> = {
-  high:   { color: '#DC143C', bg: 'rgba(220,20,60,0.1)' },
+  high:   { color: '#EA580C', bg: 'rgba(234,88,12,0.1)' },
   medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
   low:    { color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
 }
@@ -74,7 +74,7 @@ export const platformConfig: Record<string, { label: string; short: string; colo
 }
 
 export const categoryColors: Record<string, string> = {
-  strategy:  '#DC143C',
+  strategy:  '#EA580C',
   content:   '#7C3AED',
   ads:       '#F59E0B',
   seo:       '#34D399',

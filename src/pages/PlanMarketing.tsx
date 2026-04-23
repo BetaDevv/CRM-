@@ -42,7 +42,7 @@ function MilestoneNode({ milestone, index, total, onToggle, onDelete, onEdit, is
   onToggle: () => void; onDelete: () => void; onEdit: () => void; isAdmin: boolean
 }) {
   const categoryLabels = useCategoryLabels()
-  const color = categoryColors[milestone.category] || '#DC143C'
+  const color = categoryColors[milestone.category] || '#EA580C'
   const isLast = index === total - 1
 
   return (

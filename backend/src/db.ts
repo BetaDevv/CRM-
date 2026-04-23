@@ -34,7 +34,7 @@ export async function initDB() {
       services TEXT DEFAULT '[]',
       status TEXT DEFAULT 'active',
       start_date TEXT,
-      color TEXT DEFAULT '#DC143C',
+      color TEXT DEFAULT '#EA580C',
       description TEXT,
       linkedin_connected INTEGER DEFAULT 0,
       linkedin_company_id TEXT,
@@ -75,7 +75,7 @@ export async function initDB() {
   // Safe migrations for columns added after initial schema
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS avatar_url TEXT`)
   await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'`)
-  await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#DC143C'`)
+  await pool.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS accent_color TEXT DEFAULT '#EA580C'`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS active INTEGER DEFAULT 1`)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMPTZ`)
   await pool.query(`
@@ -371,7 +371,7 @@ export async function seedDB() {
   const clientHash = await bcrypt.hash('TechNova@2025!', 10)
 
   const clients = [
-    { id: 'c1', company: 'TechNova Solutions', contact: 'Alejandro Ruiz', email: 'alejandro@technova.com', phone: '+57 300 123 4567', industry: 'Tecnología', monthly_fee: 2500, services: JSON.stringify(['Social Media', 'SEO', 'Pauta Digital']), status: 'active', start_date: '2024-01-15', color: '#DC143C', description: 'Empresa líder en soluciones cloud para PYMES', linkedin_connected: 1 },
+    { id: 'c1', company: 'TechNova Solutions', contact: 'Alejandro Ruiz', email: 'alejandro@technova.com', phone: '+57 300 123 4567', industry: 'Tecnología', monthly_fee: 2500, services: JSON.stringify(['Social Media', 'SEO', 'Pauta Digital']), status: 'active', start_date: '2024-01-15', color: '#EA580C', description: 'Empresa líder en soluciones cloud para PYMES', linkedin_connected: 1 },
     { id: 'c2', company: 'Bloom Wellness', contact: 'Valentina Torres', email: 'valen@bloomwellness.co', phone: '+57 315 987 6543', industry: 'Salud & Bienestar', monthly_fee: 1800, services: JSON.stringify(['Contenido', 'Instagram', 'Email Marketing']), status: 'active', start_date: '2024-03-01', color: '#7C3AED', description: 'Centro de bienestar holístico premium', linkedin_connected: 0 },
     { id: 'c3', company: 'Urban Bites', contact: 'Sebastián Mora', email: 'sebas@urbanbites.co', phone: '+57 320 456 7890', industry: 'Gastronomía', monthly_fee: 1200, services: JSON.stringify(['Social Media', 'Fotografía']), status: 'active', start_date: '2024-06-10', color: '#F59E0B', description: 'Restaurante urbano con cocina fusión', linkedin_connected: 0 },
   ]
@@ -578,9 +578,9 @@ export async function seedDB() {
 
   // Seed calendar events
   const eventsSeed = [
-    { id: 'ev1', title: 'Planificación contenido TechNova — Abril', description: 'Sesión de brainstorming y definición de calendario de contenido para abril.', start_time: '2026-03-23T10:00:00-05:00', end_time: '2026-03-23T11:30:00-05:00', all_day: false, color: '#DC143C', creator_id: 'u_admin', client_id: 'c1', todo_id: 't1', milestone_id: null, is_shared: false },
+    { id: 'ev1', title: 'Planificación contenido TechNova — Abril', description: 'Sesión de brainstorming y definición de calendario de contenido para abril.', start_time: '2026-03-23T10:00:00-05:00', end_time: '2026-03-23T11:30:00-05:00', all_day: false, color: '#EA580C', creator_id: 'u_admin', client_id: 'c1', todo_id: 't1', milestone_id: null, is_shared: false },
     { id: 'ev2', title: 'Revisión métricas semanales', description: 'Revisión de KPIs y métricas de todas las plataformas.', start_time: '2026-03-24T09:00:00-05:00', end_time: '2026-03-24T09:45:00-05:00', all_day: false, color: '#7C3AED', creator_id: 'u_admin', client_id: null, todo_id: null, milestone_id: null, is_shared: false },
-    { id: 'ev3', title: 'Reunión con TechNova — Blog Corporativo', description: 'Presentación del plan de contenido para el blog corporativo. Revisar SEO y pilares de contenido.', start_time: '2026-03-25T14:00:00-05:00', end_time: '2026-03-25T15:00:00-05:00', all_day: false, color: '#DC143C', creator_id: 'u_admin', client_id: 'c1', todo_id: null, milestone_id: 'm3', is_shared: true },
+    { id: 'ev3', title: 'Reunión con TechNova — Blog Corporativo', description: 'Presentación del plan de contenido para el blog corporativo. Revisar SEO y pilares de contenido.', start_time: '2026-03-25T14:00:00-05:00', end_time: '2026-03-25T15:00:00-05:00', all_day: false, color: '#EA580C', creator_id: 'u_admin', client_id: 'c1', todo_id: null, milestone_id: 'm3', is_shared: true },
     { id: 'ev4', title: 'Deadline: Propuesta Nexus Inmobiliaria', description: 'Fecha límite para enviar propuesta comercial a Nexus.', start_time: '2026-03-26T00:00:00-05:00', end_time: '2026-03-26T23:59:59-05:00', all_day: true, color: '#F59E0B', creator_id: 'u_admin', client_id: null, todo_id: 't2', milestone_id: null, is_shared: false },
     { id: 'ev5', title: 'Llamada onboarding PetLove', description: 'Primera llamada con PetLove Store para definir alcance y objetivos.', start_time: '2026-03-27T11:00:00-05:00', end_time: '2026-03-27T12:00:00-05:00', all_day: false, color: '#10B981', creator_id: 'u_admin', client_id: null, todo_id: 't5', milestone_id: null, is_shared: false },
     { id: 'ev6', title: 'Review creativo Bloom Wellness', description: 'Revisión de stories y contenido visual con el equipo de diseño.', start_time: '2026-03-28T16:00:00-05:00', end_time: '2026-03-28T17:00:00-05:00', all_day: false, color: '#7C3AED', creator_id: 'u_admin', client_id: 'c2', todo_id: null, milestone_id: null, is_shared: true },

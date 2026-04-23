@@ -60,7 +60,7 @@ router.post('/:id/convert', async (req: AuthRequest, res: Response) => {
     // Parse budget to number
     const budgetNum = parseFloat((prospect.budget || '0').replace(/[^0-9.,]/g, '').replace(',', '')) || 0
 
-    const clientColors = ['#DC143C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
+    const clientColors = ['#EA580C', '#7C3AED', '#F59E0B', '#34D399', '#60A5FA', '#F97316', '#EC4899']
     const color = clientColors[Math.floor(Math.random() * clientColors.length)]
     const clientId = uuid()
     const today = new Date().toISOString().split('T')[0]

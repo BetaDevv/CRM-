@@ -44,7 +44,7 @@ export function applyAccent(hex: string) {
   root.style.setProperty('--accent-text-rgb', isLight ? '0 0 0' : '255 255 255')
 }
 
-const DEFAULT_ACCENT = '#DC143C'
+const DEFAULT_ACCENT = '#EA580C'
 
 // No persist — accent is always loaded from DB for clients, default for admin
 export const useAccentStore = create<AccentState>()((set) => ({

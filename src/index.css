@@ -15,11 +15,11 @@
   --ink-200: 115 115 115;
   --ink-100: 163 163 163;
 
-  --accent: 220 20 60;
-  --accent-hex: #DC143C;
-  --accent-light: #ff3456;
-  --accent-dark: #a50e2d;
-  --accent-glow: 0 0 20px rgba(220,20,60,0.3), 0 0 60px rgba(220,20,60,0.1);
+  --accent: 234 88 12;
+  --accent-hex: #EA580C;
+  --accent-light: #FB923C;
+  --accent-dark: #C2410C;
+  --accent-glow: 0 0 20px rgba(234,88,12,0.3), 0 0 60px rgba(234,88,12,0.1);
   --accent-text: #ffffff;
   --accent-text-rgb: 255 255 255;
 }
@@ -265,7 +265,7 @@ body, header, aside, nav, main,
 }
 
 .fc .fc-button:focus {
-  box-shadow: 0 0 0 2px rgba(220, 20, 60, 0.4);
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.4);
 }
 
 .fc .fc-daygrid-day-number {
@@ -274,7 +274,7 @@ body, header, aside, nav, main,
 }
 
 .fc .fc-day-today .fc-daygrid-day-number {
-  color: #DC143C;
+  color: #EA580C;
   font-weight: bold;
 }
 
@@ -328,7 +328,7 @@ body, header, aside, nav, main,
 }
 
 .fc .fc-list-event:hover td {
-  background: rgba(220, 20, 60, 0.1);
+  background: rgba(234, 88, 12, 0.1);
 }
 
 .fc .fc-list-day-cushion {
@@ -337,11 +337,11 @@ body, header, aside, nav, main,
 }
 
 .fc .fc-timegrid-now-indicator-line {
-  border-color: #DC143C;
+  border-color: #EA580C;
 }
 
 .fc .fc-timegrid-now-indicator-arrow {
-  border-color: #DC143C;
+  border-color: #EA580C;
 }
 
 .fc .fc-popover {

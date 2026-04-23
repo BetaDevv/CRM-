@@ -78,7 +78,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         {post.platform === 'linkedin' && (
           <div className="bg-[#1d2226] rounded-xl p-4 mb-4 border border-white/5">
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: client?.color || '#DC143C' }}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: client?.color || '#EA580C' }}>
                 {client?.company?.slice(0, 2) || 'TN'}
               </div>
               <div>

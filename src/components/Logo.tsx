@@ -47,27 +47,16 @@ export function LogoFull({ collapsed = false, size = 'md' }: LogoProps) {
 
 export function LogoLogin() {
   const { theme } = useThemeStore()
-  const fullSrc = theme === 'light' ? '/logo-full-black.png' : '/logo-full-white.png'
+  const src = theme === 'light' ? '/logo-full-black.png' : '/logo-full-white.png'
 
   return (
-    <div className="flex flex-col items-center gap-5">
+    <div className="flex flex-col items-center">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', damping: 14, stiffness: 100, delay: 0.2 }}
       >
-        <img src={fullSrc} alt="Nextgenbrand" className="h-8 object-contain" />
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="text-center"
-      >
-        <h1 className="text-3xl font-black text-white tracking-tight">
-          NextGen<span style={{ color: 'var(--accent-light)' }}>CRM</span>
-        </h1>
-        <p className="text-ink-400 text-[11px] tracking-[0.2em] uppercase mt-1.5">by Nextgenbrand</p>
+        <img src={src} alt="Nextgenbrand" className="h-16 w-auto object-contain" />
       </motion.div>
     </div>
   )

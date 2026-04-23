@@ -1,8 +1,8 @@
 <svg width="512" height="512" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Outer diamond -->
-  <path d="M18 1 L35 18 L18 35 L1 18 Z" fill="#DC143C"/>
+  <path d="M18 1 L35 18 L18 35 L1 18 Z" fill="#EA580C"/>
   <!-- Inner glow -->
-  <path d="M18 4 L32 18 L18 32 L4 18 Z" fill="#A50E2D"/>
+  <path d="M18 4 L32 18 L18 32 L4 18 Z" fill="#C2410C"/>
   <!-- Lightning bolt -->
   <path d="M21 8 L14 20 L19.5 20 L15 28 L24 16 L18.5 16 Z" fill="white"/>
   <!-- Top highlight -->

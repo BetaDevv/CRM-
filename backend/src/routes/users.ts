@@ -112,7 +112,7 @@ router.patch('/me/accent-color', async (req: AuthRequest, res: Response) => {
 
     await pool.query('UPDATE users SET accent_color = $1 WHERE id = $2', [normalized, userId])
 
-    // Resolve fallback chain: user.accent_color → client.accent_color → '#DC143C'
+    // Resolve fallback chain: user.accent_color → client.accent_color → '#EA580C'
     const { rows } = await pool.query(
       `SELECT u.accent_color AS user_accent_color, c.accent_color AS client_accent_color
        FROM users u
@@ -121,7 +121,7 @@ router.patch('/me/accent-color', async (req: AuthRequest, res: Response) => {
       [userId]
     )
     const row = rows[0] || { user_accent_color: null, client_accent_color: null }
-    const resolved = row.user_accent_color || row.client_accent_color || '#DC143C'
+    const resolved = row.user_accent_color || row.client_accent_color || '#EA580C'
 
     res.json({
       accent_color: resolved,

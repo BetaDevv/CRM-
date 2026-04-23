@@ -33,11 +33,11 @@ import { useStore } from '../store/useStore'
 /* ─── FullCalendar locale map ─── */
 const fcLocales: Record<string, typeof esLocale> = { es: esLocale, en: enLocale, de: deLocale }
 
-function getAccentHex() { return getComputedStyle(document.documentElement).getPropertyValue('--accent-hex').trim() || '#DC143C' }
+function getAccentHex() { return getComputedStyle(document.documentElement).getPropertyValue('--accent-hex').trim() || '#EA580C' }
 
 /* ─── Color Presets ─── */
 const COLOR_PRESETS = [
-  '#DC143C', '#3B82F6', '#10B981', '#8B5CF6',
+  '#EA580C', '#3B82F6', '#10B981', '#8B5CF6',
   '#F59E0B', '#EC4899', '#14B8A6', '#F97316',
 ]
 

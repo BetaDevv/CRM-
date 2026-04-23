@@ -26,13 +26,13 @@ export async function sendEventInvite(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">CRM Calendar</p>
       </div>
-      <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #DC143C;">
+      <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #EA580C;">
         <h2 style="margin-top: 0; color: #fff;">${params.eventTitle}</h2>
         ${params.eventDescription ? `<p style="color: #aaa;">${params.eventDescription}</p>` : ''}
-        <p style="color: #DC143C; font-weight: bold;">
+        <p style="color: #EA580C; font-weight: bold;">
           ${new Date(params.startTime).toLocaleString('es-CO', { dateStyle: 'full', timeStyle: 'short' })}
         </p>
         <p style="color: #888; font-size: 14px;">
@@ -82,10 +82,10 @@ export async function sendPostForApproval(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Content Approval</p>
       </div>
-      <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #DC143C;">
+      <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #EA580C;">
         <h2 style="margin-top: 0; color: #fff;">Nuevo post pendiente de aprobación</h2>
         <p style="color: #aaa;">Hola <strong>${params.clientName}</strong>, tienes un nuevo post para revisar:</p>
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
@@ -99,7 +99,7 @@ export async function sendPostForApproval(params: {
           </tr>
           <tr>
             <td style="color: #888; padding: 8px 0;">Fecha programada</td>
-            <td style="color: #DC143C; padding: 8px 0; text-align: right; font-weight: bold;">${dateFormatted}</td>
+            <td style="color: #EA580C; padding: 8px 0; text-align: right; font-weight: bold;">${dateFormatted}</td>
           </tr>
         </table>
         <p style="color: #aaa; font-size: 14px; margin-top: 16px;">
@@ -150,7 +150,7 @@ export async function sendPostStatusNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Post Status Update</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid ${cfg.color};">
@@ -211,7 +211,7 @@ export async function sendNoteNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Nueva nota</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #F59E0B;">
@@ -262,7 +262,7 @@ export async function sendTodoCompletedNotification(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Task Update</p>
       </div>
       <div style="background: #111111; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e;">
@@ -366,7 +366,7 @@ export async function sendWeeklyMetricsSummary(params: {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #DC143C; margin: 0;">NextGenCRM</h1>
+        <h1 style="color: #EA580C; margin: 0;">NextGenCRM</h1>
         <p style="color: #666; font-size: 12px;">Weekly Metrics Report</p>
       </div>
       <p style="color: #aaa; margin-bottom: 20px;">

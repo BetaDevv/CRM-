@@ -6,7 +6,7 @@ import { verifyToken, AuthRequest } from '../middleware/auth'
 const router = Router()
 router.use(verifyToken)
 
-const CRIMSON = '#DC143C'
+const CRIMSON = '#EA580C'
 const DARK_TEXT = '#333333'
 const LIGHT_TEXT = '#666666'
 const SECTION_BG = '#F8F8F8'

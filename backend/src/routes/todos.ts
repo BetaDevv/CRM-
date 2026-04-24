@@ -92,8 +92,9 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       [id, title, description || null, priority || 'medium', category || 'General', finalClientId, week_of || null, finalShared, user.userId, start_time || null, end_time || null, status || TODO_STATUS.PENDING, assigned_to || null]
     )
 
-    // Auto-create linked calendar event if time range provided
-    if (start_time && end_time) {
+    // TEMPORARILY DISABLED — user wants to-dos NOT to auto-create calendar events.
+    // To reactivate: change `if (false &&` back to `if (`
+    if (false && start_time && end_time) {
       try {
         await CalendarEventService.createFromTodo({
           title,
@@ -142,8 +143,9 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       [title, description || null, priority || 'medium', category || 'General', finalClientId, doneVal, finalShared, start_time || null, end_time || null, finalStatus, assigned_to || null, req.params.id]
     )
 
-    // Update linked calendar event if time range provided
-    if (start_time && end_time) {
+    // TEMPORARILY DISABLED — user wants to-dos NOT to sync changes to calendar events.
+    // To reactivate: change `if (false &&` back to `if (`
+    if (false && start_time && end_time) {
       await CalendarEventService.updateFromTodo({
         todoId: req.params.id,
         title,

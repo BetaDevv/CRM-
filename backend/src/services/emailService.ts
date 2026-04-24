@@ -1,5 +1,13 @@
 import nodemailer from 'nodemailer'
 
+/**
+ * Feature flag: emails to client-role users.
+ * Set to `true` to re-enable all client-facing emails.
+ * The post-approval email (`sendPostForApproval`) is NOT gated by this flag
+ * because the client needs it to interact with new posts.
+ */
+export const CLIENT_EMAILS_ENABLED = false
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '587'),

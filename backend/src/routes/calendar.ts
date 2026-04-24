@@ -3,7 +3,7 @@ import { pool } from '../db'
 import { verifyToken, AuthRequest } from '../middleware/auth'
 import { v4 as uuid } from 'uuid'
 import { logActivity } from '../services/activityLogger'
-import { sendEventInvite } from '../services/emailService'
+import { sendEventInvite, CLIENT_EMAILS_ENABLED } from '../services/emailService'
 import { createNotification } from '../services/notificationService'
 import * as googleCal from '../services/googleCalendarService'
 import * as microsoftCal from '../services/microsoftCalendarService'
@@ -167,7 +167,7 @@ router.post('/events', async (req: AuthRequest, res: Response) => {
           participantList.push({ id: pUserId, status: 'pending', name: userRows[0].name, email: userRows[0].email })
 
           // Send email invite (non-blocking)
-          if (is_shared) {
+          if (is_shared && CLIENT_EMAILS_ENABLED) {
             sendEventInvite({
               to: userRows[0].email,
               eventTitle: title,
@@ -402,14 +402,16 @@ router.post('/events/:id/participants', async (req: AuthRequest, res: Response) 
         added.push({ id: pUserId, status: 'pending', name: userRows[0].name, email: userRows[0].email })
 
         // Send email invite (non-blocking)
-        sendEventInvite({
-          to: userRows[0].email,
-          eventTitle: existing[0].title,
-          eventDescription: existing[0].description,
-          startTime: existing[0].start_time,
-          endTime: existing[0].end_time,
-          organizerName: req.user!.name,
-        }).catch(err => console.error('[Email] Error:', err))
+        if (CLIENT_EMAILS_ENABLED) {
+          sendEventInvite({
+            to: userRows[0].email,
+            eventTitle: existing[0].title,
+            eventDescription: existing[0].description,
+            startTime: existing[0].start_time,
+            endTime: existing[0].end_time,
+            organizerName: req.user!.name,
+          }).catch(err => console.error('[Email] Error:', err))
+        }
       }
     }
 

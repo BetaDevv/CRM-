@@ -1,6 +1,6 @@
 import { pool } from '../db'
 import { v4 as uuid } from 'uuid'
-import { sendTodoCompletedNotification, sendNoteNotification } from './emailService'
+import { sendTodoCompletedNotification, sendNoteNotification, CLIENT_EMAILS_ENABLED } from './emailService'
 import { NOTIFICATION_TYPE } from '../constants'
 
 type I18nParams = Record<string, string | number | null | undefined>
@@ -109,7 +109,9 @@ export async function notifyTodoCompleted(todo: { id: string; title: string; cli
           i18nParams,
         ]
       )
-      sendTodoCompletedNotification({ to: u.email, clientName: u.name, todoTitle: todo.title })
+      if (CLIENT_EMAILS_ENABLED) {
+        sendTodoCompletedNotification({ to: u.email, clientName: u.name, todoTitle: todo.title })
+      }
     }
   } catch (err) {
     console.error('Error sending todo completion notification:', err)
@@ -154,14 +156,16 @@ export async function notifyNoteAdded(params: {
       )
       const { rows: ownerRows } = await pool.query('SELECT email, name FROM users WHERE id = $1', [item.created_by])
       if (ownerRows.length) {
-        sendNoteNotification({
-          to: ownerRows[0].email,
-          recipientName: ownerRows[0].name,
-          senderName: authorName,
-          itemType: emailItemType,
-          itemTitle: item.title,
-          note: trimmedContent,
-        })
+        if (CLIENT_EMAILS_ENABLED) {
+          sendNoteNotification({
+            to: ownerRows[0].email,
+            recipientName: ownerRows[0].name,
+            senderName: authorName,
+            itemType: emailItemType,
+            itemTitle: item.title,
+            note: trimmedContent,
+          })
+        }
       }
     // Case 2: Item is shared and has a client_id -> notify admin (client wrote the note)
     } else if (item.shared && item.client_id) {

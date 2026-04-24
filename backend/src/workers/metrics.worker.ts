@@ -4,7 +4,7 @@ import { LinkedInService } from '../services/linkedin.service'
 import { MetaService } from '../services/meta.service'
 import { TikTokService } from '../services/tiktok.service'
 import { GA4Service } from '../services/ga4.service'
-import { sendWeeklyMetricsSummary } from '../services/emailService'
+import { sendWeeklyMetricsSummary, CLIENT_EMAILS_ENABLED } from '../services/emailService'
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
 
@@ -138,12 +138,14 @@ async function sendWeeklySummaries() {
           }
         }
 
-        await sendWeeklyMetricsSummary({
-          to: userRows[0].email,
-          clientName: userRows[0].name || client.company,
-          metrics,
-        })
-        console.log(`  ✓ Resumen enviado a ${client.company}`)
+        if (CLIENT_EMAILS_ENABLED) {
+          await sendWeeklyMetricsSummary({
+            to: userRows[0].email,
+            clientName: userRows[0].name || client.company,
+            metrics,
+          })
+          console.log(`  ✓ Resumen enviado a ${client.company}`)
+        }
       } catch (err: any) {
         console.error(`  ✗ Error enviando resumen a ${client.company}: ${err.message}`)
       }

@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import ChatWidget from '../chat/ChatWidget'
 import { useThemeStore } from '../../store/useThemeStore'
 import { useStore } from '../../store/useStore'
 
@@ -36,6 +37,7 @@ export default function Layout() {
           </motion.div>
         </main>
       </div>
+      <ChatWidget />
     </div>
   )
 }

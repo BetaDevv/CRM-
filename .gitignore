@@ -49,3 +49,6 @@ Thumbs.db
 # TypeScript cache
 *.tsbuildinfo
 docker-compose.override.yml
+
+# Claude
+*.claude

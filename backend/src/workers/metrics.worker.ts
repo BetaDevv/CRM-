@@ -4,6 +4,7 @@ import { LinkedInService } from '../services/linkedin.service'
 import { MetaService } from '../services/meta.service'
 import { TikTokService } from '../services/tiktok.service'
 import { GA4Service } from '../services/ga4.service'
+import { PlausibleService } from '../services/plausible.service'
 import { sendWeeklyMetricsSummary, CLIENT_EMAILS_ENABLED } from '../services/emailService'
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms))
@@ -12,10 +13,11 @@ async function syncConnection(conn: any) {
   const { client_id, platform } = conn
   try {
     switch (platform) {
-      case 'linkedin': await LinkedInService.fetchAndStore(client_id, conn); break
-      case 'meta':     await MetaService.fetchAndStore(client_id, conn);     break
-      case 'tiktok':   await TikTokService.fetchAndStore(client_id, conn);   break
-      case 'ga4':      await GA4Service.fetchAndStore(client_id, conn);      break
+      case 'linkedin':  await LinkedInService.fetchAndStore(client_id, conn); break
+      case 'meta':      await MetaService.fetchAndStore(client_id, conn);     break
+      case 'tiktok':    await TikTokService.fetchAndStore(client_id, conn);   break
+      case 'ga4':       await GA4Service.fetchAndStore(client_id, conn);      break
+      case 'plausible': await PlausibleService.fetchAndStore(client_id, conn); break
     }
     console.log(`  ✓ ${platform} → ${conn.company || client_id}`)
   } catch (err: any) {

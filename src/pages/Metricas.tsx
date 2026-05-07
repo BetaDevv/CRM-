@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Linkedin, ExternalLink, Loader2, AlertCircle,
   RefreshCw, Unlink, BarChart3, Play, FileDown,
-  Upload, X, CheckCircle2, Globe,
+  Upload, X, CheckCircle2, Globe, Eye, EyeOff, Plug,
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
-import { api, importMetrics, importPlausible, reorderClients } from '../lib/api'
+import { api, importMetrics, importPlausible, reorderClients, connectPlausible, disconnectPlausible, getPlausibleConnection, resyncPlausible, type PlausibleConnectionStatus } from '../lib/api'
 import { ClientStrip } from '../components/ClientStrip'
 import type { Client } from '../types'
 import { localToday, getLocale } from '../lib/utils'
@@ -120,6 +120,9 @@ export default function Metricas() {
   const [exporting, setExporting] = useState(false)
   const [importKind, setImportKind] = useState<'content' | 'visitors' | 'followers' | null>(null)
   const [plausibleOpen, setPlausibleOpen] = useState(false)
+  const [plausibleConnect, setPlausibleConnect] = useState(false)
+  const [plausibleConn, setPlausibleConn] = useState<PlausibleConnectionStatus | null>(null)
+  const [resyncing, setResyncing] = useState(false)
 
   const activeClients = clients.filter(c => c.status === 'active')
   const selectedClient = clients.find(c => c.id === selectedClientId)
@@ -150,6 +153,14 @@ export default function Metricas() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [selectedClientId, days])
+
+  // Plausible connection status (separate endpoint — no se incluye en /metrics/:id)
+  useEffect(() => {
+    if (!selectedClientId) { setPlausibleConn(null); return }
+    getPlausibleConnection(selectedClientId)
+      .then(setPlausibleConn)
+      .catch(() => setPlausibleConn({ connected: false }))
+  }, [selectedClientId])
 
   const handleDisconnect = async (platform: string) => {
     if (!confirm(t('admin:metrics.disconnectConfirm', { platform }))) return
@@ -236,12 +247,23 @@ export default function Metricas() {
               </button>
             </>
           )}
+          {/* LEGACY ZIP import retired in favor of API connection. Component kept for one-time historical backfills. */}
+          {/*
           {isAdmin() && activePlatform === 'web' && selectedClientId && (
             <button onClick={() => setPlausibleOpen(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
               style={{ background: WEB_COLOR + '20', borderColor: WEB_COLOR + '50', color: WEB_COLOR }}>
               <Upload size={13} />
               {t('admin:metrics.import.buttonPlausible')}
+            </button>
+          )}
+          */}
+          {isAdmin() && activePlatform === 'web' && selectedClientId && !plausibleConn?.connected && (
+            <button onClick={() => setPlausibleConnect(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
+              style={{ background: WEB_COLOR + '20', borderColor: WEB_COLOR + '50', color: WEB_COLOR }}>
+              <Plug size={13} />
+              {t('admin:metrics.web.connect.title')}
             </button>
           )}
           {isAdmin() && (
@@ -321,7 +343,7 @@ export default function Metricas() {
           </div>
 
           {/* Connection status + disconnect */}
-          {isAdmin() && selectedClientId && (
+          {isAdmin() && selectedClientId && activePlatform !== 'web' && (
             <div className="flex items-center gap-4 flex-wrap">
               <ConnectionBadge
                 connected={conn?.connected}
@@ -331,6 +353,53 @@ export default function Metricas() {
                 clientId={selectedClientId}
                 onDisconnect={() => handleDisconnect(activePlatform)}
               />
+            </div>
+          )}
+          {isAdmin() && selectedClientId && activePlatform === 'web' && plausibleConn?.connected && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                {t('admin:metrics.web.connect.connectedTo', { domain: plausibleConn.site_id })}
+              </div>
+              {plausibleConn.last_sync_at && (
+                <span className="text-xs text-ink-500">
+                  {t('admin:metrics.web.connect.lastSync', { time: new Date(plausibleConn.last_sync_at).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}
+                </span>
+              )}
+              <button
+                onClick={async () => {
+                  if (resyncing || !selectedClientId) return
+                  setResyncing(true)
+                  try {
+                    await resyncPlausible(selectedClientId)
+                    const fresh = await getPlausibleConnection(selectedClientId)
+                    setPlausibleConn(fresh)
+                    reloadMetrics()
+                  } catch (err: any) {
+                    alert(err?.response?.data?.error || err?.message || 'Error')
+                  } finally {
+                    setResyncing(false)
+                  }
+                }}
+                disabled={resyncing}
+                className="flex items-center gap-1 text-xs text-ink-300 hover:text-white transition-colors disabled:opacity-50"
+                style={{ color: resyncing ? undefined : WEB_COLOR }}
+              >
+                <RefreshCw size={12} className={resyncing ? 'animate-spin' : ''} />
+                {resyncing
+                  ? t('admin:metrics.web.connect.resyncing')
+                  : t('admin:metrics.web.connect.resync')}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm(t('admin:metrics.disconnectConfirm', { platform: 'Plausible' }))) return
+                  await disconnectPlausible(selectedClientId)
+                  setPlausibleConn({ connected: false })
+                }}
+                className="flex items-center gap-1 text-xs text-ink-500 hover:text-red-400 transition-colors"
+              >
+                <Unlink size={12} /> {t('admin:metrics.web.connect.disconnect')}
+              </button>
             </div>
           )}
 
@@ -346,13 +415,32 @@ export default function Metricas() {
                   {activePlatform === 'web'      && <WebPanel      data={platformData} days={days} />}
                 </>
               ) : activePlatform === 'web' ? (
-                <div className="glass-card p-12 flex flex-col items-center text-center">
-                  <Globe size={40} className="text-ink-500 mb-3 opacity-40" />
-                  <p className="text-ink-300 mb-1">
-                    {isAdmin() ? t('admin:metrics.web.emptyAdmin') : t('admin:metrics.web.emptyClient')}
-                  </p>
-                  <p className="text-ink-500 text-sm">{t('admin:metrics.import.plausibleHint')}</p>
-                </div>
+                isAdmin() ? (
+                  <div className="glass-card p-6 border border-white/5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white"
+                        style={{ background: WEB_COLOR }}>
+                        <Globe size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-white mb-1">{t('admin:metrics.web.connect.title')}</h4>
+                        <p className="text-sm text-ink-300 mb-4">{t('admin:metrics.web.connect.domainHelp')}</p>
+                        <button
+                          onClick={() => setPlausibleConnect(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                          style={{ background: WEB_COLOR }}
+                        >
+                          <Plug size={14} /> {t('admin:metrics.web.connect.testButton')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="glass-card p-12 flex flex-col items-center text-center">
+                    <Globe size={40} className="text-ink-500 mb-3 opacity-40" />
+                    <p className="text-ink-300 mb-1">{t('admin:metrics.web.emptyClient')}</p>
+                  </div>
+                )
               ) : (
                 isAdmin() ? (
                   <ConnectCTA
@@ -389,7 +477,7 @@ export default function Metricas() {
         )}
       </AnimatePresence>
 
-      {/* Import Plausible Modal */}
+      {/* LEGACY: ImportPlausibleModal kept for one-time historical backfills — trigger button was retired. */}
       <AnimatePresence>
         {plausibleOpen && selectedClient && (
           <ImportPlausibleModal
@@ -398,6 +486,27 @@ export default function Metricas() {
             onSuccess={() => {
               setPlausibleOpen(false)
               reloadMetrics()
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Connect Plausible (live API) */}
+      <AnimatePresence>
+        {plausibleConnect && selectedClient && (
+          <ConnectPlausibleModal
+            client={selectedClient}
+            onClose={() => setPlausibleConnect(false)}
+            onSuccess={async (siteId) => {
+              setPlausibleConnect(false)
+              setPlausibleConn({ connected: true, site_id: siteId, last_sync_at: null })
+              // Re-fetch shortly to pick up first sync; the WebPanel hidrata cuando llegue.
+              setTimeout(() => {
+                if (selectedClientId) {
+                  getPlausibleConnection(selectedClientId).then(setPlausibleConn).catch(() => {})
+                  reloadMetrics()
+                }
+              }, 4000)
             }}
           />
         )}
@@ -805,6 +914,202 @@ function ImportPlausibleModal({ client, onClose, onSuccess }: {
           >
             {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
             {t('admin:metrics.import.submitButton')}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─── Connect Plausible (live API) Modal ───────────────────────────────────────
+function ConnectPlausibleModal({ client, onClose, onSuccess }: {
+  client: { id: string; company: string }
+  onClose: () => void
+  onSuccess: (siteId: string) => void
+}) {
+  const { t } = useTranslation(['admin', 'common'])
+  const [domain, setDomain] = useState('')
+  const [apiKey, setApiKey] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
+  const [showKey, setShowKey] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [feedback, setFeedback] = useState<
+    | { kind: 'success'; siteId: string }
+    | { kind: 'error'; message: string }
+    | null
+  >(null)
+
+  const handleSubmit = async () => {
+    const cleanDomain = domain.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase()
+    if (!cleanDomain || !apiKey.trim()) {
+      setFeedback({ kind: 'error', message: t('admin:metrics.import.noFileSelected') })
+      return
+    }
+    setSubmitting(true)
+    setFeedback(null)
+    try {
+      const cleanBase = baseUrl.trim() || undefined
+      const res = await connectPlausible(client.id, cleanDomain, apiKey.trim(), cleanBase)
+      setFeedback({ kind: 'success', siteId: res.site_id })
+      setTimeout(() => onSuccess(res.site_id), 1200)
+    } catch (err: any) {
+      const data = err?.response?.data
+      const status = err?.response?.status
+      let msg = data?.error || err?.message || t('admin:metrics.web.connect.errors.network')
+      // Mensajes traducidos según status si aplica
+      if (status === 422) {
+        const lower = String(msg).toLowerCase()
+        if (lower.includes('api key') || lower.includes('inválida') || lower.includes('invalid')) {
+          msg = t('admin:metrics.web.connect.errors.invalidKey')
+        } else if (lower.includes('sitio') || lower.includes('site') || lower.includes('not found') || lower.includes('404')) {
+          msg = t('admin:metrics.web.connect.errors.siteNotFound')
+        }
+      }
+      setFeedback({ kind: 'error', message: msg })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onMouseDown={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        onMouseDown={e => e.stopPropagation()}
+        className="glass-card p-6 w-full max-w-lg border border-white/10"
+      >
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Globe size={18} style={{ color: WEB_COLOR }} />
+              {t('admin:metrics.web.connect.title')}
+            </h3>
+            <div className="flex gap-4 mt-2 text-xs text-ink-400 flex-wrap">
+              <span>{t('admin:metrics.import.clientLabel')}: <span className="text-white font-medium">{client.company}</span></span>
+              <span>{t('admin:metrics.import.platformLabel')}: <span className="text-white font-medium">Plausible</span></span>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-ink-400 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {/* Domain */}
+          <div>
+            <label className="block text-xs font-medium text-ink-300 mb-1.5">
+              {t('admin:metrics.web.connect.domainLabel')}
+            </label>
+            <input
+              type="text"
+              value={domain}
+              onChange={e => setDomain(e.target.value)}
+              disabled={submitting}
+              placeholder={t('admin:metrics.web.connect.domainPlaceholder')}
+              className="w-full input-dark"
+              autoFocus
+            />
+            <p className="text-[11px] text-ink-500 mt-1">{t('admin:metrics.web.connect.domainHelp')}</p>
+          </div>
+
+          {/* API key */}
+          <div>
+            <label className="block text-xs font-medium text-ink-300 mb-1.5">
+              {t('admin:metrics.web.connect.apiKeyLabel')}
+            </label>
+            <div className="relative">
+              <input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={e => setApiKey(e.target.value)}
+                disabled={submitting}
+                placeholder="••••••••••••••••"
+                className="w-full input-dark pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(s => !s)}
+                className="absolute inset-y-0 right-0 px-3 text-ink-400 hover:text-white transition-colors"
+                tabIndex={-1}
+              >
+                {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+            <p className="text-[11px] text-ink-500 mt-1">{t('admin:metrics.web.connect.apiKeyHelp')}</p>
+          </div>
+
+          {/* Base URL (optional — defaults to plausible.io) */}
+          <div>
+            <label className="block text-xs font-medium text-ink-300 mb-1.5">
+              {t('admin:metrics.web.connect.baseUrlLabel')}
+            </label>
+            <input
+              type="text"
+              value={baseUrl}
+              onChange={e => setBaseUrl(e.target.value)}
+              disabled={submitting}
+              placeholder={t('admin:metrics.web.connect.baseUrlPlaceholder')}
+              className="w-full input-dark"
+            />
+            <p className="text-[11px] text-ink-500 mt-1">{t('admin:metrics.web.connect.baseUrlHelp')}</p>
+          </div>
+        </div>
+
+        {/* Feedback */}
+        <AnimatePresence>
+          {feedback?.kind === 'success' && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs"
+            >
+              <CheckCircle2 size={14} className="flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-semibold">{t('admin:metrics.web.connect.success')}</p>
+                <p className="text-emerald-400/70">{t('admin:metrics.web.connect.firstSyncQueued')}</p>
+              </div>
+            </motion.div>
+          )}
+          {feedback?.kind === 'error' && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs"
+            >
+              <div className="flex items-start gap-2">
+                <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+                <span className="font-semibold">{feedback.message}</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2 mt-5">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="px-4 py-2 rounded-xl text-xs font-medium bg-ink-800 border border-white/10 text-ink-300 hover:text-white transition-all disabled:opacity-50"
+          >
+            {t('common:common.cancel')}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!domain.trim() || !apiKey.trim() || submitting}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: WEB_COLOR }}
+          >
+            {submitting
+              ? <><Loader2 size={13} className="animate-spin" /> {t('admin:metrics.web.connect.connecting')}</>
+              : <><Plug size={13} /> {t('admin:metrics.web.connect.testButton')}</>}
           </button>
         </div>
       </motion.div>

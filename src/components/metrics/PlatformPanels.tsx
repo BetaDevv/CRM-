@@ -29,8 +29,12 @@ export function formatShort(n: number): string {
 }
 
 export function formatAxisDate(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })
+  // Parsear como fecha LOCAL (no UTC). `new Date('2026-04-30')` se interpreta
+  // como UTC midnight, lo que hace que en TZ negativos (Colombia UTC-5) se
+  // formatee como el día anterior. Construir con componentes evita eso.
+  const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number)
+  const date = new Date(y, (m || 1) - 1, d || 1)
+  return date.toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' })
 }
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────

@@ -840,6 +840,43 @@ export async function importPlausible(
   return data
 }
 
+// --- Plausible API connection (per-client) ---
+
+export interface PlausibleConnectionStatus {
+  connected: boolean
+  site_id?: string | null
+  base_url?: string | null
+  last_sync_at?: string | null
+}
+
+export async function connectPlausible(
+  clientId: string,
+  siteId: string,
+  apiKey: string,
+  baseUrl?: string,
+): Promise<{ connected: boolean; site_id: string; lastSyncQueued: boolean }> {
+  const { data } = await api.post('/metrics/web/connect', {
+    client_id: clientId,
+    site_id: siteId,
+    api_key: apiKey,
+    base_url: baseUrl,
+  })
+  return data
+}
+
+export async function disconnectPlausible(clientId: string): Promise<void> {
+  await api.delete(`/metrics/web/disconnect/${clientId}`)
+}
+
+export async function resyncPlausible(clientId: string): Promise<void> {
+  await api.post(`/metrics/web/resync/${clientId}`)
+}
+
+export async function getPlausibleConnection(clientId: string): Promise<PlausibleConnectionStatus> {
+  const { data } = await api.get(`/metrics/web/connection/${clientId}`)
+  return data
+}
+
 // --- Client reordering (global sort_order) ---
 
 /** Persists the global order of clients. Admin only. */

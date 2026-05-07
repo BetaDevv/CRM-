@@ -7,6 +7,7 @@ import { verifyToken, requireAdmin, AuthRequest } from '../middleware/auth'
 import { syncAll } from '../workers/metrics.worker'
 import { parseLinkedInExport } from '../services/linkedinImport.service'
 import { parsePlausibleExport } from '../services/plausibleImport.service'
+import { PlausibleService, normalizePlausibleBase } from '../services/plausible.service'
 
 const router = Router()
 router.use(verifyToken)
@@ -488,6 +489,141 @@ router.post('/import', requireAdmin, importUpload.single('file'), async (req: Au
   }
 })
 
+// ─── Plausible API connection (per-client) ───────────────────────────────────
+// POST /api/metrics/web/connect — body: { client_id, site_id, api_key }
+// Tests the credentials against Plausible Cloud, persists the connection, and
+// fires a background fetchAndStore so the WebPanel hydrates without manual sync.
+router.post('/web/connect', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const client_id = String(req.body?.client_id || '').trim()
+    const rawSite = String(req.body?.site_id || '').trim()
+    const api_key = String(req.body?.api_key || '').trim()
+    const rawBase = String(req.body?.base_url || '').trim()
+
+    if (!client_id) { res.status(400).json({ error: 'client_id es requerido' }); return }
+    if (!rawSite)   { res.status(400).json({ error: 'site_id es requerido' }); return }
+    if (!api_key)   { res.status(400).json({ error: 'api_key es requerido' }); return }
+
+    // Normalizar el site_id: aceptamos "https://technova.com/" → "technova.com"
+    const site_id = rawSite
+      .replace(/^https?:\/\//i, '')
+      .replace(/\/.*$/, '')
+      .toLowerCase()
+
+    const baseUrl = normalizePlausibleBase(rawBase)
+    const scopes = JSON.stringify({ baseUrl })
+
+    const { rows: clientRows } = await pool.query('SELECT id FROM clients WHERE id = $1', [client_id])
+    if (!clientRows.length) { res.status(404).json({ error: 'Cliente no encontrado' }); return }
+
+    const test = await PlausibleService.testConnection(site_id, api_key, baseUrl)
+    if (!test.ok) {
+      res.status(422).json({ error: test.error || 'No se pudo verificar la conexión con Plausible' })
+      return
+    }
+
+    await pool.query(
+      `INSERT INTO platform_connections
+         (id, client_id, platform, access_token, platform_account_id, platform_account_name, scopes, is_active)
+       VALUES ($1, $2, 'plausible', $3, $4, $4, $5, 1)
+       ON CONFLICT (client_id, platform) DO UPDATE SET
+         access_token = EXCLUDED.access_token,
+         platform_account_id = EXCLUDED.platform_account_id,
+         platform_account_name = EXCLUDED.platform_account_name,
+         scopes = EXCLUDED.scopes,
+         is_active = 1`,
+      [crypto.randomUUID(), client_id, api_key, site_id, scopes]
+    )
+
+    // Disparar primer sync en background — no awaiteamos para responder rápido al UI
+    pool.query(
+      `SELECT * FROM platform_connections WHERE client_id = $1 AND platform = 'plausible'`,
+      [client_id]
+    ).then(({ rows }) => {
+      if (!rows.length) return
+      PlausibleService.fetchAndStore(client_id, rows[0])
+        .then(() => console.log(`[plausible] initial sync ok → ${client_id}/${site_id}`))
+        .catch(err => console.error(`[plausible] initial sync failed → ${client_id}/${site_id}:`, err.message))
+    }).catch(() => {})
+
+    res.json({ connected: true, site_id, lastSyncQueued: true })
+  } catch (err: any) {
+    console.error('Error en /metrics/web/connect:', err)
+    res.status(500).json({ error: err?.message || 'Error interno del servidor' })
+  }
+})
+
+// POST /api/metrics/web/resync/:clientId — admin only. Forzar re-fetch on-demand.
+router.post('/web/resync/:clientId', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { clientId } = req.params
+    const { rows } = await pool.query(
+      `SELECT * FROM platform_connections WHERE client_id = $1 AND platform = 'plausible'`,
+      [clientId]
+    )
+    if (!rows.length) {
+      res.status(404).json({ error: 'No hay conexión Plausible para este cliente' })
+      return
+    }
+    await PlausibleService.fetchAndStore(clientId, rows[0])
+    res.json({ ok: true })
+  } catch (err: any) {
+    console.error('Error en /metrics/web/resync:', err)
+    res.status(500).json({ error: err?.message || 'Error al sincronizar con Plausible' })
+  }
+})
+
+// DELETE /api/metrics/web/disconnect/:clientId — admin only.
+// Borra la conexión pero conserva los snapshots/dimensiones históricas.
+router.delete('/web/disconnect/:clientId', requireAdmin, async (req: AuthRequest, res: Response) => {
+  try {
+    const { clientId } = req.params
+    await pool.query(
+      `DELETE FROM platform_connections WHERE client_id = $1 AND platform = 'plausible'`,
+      [clientId]
+    )
+    res.json({ ok: true })
+  } catch (err: any) {
+    console.error('Error en /metrics/web/disconnect:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// GET /api/metrics/web/connection/:clientId — devuelve estado SIN exponer la API key.
+router.get('/web/connection/:clientId', async (req: AuthRequest, res: Response) => {
+  try {
+    const { clientId } = req.params
+    if (req.user!.role === 'client' && req.user!.clientId !== clientId) {
+      res.status(403).json({ error: 'Sin acceso' }); return
+    }
+    const { rows } = await pool.query(
+      `SELECT platform_account_id, last_sync_at, is_active, scopes
+       FROM platform_connections
+       WHERE client_id = $1 AND platform = 'plausible'`,
+      [clientId]
+    )
+    if (!rows.length) { res.json({ connected: false }); return }
+    const r = rows[0]
+    let baseUrl: string | null = null
+    try {
+      const parsed = r.scopes ? JSON.parse(r.scopes) : null
+      if (parsed && typeof parsed === 'object' && typeof parsed.baseUrl === 'string') {
+        baseUrl = parsed.baseUrl
+      }
+    } catch { /* legacy */ }
+    res.json({
+      connected: !!r.is_active,
+      site_id: r.platform_account_id || null,
+      base_url: baseUrl,
+      last_sync_at: r.last_sync_at || null,
+    })
+  } catch (err) {
+    console.error('Error en /metrics/web/connection:', err)
+    res.status(500).json({ error: 'Error interno del servidor' })
+  }
+})
+
+// LEGACY: manual ZIP/CSV import — kept for one-time historical backfills. Live data uses the Plausible API via PlausibleService.
 // POST /api/metrics/import-plausible — admin-only Plausible CSV/ZIP import
 // multipart/form-data: file (single, .zip or .csv), client_id
 router.post('/import-plausible', requireAdmin, plausibleUpload.single('file'), async (req: AuthRequest, res: Response) => {

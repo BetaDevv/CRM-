@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X, Mail, DollarSign, Tag, Pencil, Trash2, Loader2, Sparkles, TrendingUp } from 'lucide-react'
+import { DndContext, DragOverlay, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core'
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { prospectStatusConfig, formatCurrency } from '../lib/utils'
 import { api, convertProspect } from '../lib/api'
 import type { Prospect, ProspectStatus } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
-import ResponsiveKanbanBoard from '../components/responsive/ResponsiveKanbanBoard'
 
 const columns: { key: ProspectStatus; tKey: string }[] = [
   { key: 'new',         tKey: 'prospects.columns.new' },
@@ -143,6 +145,34 @@ function ProspectCard({
         </select>
       </div>
     </motion.div>
+  )
+}
+
+function DroppableColumn({ id, children }: { id: string; children: ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id })
+  return (
+    <div
+      ref={setNodeRef}
+      className={`max-h-[520px] overflow-y-auto space-y-3 pr-1 thin-scrollbar min-h-[120px] p-2 rounded-xl transition-colors ${isOver ? 'bg-ink-800/50 ring-1 ring-ink-600' : ''}`}
+    >
+      {children}
+    </div>
+  )
+}
+
+function DraggableProspectCard({ prospect, children }: { prospect: Prospect; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: prospect.id })
+  const style = transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={isDragging ? 'opacity-30 z-50' : ''}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -312,6 +342,42 @@ export default function Prospectos() {
   const [showModal, setShowModal] = useState(false)
   const [editProspect, setEditProspect] = useState<Prospect | null>(null)
   const [convertMsg, setConvertMsg] = useState<string | null>(null)
+  const [activeProspect, setActiveProspect] = useState<Prospect | null>(null)
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
+
+  function handleDragStart(event: DragStartEvent) {
+    const prospect = prospects.find(p => p.id === event.active.id)
+    setActiveProspect(prospect || null)
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    setActiveProspect(null)
+    const { active, over } = event
+    if (!over) return
+
+    const prospectId = active.id as string
+    const newStatus = over.id as ProspectStatus
+    if (!columns.some(c => c.key === newStatus)) return
+
+    const prospect = prospects.find(p => p.id === prospectId)
+    if (!prospect || prospect.status === newStatus) return
+
+    // Optimistic update + auto-probability como hace el dropdown
+    const newProbability = defaultProbabilityByStatus[newStatus]
+    setProspects(prev => prev.map(p => p.id === prospectId ? { ...p, status: newStatus, probability: newProbability } : p))
+
+    try {
+      const { data } = await api.put(`/prospects/${prospectId}`, { ...prospect, status: newStatus, probability: newProbability })
+      setProspects(prev => prev.map(p => p.id === prospectId ? data : p))
+    } catch {
+      // Revert on error
+      setProspects(prev => prev.map(p => p.id === prospectId ? prospect : p))
+    }
+  }
 
   useEffect(() => {
     api.get('/prospects').then(r => setProspects(r.data)).finally(() => setLoading(false))
@@ -448,37 +514,53 @@ export default function Prospectos() {
 
       {/* Kanban View */}
       {!loading && (
-        <ResponsiveKanbanBoard columnCount={6}>
-          {columns.map(col => {
-            const cfg = prospectStatusConfig[col.key]
-            const items = byColumn(col.key)
-            return (
-              <div key={col.key} className="space-y-3 min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: cfg.color }} />
-                    <span className="text-xs font-semibold text-ink-200">{t(col.tKey)}</span>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+            {columns.map(col => {
+              const cfg = prospectStatusConfig[col.key]
+              const items = byColumn(col.key)
+              return (
+                <div key={col.key} className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ background: cfg.color }} />
+                      <span className="text-xs font-semibold text-ink-200">{t(col.tKey)}</span>
+                    </div>
+                    <span className="text-xs text-ink-400">{items.length}</span>
                   </div>
-                  <span className="text-xs text-ink-400">{items.length}</span>
+                  <DroppableColumn id={col.key}>
+                    <AnimatePresence>
+                      {items.map(p => (
+                        <DraggableProspectCard key={p.id} prospect={p}>
+                          <ProspectCard
+                            prospect={p}
+                            onUpdate={handleStatusUpdate}
+                            onEdit={setEditProspect}
+                            onDelete={handleDelete}
+                            onConvert={handleConvert}
+                          />
+                        </DraggableProspectCard>
+                      ))}
+                    </AnimatePresence>
+                  </DroppableColumn>
                 </div>
-                <div className="space-y-3 min-h-[120px]">
-                  <AnimatePresence>
-                    {items.map(p => (
-                      <ProspectCard
-                        key={p.id}
-                        prospect={p}
-                        onUpdate={handleStatusUpdate}
-                        onEdit={setEditProspect}
-                        onDelete={handleDelete}
-                        onConvert={handleConvert}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </div>
+              )
+            })}
+          </div>
+          <DragOverlay>
+            {activeProspect ? (
+              <div className="opacity-90 pointer-events-none">
+                <ProspectCard
+                  prospect={activeProspect}
+                  onUpdate={() => {}}
+                  onEdit={() => {}}
+                  onDelete={() => {}}
+                  onConvert={() => {}}
+                />
               </div>
-            )
-          })}
-        </ResponsiveKanbanBoard>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       <AnimatePresence>

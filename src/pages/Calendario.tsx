@@ -211,7 +211,7 @@ function EventModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto"
+        className="glass-card p-4 sm:p-6 mx-4 w-full max-w-lg max-h-[90vh] overflow-y-auto thin-scrollbar"
         onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -232,7 +232,7 @@ function EventModal({
           </div>
         )}
 
-        <div className="p-5 space-y-4">
+        <div className="p-3 sm:p-5 space-y-4">
           {/* Title */}
           <div>
             <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.title')}</label>
@@ -275,7 +275,7 @@ function EventModal({
           </div>
 
           {/* Date/Time pickers */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium mb-1.5 text-ink-300">{t('admin:calendar.form.start')}</label>
               <input
@@ -446,7 +446,7 @@ function EventModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3 mt-5">
+        <div className="flex items-center gap-2 sm:gap-3 mt-5 flex-wrap">
           {mode === 'edit' && onDelete && (
             <button
               onClick={handleDelete}
@@ -746,19 +746,19 @@ export default function Calendario() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-6 space-y-5 h-full flex flex-col"
+      className="p-4 sm:p-6 space-y-4 sm:space-y-5 h-full flex flex-col"
     >
       {/* ─── Header ─── */}
-      <div className="flex items-center justify-between flex-shrink-0 flex-wrap gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between flex-shrink-0 gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl" style={{ background: 'rgb(var(--accent) / 0.2)' }}>
             <CalendarIcon size={22} style={{ color: 'var(--accent-light)' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
               {t('admin:calendar.title')}
             </h1>
-            <p className="text-sm mt-0.5 text-ink-400">
+            <p className="text-sm sm:text-base mt-0.5 text-ink-400">
               {t('admin:calendar.subtitle')}
             </p>
           </div>
@@ -864,7 +864,7 @@ export default function Calendario() {
       </div>
 
       {/* ─── FullCalendar ─── */}
-      <div className="glass-card flex-1 p-4 rounded-2xl overflow-hidden fc-dark-wrapper">
+      <div className="glass-card flex-1 p-2 sm:p-4 rounded-2xl overflow-hidden fc-dark-wrapper">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}

@@ -421,31 +421,31 @@ export default function TodoSemanal() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="page-header">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-8">
         <div>
-          <h2 className="section-title">{t('admin:todo.title')}</h2>
-          <p className="text-ink-300 text-sm mt-1">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>{t('admin:todo.title')}</h2>
+          <p className="text-ink-300 text-sm sm:text-base mt-1">
             {t('admin:todo.completedCount', { done: doneCount, total: totalCount })}
           </p>
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={openCreate} className="btn-primary">
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={openCreate} className="btn-primary justify-center w-full sm:w-auto">
           <Plus size={16} /> {t('admin:todo.newTask')}
         </motion.button>
       </div>
 
       {/* Progress */}
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
+      <div className="glass-card p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3 gap-3">
+          <div className="min-w-0">
             <p className="font-semibold text-white">{t('admin:todo.weekProgress')}</p>
             <p className="text-xs text-ink-300 mt-0.5">
               {new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-white">{progress}%</p>
+          <div className="text-right flex-shrink-0">
+            <p className="text-2xl sm:text-3xl font-bold text-white">{progress}%</p>
             <p className="text-xs text-ink-400">{t('admin:todo.completed')}</p>
           </div>
         </div>
@@ -461,18 +461,18 @@ export default function TodoSemanal() {
         </div>
 
         {/* Status breakdown */}
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="p-3 rounded-xl bg-ink-800/50 text-center">
-            <p className="text-lg font-bold text-amber-400">{pendingCount}</p>
-            <p className="text-xs text-ink-400">{t('admin:todo.columns.pending')}</p>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+          <div className="p-2 sm:p-3 rounded-xl bg-ink-800/50 text-center">
+            <p className="text-base sm:text-lg font-bold text-amber-400">{pendingCount}</p>
+            <p className="text-[10px] sm:text-xs text-ink-400">{t('admin:todo.columns.pending')}</p>
           </div>
-          <div className="p-3 rounded-xl bg-ink-800/50 text-center">
-            <p className="text-lg font-bold text-blue-400">{inProgressCount}</p>
-            <p className="text-xs text-ink-400">{t('admin:todo.columns.inProgress')}</p>
+          <div className="p-2 sm:p-3 rounded-xl bg-ink-800/50 text-center">
+            <p className="text-base sm:text-lg font-bold text-blue-400">{inProgressCount}</p>
+            <p className="text-[10px] sm:text-xs text-ink-400">{t('admin:todo.columns.inProgress')}</p>
           </div>
-          <div className="p-3 rounded-xl bg-ink-800/50 text-center">
-            <p className="text-lg font-bold text-emerald-400">{doneCount}</p>
-            <p className="text-xs text-ink-400">{t('admin:todo.columns.done')}</p>
+          <div className="p-2 sm:p-3 rounded-xl bg-ink-800/50 text-center">
+            <p className="text-base sm:text-lg font-bold text-emerald-400">{doneCount}</p>
+            <p className="text-[10px] sm:text-xs text-ink-400">{t('admin:todo.columns.done')}</p>
           </div>
         </div>
       </div>
@@ -525,7 +525,7 @@ export default function TodoSemanal() {
 
       {/* Tasks - 3 columns with Drag & Drop */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Pending */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -632,7 +632,7 @@ export default function TodoSemanal() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
+              className="glass-card p-4 sm:p-6 mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
               onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">
@@ -675,7 +675,7 @@ export default function TodoSemanal() {
                   )}
                 </div>
                 {/* Start/End time */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-ink-300 mb-1.5">{t('admin:todo.form.startDateTime')}</p>
                     <input
@@ -696,7 +696,7 @@ export default function TodoSemanal() {
                   </div>
                 </div>
                 {/* Priority + Category */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-ink-300 mb-1.5">{t('admin:todo.form.priority')}</p>
                     <div className="flex flex-col gap-1.5">
@@ -839,7 +839,7 @@ export default function TodoSemanal() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-ink-900 border border-ink-700 rounded-2xl p-6 max-w-sm mx-4"
+              className="bg-ink-900 border border-ink-700 rounded-2xl p-4 sm:p-6 max-w-sm mx-4 w-full"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
@@ -877,12 +877,12 @@ export default function TodoSemanal() {
             onMouseDown={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto thin-scrollbar"
+              className="glass-card p-4 sm:p-6 mx-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto thin-scrollbar"
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
+              <div className="flex items-center justify-between mb-5 gap-3">
+                <h3 className="font-bold text-lg sm:text-xl text-white break-words min-w-0">{detailTodo.title}</h3>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { openEdit(detailTodo); setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}
                     className="text-ink-400 hover:text-[var(--accent-light)] transition-all"><Pencil size={16} /></button>
@@ -976,7 +976,7 @@ export default function TodoSemanal() {
                   <div className="space-y-2">
                     {/* Image previews */}
                     {detailAttachments.filter(a => a.mime_type.startsWith('image/')).length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                         {detailAttachments.filter(a => a.mime_type.startsWith('image/')).map(att => (
                           <div key={att.id} className="group/att relative rounded-xl overflow-hidden border border-white/5">
                             <img src={att.url} alt={att.original_name} className="w-full h-28 object-cover" />

@@ -73,14 +73,14 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="glass-card p-8">
+        <div className="glass-card p-6 sm:p-8">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-xl font-bold text-white mb-1">{t('login.title')}</h2>
-            <p className="text-sm text-ink-300 mb-7">{t('login.subtitle')}</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">{t('login.title')}</h2>
+            <p className="text-sm sm:text-base text-ink-300 mb-7">{t('login.subtitle')}</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email */}

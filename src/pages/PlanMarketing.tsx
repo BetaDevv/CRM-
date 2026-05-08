@@ -175,17 +175,17 @@ function NewPlanModal({ clients, onClose, onCreated }: {
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.93, y: 20 }} transition={{ duration: 0.25 }}
-        className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="glass-card mx-4 w-full max-w-2xl max-h-[90vh] overflow-y-auto thin-scrollbar"
         onMouseDown={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-6 border-b border-white/5">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/5">
           <div>
-            <h3 className="font-bold text-white text-xl">{t('admin:plan.newPlanModal.title')}</h3>
+            <h3 className="font-bold text-white text-lg sm:text-xl">{t('admin:plan.newPlanModal.title')}</h3>
             <p className="text-xs text-ink-400 mt-0.5">{t('admin:plan.newPlanModal.step', { step })}</p>
           </div>
           <button onClick={onClose} className="text-ink-400 hover:text-white"><X size={20} /></button>
         </div>
-        <div className="px-6 py-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b border-white/5 overflow-x-auto thin-scrollbar">
+          <div className="flex items-center gap-3 min-w-max">
             {[{ n: 1, l: t('admin:plan.newPlanModal.steps.info') }, { n: 2, l: t('admin:plan.newPlanModal.steps.milestones') }, { n: 3, l: t('admin:plan.newPlanModal.steps.kpis') }].map(s => (
               <div key={s.n} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${step >= s.n ? '' : 'border-ink-600 text-ink-500'}`}
@@ -199,7 +199,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           {step === 1 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
               <div>
@@ -216,7 +216,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                 <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.mainObjective')}</label>
                 <textarea value={objective} onChange={e => setObjective(e.target.value)} rows={3} placeholder={t('admin:plan.newPlanModal.objectivePlaceholder')} className="input-dark text-sm resize-none" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-ink-300 mb-1.5">{t('admin:plan.newPlanModal.startDate')}</label>
                   <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-dark text-sm" />
@@ -244,7 +244,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                   </div>
                   <input type="text" value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)} placeholder={t('admin:plan.newPlanModal.milestoneTitlePlaceholder')} className="input-dark text-sm" />
                   <input type="text" value={m.description} onChange={e => updateMilestone(i, 'description', e.target.value)} placeholder={t('admin:plan.newPlanModal.milestoneDescPlaceholder')} className="input-dark text-sm" />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input type="date" value={m.date} onChange={e => updateMilestone(i, 'date', e.target.value)} className="input-dark text-sm" />
                     <select value={m.category} onChange={e => updateMilestone(i, 'category', e.target.value)} className="input-dark text-sm">
                       {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
@@ -272,7 +272,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
                     )}
                   </div>
                   <input type="text" value={k.label} onChange={e => updateKpi(i, 'label', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiLabelPlaceholder')} className="input-dark text-sm" />
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input type="text" value={k.target} onChange={e => updateKpi(i, 'target', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiTargetPlaceholder')} className="input-dark text-sm" />
                     <input type="text" value={k.current_value} onChange={e => updateKpi(i, 'current_value', e.target.value)} placeholder={t('admin:plan.newPlanModal.kpiCurrentPlaceholder')} className="input-dark text-sm" />
                   </div>
@@ -289,7 +289,7 @@ function NewPlanModal({ clients, onClose, onCreated }: {
           )}
         </div>
 
-        <div className="flex items-center justify-between p-6 border-t border-white/5">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-t border-white/5 gap-2 flex-wrap">
           <button onClick={step > 1 ? () => setStep(s => s - 1) : onClose} className="btn-ghost">
             {step > 1 ? t('admin:plan.newPlanModal.previous') : t('common:common.cancel')}
           </button>
@@ -340,7 +340,7 @@ function EditPlanModal({ plan, onClose, onSaved }: {
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-4 sm:p-6 mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
         onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editPlan')}</h3>
@@ -349,7 +349,7 @@ function EditPlanModal({ plan, onClose, onSaved }: {
         <div className="space-y-3">
           <input type="text" placeholder={t('admin:plan.editPlanModal.titlePlaceholder')} value={title} onChange={e => setTitle(e.target.value)} className="input-dark text-sm" />
           <textarea placeholder={t('admin:plan.editPlanModal.objectivePlaceholder')} value={objective} onChange={e => setObjective(e.target.value)} rows={3} className="input-dark text-sm resize-none" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input-dark text-sm" />
             <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="input-dark text-sm" />
           </div>
@@ -388,7 +388,7 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-4 sm:p-6 mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
         onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.addMilestoneModal.title')}</h3>
@@ -397,7 +397,7 @@ function AddMilestoneModal({ planId, onClose, onAdded }: {
         <div className="space-y-3">
           <input type="text" placeholder={t('admin:plan.addMilestoneModal.titlePlaceholder')} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
           <input type="text" placeholder={t('admin:plan.addMilestoneModal.descPlaceholder')} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
             <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
               {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
@@ -443,7 +443,7 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-md"
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-4 sm:p-6 mx-4 w-full max-w-md max-h-[90vh] overflow-y-auto thin-scrollbar"
         onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editMilestoneModal.title')}</h3>
@@ -452,7 +452,7 @@ function EditMilestoneModal({ planId, milestone, onClose, onSaved }: {
         <div className="space-y-3">
           <input type="text" placeholder={t('admin:plan.addMilestoneModal.titlePlaceholder')} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
           <input type="text" placeholder={t('admin:plan.addMilestoneModal.descPlaceholder')} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} className="input-dark text-sm" />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} className="input-dark text-sm" />
             <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as typeof form.category }))} className="input-dark text-sm">
               {categories.map(c => <option key={c} value={c} className="bg-ink-800">{categoryLabels[c]}</option>)}
@@ -497,7 +497,7 @@ function EditKpiModal({ planId, kpi, onClose, onSaved, onDeleted }: {
       className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-6 w-full max-w-sm"
+        exit={{ opacity: 0, scale: 0.95, y: 20 }} className="glass-card p-4 sm:p-6 mx-4 w-full max-w-sm"
         onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-white text-lg">{t('admin:plan.editKpiModal.title')}</h3>
@@ -617,14 +617,14 @@ export default function PlanMarketing() {
   const admin = isAdmin()
 
   return (
-    <div className="space-y-6">
-      <div className="page-header">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-8">
         <div>
-          <h2 className="section-title">{t('admin:plan.title')}</h2>
-          <p className="text-ink-300 text-sm mt-1">{t('admin:plan.subtitle', { count: plans.length })}</p>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>{t('admin:plan.title')}</h2>
+          <p className="text-ink-300 text-sm sm:text-base mt-1">{t('admin:plan.subtitle', { count: plans.length })}</p>
         </div>
         {admin && (
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowNewPlan(true)} className="btn-primary">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowNewPlan(true)} className="btn-primary justify-center w-full sm:w-auto">
             <Plus size={16} /> {t('admin:plan.newPlan')}
           </motion.button>
         )}
@@ -664,11 +664,11 @@ export default function PlanMarketing() {
       )}
 
       {!loading && plan && client ? (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Timeline */}
           <div className="xl:col-span-2 space-y-4">
             {/* Plan Header */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 relative overflow-hidden">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4 sm:p-6 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: client.color + '10' }} />
               <div className="relative">
                 <div className="flex items-start gap-4 mb-4">
@@ -718,8 +718,8 @@ export default function PlanMarketing() {
             </div>
 
             {/* Timeline */}
-            <div className="glass-card p-6">
-              <div className="flex items-center justify-between mb-6">
+            <div className="glass-card p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 flex-wrap">
                 <h4 className="font-semibold text-white flex items-center gap-2">
                   <Zap size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.timelineTitle')}
                 </h4>
@@ -749,7 +749,7 @@ export default function PlanMarketing() {
           {/* KPIs + sidebar */}
           <div className="space-y-5">
             {(plan.kpis?.length > 0 || admin) && (
-              <div className="glass-card p-5">
+              <div className="glass-card p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-semibold text-white flex items-center gap-2">
                     <Target size={16} style={{ color: 'var(--accent-light)' }} /> KPIs
@@ -801,7 +801,7 @@ export default function PlanMarketing() {
             )}
 
             {/* Category breakdown */}
-            <div className="glass-card p-5">
+            <div className="glass-card p-4 sm:p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <TrendingUp size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.byCategory')}
               </h4>
@@ -830,7 +830,7 @@ export default function PlanMarketing() {
             </div>
 
             {/* Proximos hitos */}
-            <div className="glass-card p-5">
+            <div className="glass-card p-4 sm:p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:plan.upcomingMilestones')}
               </h4>
@@ -850,7 +850,7 @@ export default function PlanMarketing() {
           </div>
         </div>
       ) : !loading && (
-        <div className="glass-card p-12 flex flex-col items-center justify-center text-center">
+        <div className="glass-card p-6 sm:p-12 flex flex-col items-center justify-center text-center">
           <Target size={40} className="mb-4 opacity-50" style={{ color: 'rgb(var(--accent))' }} />
           <p className="text-lg font-semibold text-white mb-2">{t('admin:plan.noPlan')}</p>
           <p className="text-sm text-ink-300 mb-5">{t('admin:plan.noPlanDesc')}</p>

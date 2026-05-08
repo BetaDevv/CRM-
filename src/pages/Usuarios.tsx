@@ -14,6 +14,7 @@ import type { User, ApiKey } from '../lib/api'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useTranslation } from 'react-i18next'
+import ResponsiveTable, { type ColumnDef } from '../components/responsive/ResponsiveTable'
 
 interface ClientOption {
   id: string
@@ -314,23 +315,23 @@ export default function Usuarios() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 space-y-6 max-w-7xl mx-auto"
+      className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto"
     >
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
-          <h1 className="text-2xl font-bold text-white">{t('admin:users.title')}</h1>
-          <p className="text-sm text-ink-300 mt-1">{t('admin:users.subtitle')}</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{t('admin:users.title')}</h1>
+          <p className="text-sm sm:text-base text-ink-300 mt-1">{t('admin:users.subtitle')}</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <UserPlus size={16} />
           {t('admin:users.newUser')}
@@ -342,10 +343,10 @@ export default function Usuarios() {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
         {stats.map(s => (
-          <motion.div key={s.label} variants={item} className="glass-card p-4">
+          <motion.div key={s.label} variants={item} className="glass-card p-3 sm:p-4">
             <div className="flex items-center justify-between mb-2">
               <s.icon size={18} className={s.color} />
             </div>
@@ -565,129 +566,142 @@ export default function Usuarios() {
         transition={{ delay: 0.3 }}
         className="space-y-4"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-amber-500/10">
               <Globe size={20} className="text-amber-400" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">{t('admin:users.apiKeys.title')}</h2>
-              <p className="text-xs text-ink-300">{t('admin:users.apiKeys.subtitle')}</p>
+              <h2 className="text-lg sm:text-xl font-bold text-white">{t('admin:users.apiKeys.title')}</h2>
+              <p className="text-xs sm:text-sm text-ink-300">{t('admin:users.apiKeys.subtitle')}</p>
             </div>
           </div>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => { setShowApiKeyModal(true); setCreatedKey(null) }}
-            className="btn-primary flex items-center gap-2 text-sm"
+            className="btn-primary flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
           >
             <Zap size={14} />
             {t('admin:users.apiKeys.generate')}
           </motion.button>
         </div>
 
-        <motion.div className="glass-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/5">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.name')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.key')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.role')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.client')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.scopes')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.status')}</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.lastUsed')}</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-ink-300 uppercase tracking-wider">{t('admin:users.apiKeys.table.actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {apiKeys.map((ak, i) => (
-                    <motion.tr
-                      key={ak.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="border-b border-white/5 hover:bg-white/[0.02] transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div>
-                          <span className="font-medium text-white">{ak.name}</span>
-                          {ak.user_name && (
-                            <p className="text-xs text-ink-400 mt-0.5">{ak.user_name}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <code className="text-xs font-mono text-ink-300 bg-ink-800/50 px-2 py-1 rounded">
-                          {maskKey(ak.key)}
-                        </code>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
-                          ak.role === 'admin'
-                            ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
-                            : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
-                        }`}>
-                          {ak.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}
-                          {ak.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-ink-300 text-xs">{ak.client_name || '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-ink-300 bg-ink-800/50 px-2 py-0.5 rounded">
-                          {ak.scopes}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
-                          ak.is_active
-                            ? 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30'
-                            : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${ak.is_active ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                          {ak.is_active ? t('admin:users.apiKeys.status.active') : t('admin:users.apiKeys.status.inactive')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-ink-400 text-xs">
+        <motion.div className="glass-card overflow-hidden p-3 sm:p-0">
+          {apiKeys.length > 0 ? (
+            <ResponsiveTable<ApiKey>
+              data={apiKeys}
+              rowKey={(ak) => ak.id}
+              columns={(() => {
+                const cols: ColumnDef<ApiKey>[] = [
+                  {
+                    key: 'name',
+                    header: t('admin:users.apiKeys.table.name'),
+                    cell: (ak) => (
+                      <div>
+                        <span className="font-medium text-white">{ak.name}</span>
+                        {ak.user_name && (
+                          <p className="text-xs text-ink-400 mt-0.5">{ak.user_name}</p>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'key',
+                    header: t('admin:users.apiKeys.table.key'),
+                    cell: (ak) => (
+                      <code className="text-xs font-mono text-ink-300 bg-ink-800/50 px-2 py-1 rounded break-all">
+                        {maskKey(ak.key)}
+                      </code>
+                    ),
+                  },
+                  {
+                    key: 'role',
+                    header: t('admin:users.apiKeys.table.role'),
+                    cell: (ak) => (
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        ak.role === 'admin'
+                          ? 'ring-1 ring-[rgb(var(--accent)_/_0.3)] bg-[rgb(var(--accent)_/_0.2)] text-[var(--accent-light)]'
+                          : 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/30'
+                      }`}>
+                        {ak.role === 'admin' ? <Shield size={12} /> : <UserCheck size={12} />}
+                        {ak.role === 'admin' ? t('admin:users.role.admin') : t('admin:users.role.client')}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'client',
+                    header: t('admin:users.apiKeys.table.client'),
+                    cell: (ak) => <span className="text-ink-300 text-xs">{ak.client_name || '—'}</span>,
+                  },
+                  {
+                    key: 'scopes',
+                    header: t('admin:users.apiKeys.table.scopes'),
+                    cell: (ak) => (
+                      <span className="text-xs text-ink-300 bg-ink-800/50 px-2 py-0.5 rounded">
+                        {ak.scopes}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'status',
+                    header: t('admin:users.apiKeys.table.status'),
+                    cell: (ak) => (
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        ak.is_active
+                          ? 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30'
+                          : 'bg-red-500/15 text-red-400 ring-1 ring-red-500/30'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${ak.is_active ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                        {ak.is_active ? t('admin:users.apiKeys.status.active') : t('admin:users.apiKeys.status.inactive')}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'lastUsed',
+                    header: t('admin:users.apiKeys.table.lastUsed'),
+                    cell: (ak) => (
+                      <span className="text-ink-400 text-xs">
                         {ak.last_used_at ? relativeTime(ak.last_used_at, t('admin:users.never')) : t('admin:users.never')}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleToggleApiKey(ak)}
-                            title={ak.is_active ? t('admin:users.deactivate') : t('admin:users.activate')}
-                            className={`p-1.5 rounded-lg transition-colors ${
-                              ak.is_active
-                                ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
-                                : 'text-ink-400 hover:text-emerald-400 hover:bg-emerald-500/10'
-                            }`}
-                          >
-                            <Power size={15} />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleDeleteApiKey(ak)}
-                            title={t('common:common.delete')}
-                            className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                          >
-                            <Trash2 size={15} />
-                          </motion.button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-          </div>
-
-          {apiKeys.length === 0 && (
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: t('admin:users.apiKeys.table.actions'),
+                    className: 'text-right',
+                    cell: (ak) => (
+                      <div className="flex items-center justify-end gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleToggleApiKey(ak)}
+                          title={ak.is_active ? t('admin:users.deactivate') : t('admin:users.activate')}
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            ak.is_active
+                              ? 'text-ink-400 hover:text-amber-400 hover:bg-amber-500/10'
+                              : 'text-ink-400 hover:text-emerald-400 hover:bg-emerald-500/10'
+                          }`}
+                        >
+                          <Power size={15} />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDeleteApiKey(ak)}
+                          title={t('common:common.delete')}
+                          className="p-1.5 rounded-lg text-ink-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={15} />
+                        </motion.button>
+                      </div>
+                    ),
+                  },
+                ]
+                return cols
+              })()}
+            />
+          ) : (
             <div className="text-center py-12 text-ink-400">
               <Key size={40} className="mx-auto mb-3 opacity-40" />
               <p>{t('admin:users.apiKeys.noKeys')}</p>
@@ -712,7 +726,7 @@ export default function Usuarios() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onMouseDown={e => e.stopPropagation()}
-              className="glass-card w-full max-w-md p-6 space-y-5"
+              className="glass-card mx-4 w-full max-w-md p-4 sm:p-6 space-y-5 max-h-[90vh] overflow-y-auto thin-scrollbar"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -877,7 +891,7 @@ export default function Usuarios() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onMouseDown={e => e.stopPropagation()}
-              className="glass-card w-full max-w-md p-6 space-y-5"
+              className="glass-card mx-4 w-full max-w-md p-4 sm:p-6 space-y-5 max-h-[90vh] overflow-y-auto thin-scrollbar"
             >
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white">{t('admin:users.newUser')}</h3>
@@ -1002,7 +1016,7 @@ export default function Usuarios() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onMouseDown={e => e.stopPropagation()}
-              className="glass-card w-full max-w-sm p-6 space-y-4"
+              className="glass-card mx-4 w-full max-w-sm p-4 sm:p-6 space-y-4"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
@@ -1062,7 +1076,7 @@ export default function Usuarios() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onMouseDown={e => e.stopPropagation()}
-              className="glass-card w-full max-w-sm p-6 space-y-4"
+              className="glass-card mx-4 w-full max-w-sm p-4 sm:p-6 space-y-4"
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-red-500/10 text-red-400">

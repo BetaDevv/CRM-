@@ -141,19 +141,19 @@ export default function Documentos() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 space-y-6 min-h-screen"
+      className="p-4 sm:p-6 space-y-4 sm:space-y-6 min-h-screen"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl" style={{ background: 'rgb(var(--accent) / 0.2)' }}>
             <FolderOpen size={24} style={{ color: 'var(--accent-light)' }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
               {t('admin:documents.title')}
             </h1>
-            <p className="text-sm" style={{ color: 'rgb(var(--ink-400))' }}>
+            <p className="text-sm sm:text-base" style={{ color: 'rgb(var(--ink-400))' }}>
               {t('admin:documents.subtitle')}
             </p>
           </div>
@@ -163,7 +163,7 @@ export default function Documentos() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors" style={{ background: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
+          className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors w-full sm:w-auto" style={{ background: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
         >
           <Upload size={16} />
           {t('admin:documents.uploadFiles')}
@@ -190,8 +190,8 @@ export default function Documentos() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[180px] sm:max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
           <input
             type="text"
@@ -216,7 +216,7 @@ export default function Documentos() {
           </select>
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {categoryValues.map(catVal => (
             <button
               key={catVal}
@@ -367,11 +367,11 @@ export default function Documentos() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-ink-900 border border-ink-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-ink-900 border border-ink-700 rounded-2xl mx-4 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
               onMouseDown={e => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-white/5">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/5 gap-2 flex-wrap">
                 <div className="flex items-center gap-3 min-w-0">
                   <FileText size={18} style={{ color: 'var(--accent-light)' }} />
                   <p className="text-sm font-medium text-white truncate">{previewDoc.originalName}</p>
@@ -457,7 +457,7 @@ export default function Documentos() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="glass-card rounded-2xl p-6 w-full max-w-sm space-y-4"
+              className="glass-card rounded-2xl p-4 sm:p-6 mx-4 w-full max-w-sm space-y-4"
               onClick={e => e.stopPropagation()}
             >
               <h3 className="text-lg font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
@@ -565,12 +565,12 @@ function UploadModal({
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="glass-card rounded-2xl p-6 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto"
+        className="glass-card rounded-2xl p-4 sm:p-6 mx-4 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto"
         onMouseDown={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
+          <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
             {t('admin:documents.uploadModal.title')}
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
@@ -585,7 +585,7 @@ function UploadModal({
           onDrop={handleDrop}
           onClick={() => fileRef.current?.click()}
           className={`
-            border-2 border-dashed rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer
+            border-2 border-dashed rounded-xl p-6 sm:p-8 flex flex-col items-center gap-3 cursor-pointer
             transition-all duration-200
             ${dragOver
               ? 'border-[rgb(var(--accent))] bg-[rgb(var(--accent)_/_0.1)]'
@@ -655,7 +655,7 @@ function UploadModal({
         )}
 
         {/* Options */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium mb-1 block" style={{ color: 'rgb(var(--ink-300))' }}>
               {t('admin:documents.uploadModal.clientOptional')}

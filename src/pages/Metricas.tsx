@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Linkedin, ExternalLink, Loader2, AlertCircle,
   RefreshCw, Unlink, BarChart3, Play, FileDown,
-  Upload, X, CheckCircle2, Globe, Eye, EyeOff, Plug,
+  Upload, X, CheckCircle2, Globe, Eye, EyeOff, Plug, ChevronDown,
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { useAuthStore } from '../store/useAuthStore'
@@ -123,6 +123,18 @@ export default function Metricas() {
   const [plausibleConnect, setPlausibleConnect] = useState(false)
   const [plausibleConn, setPlausibleConn] = useState<PlausibleConnectionStatus | null>(null)
   const [resyncing, setResyncing] = useState(false)
+  const [actionsOpen, setActionsOpen] = useState(false)
+
+  // Cerrar dropdown al click fuera
+  useEffect(() => {
+    if (!actionsOpen) return
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-actions-menu]')) setActionsOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [actionsOpen])
 
   const activeClients = clients.filter(c => c.status === 'active')
   const selectedClient = clients.find(c => c.id === selectedClientId)
@@ -199,15 +211,20 @@ export default function Metricas() {
   const platformData = data?.platforms?.[activePlatform]
   const platformLabel = (p: PlatformDef) => p.labelKey ? t(`admin:${p.labelKey}`) : p.label
 
+  const canExport = !!(selectedClientId && data)
+  const canImportLinkedIn = isAdmin() && activePlatform === 'linkedin' && !!selectedClientId
+  const canConnectPlausible = isAdmin() && activePlatform === 'web' && !!selectedClientId && !plausibleConn?.connected
+  const hasActions = canExport || canImportLinkedIn || canConnectPlausible || isAdmin()
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h2 className="section-title">{t('admin:metrics.title')}</h2>
-          <p className="text-ink-300 text-sm mt-1">{t('admin:metrics.subtitle')}</p>
+      <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{t('admin:metrics.title')}</h2>
+          <p className="text-ink-300 text-sm">{t('admin:metrics.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           {/* Days filter */}
           <div className="flex gap-1 bg-ink-800/60 rounded-xl p-1 border border-white/5">
             {[7, 30, 90].map(d => (
@@ -218,60 +235,84 @@ export default function Metricas() {
               </button>
             ))}
           </div>
-          {selectedClientId && data && (
-            <button onClick={handleExport} disabled={exporting}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all disabled:opacity-50" style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
-              <FileDown size={13} className={exporting ? 'animate-bounce' : ''} />
-              {exporting ? t('admin:metrics.exporting') : t('admin:metrics.exportPDF')}
-            </button>
-          )}
-          {isAdmin() && activePlatform === 'linkedin' && selectedClientId && (
-            <>
-              <button onClick={() => setImportKind('content')}
+          {/* Acciones dropdown */}
+          {hasActions && (
+            <div className="relative" data-actions-menu>
+              <button onClick={() => setActionsOpen(o => !o)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
                 style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
-                <Upload size={13} />
-                {t('admin:metrics.import.buttonContent')}
+                <FileDown size={13} />
+                {t('admin:metrics.actionsMenu')}
+                <ChevronDown size={12} className={`transition-transform ${actionsOpen ? 'rotate-180' : ''}`} />
               </button>
-              <button onClick={() => setImportKind('visitors')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
-                style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
-                <Upload size={13} />
-                {t('admin:metrics.import.buttonVisitors')}
-              </button>
-              <button onClick={() => setImportKind('followers')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
-                style={{ background: 'rgb(var(--accent) / 0.2)', borderColor: 'rgb(var(--accent) / 0.3)', color: 'var(--accent-light)' }}>
-                <Upload size={13} />
-                {t('admin:metrics.import.buttonFollowers')}
-              </button>
-            </>
-          )}
-          {/* LEGACY ZIP import retired in favor of API connection. Component kept for one-time historical backfills. */}
-          {/*
-          {isAdmin() && activePlatform === 'web' && selectedClientId && (
-            <button onClick={() => setPlausibleOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
-              style={{ background: WEB_COLOR + '20', borderColor: WEB_COLOR + '50', color: WEB_COLOR }}>
-              <Upload size={13} />
-              {t('admin:metrics.import.buttonPlausible')}
-            </button>
-          )}
-          */}
-          {isAdmin() && activePlatform === 'web' && selectedClientId && !plausibleConn?.connected && (
-            <button onClick={() => setPlausibleConnect(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border hover:text-white transition-all"
-              style={{ background: WEB_COLOR + '20', borderColor: WEB_COLOR + '50', color: WEB_COLOR }}>
-              <Plug size={13} />
-              {t('admin:metrics.web.connect.title')}
-            </button>
-          )}
-          {isAdmin() && (
-            <button onClick={handleSync} disabled={syncing}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-ink-800/60 border border-white/10 text-ink-300 hover:text-white transition-all disabled:opacity-50">
-              <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
-              {syncing ? t('admin:metrics.syncing') : t('admin:metrics.syncNow')}
-            </button>
+              <AnimatePresence>
+                {actionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-60 glass-card border border-white/10 rounded-xl p-1.5 z-30 shadow-xl"
+                  >
+                    {canExport && (
+                      <button
+                        onClick={() => { setActionsOpen(false); handleExport() }}
+                        disabled={exporting}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-ink-200 hover:bg-ink-800 hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        <FileDown size={13} className={exporting ? 'animate-bounce' : ''} />
+                        {exporting ? t('admin:metrics.exporting') : t('admin:metrics.exportPDF')}
+                      </button>
+                    )}
+                    {canImportLinkedIn && (
+                      <>
+                        <button
+                          onClick={() => { setActionsOpen(false); setImportKind('content') }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-ink-200 hover:bg-ink-800 hover:text-white transition-colors"
+                        >
+                          <Upload size={13} />
+                          {t('admin:metrics.import.buttonContent')}
+                        </button>
+                        <button
+                          onClick={() => { setActionsOpen(false); setImportKind('visitors') }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-ink-200 hover:bg-ink-800 hover:text-white transition-colors"
+                        >
+                          <Upload size={13} />
+                          {t('admin:metrics.import.buttonVisitors')}
+                        </button>
+                        <button
+                          onClick={() => { setActionsOpen(false); setImportKind('followers') }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-ink-200 hover:bg-ink-800 hover:text-white transition-colors"
+                        >
+                          <Upload size={13} />
+                          {t('admin:metrics.import.buttonFollowers')}
+                        </button>
+                      </>
+                    )}
+                    {canConnectPlausible && (
+                      <button
+                        onClick={() => { setActionsOpen(false); setPlausibleConnect(true) }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium hover:bg-ink-800 transition-colors"
+                        style={{ color: WEB_COLOR }}
+                      >
+                        <Plug size={13} />
+                        {t('admin:metrics.web.connect.title')}
+                      </button>
+                    )}
+                    {isAdmin() && (
+                      <button
+                        onClick={() => { setActionsOpen(false); handleSync() }}
+                        disabled={syncing}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-ink-200 hover:bg-ink-800 hover:text-white transition-colors disabled:opacity-50 border-t border-white/5 mt-1 pt-2.5"
+                      >
+                        <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
+                        {syncing ? t('admin:metrics.syncing') : t('admin:metrics.syncNow')}
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
       </div>

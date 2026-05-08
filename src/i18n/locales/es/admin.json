@@ -328,6 +328,7 @@
   "metrics.exportPDF": "Exportar PDF",
   "metrics.exporting": "Exportando...",
   "metrics.syncNow": "Sync ahora",
+  "metrics.actionsMenu": "Acciones",
   "metrics.syncing": "Sincronizando...",
   "metrics.import.button": "Importar XLSX",
   "metrics.import.buttonContent": "XLSX Contenido",

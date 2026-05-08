@@ -313,7 +313,7 @@ export default function Metricas() {
       )}
 
       {!loading && !data && (
-        <div className="glass-card p-12 flex flex-col items-center text-center">
+        <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
           <AlertCircle size={40} className="text-ink-500 mb-3 opacity-40" />
           <p className="text-ink-300">{t('admin:metrics.selectClient')}</p>
         </div>
@@ -436,7 +436,7 @@ export default function Metricas() {
                     </div>
                   </div>
                 ) : (
-                  <div className="glass-card p-12 flex flex-col items-center text-center">
+                  <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
                     <Globe size={40} className="text-ink-500 mb-3 opacity-40" />
                     <p className="text-ink-300 mb-1">{t('admin:metrics.web.emptyClient')}</p>
                   </div>
@@ -450,7 +450,7 @@ export default function Metricas() {
                     icon={PLATFORMS.find(p => p.key === activePlatform)?.icon || <ExternalLink size={18} />}
                   />
                 ) : (
-                  <div className="glass-card p-12 flex flex-col items-center text-center">
+                  <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
                     <AlertCircle size={36} className="text-ink-500 mb-3 opacity-30" />
                     <p className="text-ink-300 mb-1">{t('admin:metrics.noDataFor', { platform: platformLabel(PLATFORMS.find(p => p.key === activePlatform) as PlatformDef) })}</p>
                     <p className="text-ink-500 text-sm">{t('admin:metrics.teamWillConfigure')}</p>

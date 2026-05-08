@@ -111,7 +111,7 @@ export default function ClientPlan() {
           </div>
         </>
       ) : (
-        <div className="glass-card p-12 flex flex-col items-center text-center">
+        <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
           <TrendingUp size={40} className="text-ink-500 mb-3 opacity-30" />
           <p className="text-ink-300">{t('client:plan.emptyTitle')}</p>
           <p className="text-ink-500 text-sm">{t('client:plan.emptySubtitle')}</p>

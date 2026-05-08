@@ -51,7 +51,7 @@ export default function ClientMetricas() {
 
   if (!metrics) return (
     <div className="space-y-5">
-      <div className="glass-card p-12 flex flex-col items-center text-center">
+      <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
         <BarChart2 size={40} className="text-ink-500 mb-3 opacity-30" />
         <p className="text-ink-300 mb-1">{t('client:metrics.noMetrics')}</p>
         <p className="text-ink-500 text-sm">{t('client:metrics.noMetricsSubtitle')}</p>
@@ -110,13 +110,13 @@ export default function ClientMetricas() {
               {activePlatform === 'web'      && <WebPanel      data={platformData} days={days} />}
             </>
           ) : activePlatform === 'web' ? (
-            <div className="glass-card p-12 flex flex-col items-center text-center">
+            <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
               <Globe size={40} className="text-ink-500 mb-3 opacity-40" />
               <p className="text-ink-300 mb-1">{t('admin:metrics.web.emptyClient')}</p>
               <p className="text-ink-500 text-sm">{t('admin:metrics.teamWillConfigure')}</p>
             </div>
           ) : (
-            <div className="glass-card p-12 flex flex-col items-center text-center">
+            <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
               <AlertCircle size={36} className="text-ink-500 mb-3 opacity-30" />
               <p className="text-ink-300 mb-1">{t('admin:metrics.noDataFor', { platform: platformLabel(PLATFORMS.find(p => p.key === activePlatform) as PlatformDef) })}</p>
               <p className="text-ink-500 text-sm">{t('admin:metrics.teamWillConfigure')}</p>

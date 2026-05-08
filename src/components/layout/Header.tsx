@@ -430,7 +430,7 @@ export default function Header() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.95 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="absolute right-0 top-12 w-96 glass-card z-50 overflow-hidden"
+                className="absolute right-0 top-12 w-[calc(100vw-2rem)] sm:w-96 max-w-[24rem] glass-card z-50 overflow-hidden"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b"

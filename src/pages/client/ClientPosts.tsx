@@ -42,7 +42,7 @@ export default function ClientPosts() {
   return (
     <div className="space-y-4">
       {posts.length === 0 ? (
-        <div className="glass-card p-12 flex flex-col items-center text-center">
+        <div className="glass-card p-6 sm:p-12 flex flex-col items-center text-center">
           <ThumbsUp size={40} className="text-ink-500 mb-3 opacity-30" />
           <p className="text-ink-300">{t('client:posts.emptyState')}</p>
         </div>

@@ -40,7 +40,7 @@ const clientNav = [
 
 export default function Sidebar() {
   const { t } = useTranslation('common')
-  const { sidebarCollapsed, toggleSidebar } = useStore()
+  const { sidebarCollapsed, toggleSidebar, sidebarMobileOpen, setSidebarMobileOpen } = useStore()
   const { user, logout } = useAuthStore()
   const { theme } = useThemeStore()
   const location = useLocation()
@@ -76,15 +76,37 @@ export default function Sidebar() {
   }
 
   return (
-    <motion.aside
-      animate={{ width: sidebarCollapsed ? 72 : 240 }}
-      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="relative flex flex-col h-full overflow-hidden flex-shrink-0"
-      style={{
-        backgroundColor: 'rgb(var(--ink-900))',
-        borderRight: '1px solid rgb(var(--ink-600) / 0.4)',
-      }}
-    >
+    <>
+      {/* Mobile backdrop — visible only when drawer is open and on <lg */}
+      <AnimatePresence>
+        {sidebarMobileOpen && (
+          <motion.div
+            key="sidebar-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setSidebarMobileOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.aside
+        animate={{ width: sidebarCollapsed ? 72 : 240 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+        className={`
+          fixed inset-y-0 left-0 z-50 max-lg:!w-72
+          transform transition-transform duration-300
+          lg:relative lg:translate-x-0 lg:z-auto
+          ${sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          flex flex-col h-full overflow-hidden flex-shrink-0
+        `}
+        style={{
+          backgroundColor: 'rgb(var(--ink-900))',
+          borderRight: '1px solid rgb(var(--ink-600) / 0.4)',
+        }}
+      >
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b to-transparent" style={{ '--tw-gradient-from': 'rgb(var(--accent) / 0.05)' } as React.CSSProperties} />
@@ -163,7 +185,7 @@ export default function Sidebar() {
             : location.pathname.startsWith(item.path)
 
           return (
-            <NavLink key={item.path} to={item.path}>
+            <NavLink key={item.path} to={item.path} onClick={() => setSidebarMobileOpen(false)}>
               <motion.div
                 whileHover={{ x: sidebarCollapsed ? 0 : 3 }}
                 whileTap={{ scale: 0.97 }}
@@ -290,6 +312,7 @@ export default function Sidebar() {
           </AnimatePresence>
         </motion.button>
       </div>
-    </motion.aside>
+      </motion.aside>
+    </>
   )
 }

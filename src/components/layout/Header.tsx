@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, ThumbsUp, ThumbsDown, Target, Clock, Camera, Calendar, Loader2 } from 'lucide-react'
+import { Search, Bell, X, Sun, Moon, Check, CheckCheck, FileText, UserPlus, ThumbsUp, ThumbsDown, Target, Clock, Camera, Calendar, Loader2, Menu } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '../../store/useThemeStore'
@@ -8,6 +8,7 @@ import { getNotifications, getUnreadCount, markNotificationRead, markAllNotifica
 import type { Notification } from '../../lib/api'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useAccentStore } from '../../store/useAccentStore'
+import { useStore } from '../../store/useStore'
 
 const pageKeyMap: Record<string, string> = {
   '/':             'dashboard',
@@ -108,6 +109,7 @@ export default function Header() {
   const { t, i18n } = useTranslation('common')
   const { user, updateUser } = useAuthStore()
   const { accentColor, userAccent, setAccent } = useAccentStore()
+  const toggleSidebarMobile = useStore(s => s.toggleSidebarMobile)
 
   // Apply a new per-user accent and sync the store with the resolved values from the server.
   async function applyUserAccent(color: string | null) {
@@ -274,62 +276,75 @@ export default function Header() {
   }
 
   return (
-    <header className="flex items-center justify-between px-8 py-5 border-b sticky top-0 z-30 backdrop-blur-sm"
+    <header className="flex items-center justify-between gap-3 px-4 md:px-6 lg:px-8 py-5 border-b sticky top-0 z-30 backdrop-blur-sm"
       style={{ borderBottomColor: 'rgb(var(--ink-600) / 0.4)', backgroundColor: 'rgb(var(--ink-900) / 0.85)' }}>
-      {/* Page Info */}
-      <motion.div
-        key={pageKey}
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-xl font-bold tracking-tight" style={{ color: 'rgb(var(--ink-100))' }}>{pageTitle}</h1>
-        <p className="text-sm" style={{ color: 'rgb(var(--ink-300))' }}>{pageSubtitle}</p>
-      </motion.div>
+      {/* Hamburger + Page Info (left side) */}
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={() => toggleSidebarMobile()}
+          className="lg:hidden p-2 rounded-lg hover:bg-ink-800 transition-colors flex-shrink-0"
+          style={{ color: 'rgb(var(--ink-100))' }}
+          aria-label="Open menu"
+        >
+          <Menu size={22} />
+        </button>
+        <motion.div
+          key={pageKey}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="min-w-0"
+        >
+          <h1 className="text-xl font-bold tracking-tight truncate" style={{ color: 'rgb(var(--ink-100))' }}>{pageTitle}</h1>
+          <p className="text-sm truncate" style={{ color: 'rgb(var(--ink-300))' }}>{pageSubtitle}</p>
+        </motion.div>
+      </div>
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        {/* Search */}
-        <AnimatePresence mode="wait">
-          {showSearch ? (
-            <motion.div
-              key="search-open"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 260, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="flex items-center gap-2 border rounded-xl px-4 py-2 overflow-hidden"
-              style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-500) / 0.4)' }}
-            >
-              <Search size={15} style={{ color: 'rgb(var(--ink-300))' }} className="flex-shrink-0" />
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder={t('header.search')}
-                className="bg-transparent text-sm outline-none flex-1 min-w-0 placeholder-ink-300"
-                style={{ color: 'rgb(var(--ink-100))' }}
-              />
-              <button onClick={() => { setShowSearch(false); setSearchQuery('') }}>
-                <X size={14} style={{ color: 'rgb(var(--ink-300))' }} className="hover:text-white" />
-              </button>
-            </motion.div>
-          ) : (
-            <motion.button
-              key="search-closed"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowSearch(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-xl border transition-all"
-              style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-500) / 0.4)', color: 'rgb(var(--ink-300))' }}
-            >
-              <Search size={16} />
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* Search — hidden on mobile (<md), visible from md upwards */}
+        <div className="hidden md:flex">
+          <AnimatePresence mode="wait">
+            {showSearch ? (
+              <motion.div
+                key="search-open"
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 260, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-2 border rounded-xl px-4 py-2 overflow-hidden"
+                style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-500) / 0.4)' }}
+              >
+                <Search size={15} style={{ color: 'rgb(var(--ink-300))' }} className="flex-shrink-0" />
+                <input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder={t('header.search')}
+                  className="bg-transparent text-sm outline-none flex-1 min-w-0 placeholder-ink-300"
+                  style={{ color: 'rgb(var(--ink-100))' }}
+                />
+                <button onClick={() => { setShowSearch(false); setSearchQuery('') }}>
+                  <X size={14} style={{ color: 'rgb(var(--ink-300))' }} className="hover:text-white" />
+                </button>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="search-closed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowSearch(true)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl border transition-all"
+                style={{ backgroundColor: 'rgb(var(--ink-800))', borderColor: 'rgb(var(--ink-500) / 0.4)', color: 'rgb(var(--ink-300))' }}
+              >
+                <Search size={16} />
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Language Switcher */}
         <div className="relative" ref={langRef}>

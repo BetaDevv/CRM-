@@ -11,6 +11,7 @@ interface CRMState {
   posts: Post[]
   marketingPlans: MarketingPlan[]
   sidebarCollapsed: boolean
+  sidebarMobileOpen: boolean
 
   // Hydrate from API
   fetchClients: () => Promise<void>
@@ -48,6 +49,8 @@ interface CRMState {
 
   // UI
   toggleSidebar: () => void
+  setSidebarMobileOpen: (open: boolean) => void
+  toggleSidebarMobile: () => void
 }
 
 
@@ -252,6 +255,7 @@ export const useStore = create<CRMState>()(
       posts: samplePosts,
       marketingPlans: [samplePlan],
       sidebarCollapsed: false,
+      sidebarMobileOpen: false,
 
       fetchClients: async () => {
         try {
@@ -288,12 +292,14 @@ export const useStore = create<CRMState>()(
       updatePlan: (id, data) => set((s) => ({ marketingPlans: s.marketingPlans.map(p => p.id === id ? { ...p, ...data } : p) })),
 
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      setSidebarMobileOpen: (open) => set({ sidebarMobileOpen: open }),
+      toggleSidebarMobile: () => set((s) => ({ sidebarMobileOpen: !s.sidebarMobileOpen })),
     }),
     {
       name: 'tbs-crm-store',
       partialize: (state) => {
-        // Don't persist clients — always fetched fresh from API
-        const { clients, ...rest } = state
+        // Don't persist clients (always fetched fresh) nor ephemeral mobile drawer state
+        const { clients, sidebarMobileOpen, ...rest } = state
         return rest
       },
     }

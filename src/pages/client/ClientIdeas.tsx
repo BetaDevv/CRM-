@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Lightbulb, Sparkles, Zap, Wrench, CheckCircle, Rocket, Loader2, Share2, Users, MessageSquare, Pencil, AlertTriangle, Send } from 'lucide-react'
-import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
@@ -12,7 +12,6 @@ import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, del
 import type { ItemNote } from '../../lib/api'
 import { ideaStatusConfig, localToday, getLocale } from '../../lib/utils'
 import type { Idea, IdeaStatus } from '../../types'
-import ResponsiveKanbanBoard from '../../components/responsive/ResponsiveKanbanBoard'
 
 const commonTags = ['LinkedIn', 'Instagram', 'Video', 'Diseno', 'SEO', 'Email', 'Contenido', 'Estrategia', 'Branding', 'Campana']
 
@@ -165,7 +164,8 @@ export default function ClientIdeas() {
   ]
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   )
 
   const resetForm = () => {
@@ -367,12 +367,12 @@ export default function ClientIdeas() {
 
       {/* Kanban with DnD */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <ResponsiveKanbanBoard columnCount={4}>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {statusColumns.map(col => {
             const cfg = ideaStatusConfig[col.key]
             const items = ideas.filter(i => i.status === col.key)
             return (
-              <div key={col.key} className="space-y-3 min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
+              <div key={col.key} className="space-y-3">
                 <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                   <span style={{ color: cfg.color }}>{col.icon}</span>
                   <span className="text-sm font-semibold" style={{ color: cfg.color }}>{col.label}</span>
@@ -394,7 +394,7 @@ export default function ClientIdeas() {
               </div>
             )
           })}
-        </ResponsiveKanbanBoard>
+        </div>
 
         <DragOverlay>
           {activeDragIdea ? (

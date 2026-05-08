@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X, Check, Trash2, Calendar, Loader2, Share2, Users, MessageSquare, Pencil, Clock, Wrench, CheckCircle2, AlertTriangle, Paperclip, FileText, Download, Eye, Send } from 'lucide-react'
-import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, useDroppable, useDraggable, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useTranslation } from 'react-i18next'
 import T from '../../components/TranslatedText'
@@ -11,7 +11,6 @@ import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, upd
 import type { ItemNote, TodoAttachment, CalendarUser } from '../../lib/api'
 import { priorityConfig, localToday, getLocale } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
-import ResponsiveKanbanBoard from '../../components/responsive/ResponsiveKanbanBoard'
 
 const categoryKeys: Record<string, string> = {
   'Contenido': 'categories.content',
@@ -178,7 +177,8 @@ export default function ClientTodos() {
   })
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   )
 
   const weekOf = localToday()
@@ -440,9 +440,9 @@ export default function ClientTodos() {
 
       {/* Tasks - 3 columns with DnD */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <ResponsiveKanbanBoard columnCount={3}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Pendientes */}
-          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <Clock size={16} className="text-amber-400" />
               <h3 className="font-semibold text-amber-400">{t('client:todos.pending')}</h3>
@@ -469,7 +469,7 @@ export default function ClientTodos() {
           </div>
 
           {/* Desarrollando */}
-          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <Wrench size={16} className="text-blue-400" />
               <h3 className="font-semibold text-blue-400">{t('client:todos.developing')}</h3>
@@ -496,7 +496,7 @@ export default function ClientTodos() {
           </div>
 
           {/* Completadas */}
-          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
+          <div>
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle2 size={16} className="text-emerald-400" />
               <h3 className="font-semibold text-emerald-400">{t('client:todos.completedLabel')}</h3>
@@ -516,7 +516,7 @@ export default function ClientTodos() {
               </div>
             </DroppableColumn>
           </div>
-        </ResponsiveKanbanBoard>
+        </div>
 
         <DragOverlay>
           {activeDragTodo ? (

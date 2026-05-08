@@ -216,7 +216,7 @@ function ClientModal({
       onMouseDown={onClose}>
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="glass-card p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
         onMouseDown={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'rgb(var(--ink-100))' }}>
@@ -527,7 +527,7 @@ export default function Clientes() {
 
       {/* MRR Bar */}
       {totalMRR > 0 && (
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium" style={{ color: 'rgb(var(--ink-200))' }}>{t('admin:clients.mrrDistribution')}</p>
             <p className="text-sm font-bold" style={{ color: 'rgb(var(--ink-100))' }}>{formatCurrency(totalMRR)}</p>
@@ -560,7 +560,7 @@ export default function Clientes() {
 
       {/* Grid */}
       {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
           <AnimatePresence>
             {clients.map(c => (
               <ClientCard key={c.id} client={c} onSelect={(c) => { setDrawerTab('info'); setSelected(c) }} onEdit={setEditClient} onDelete={handleDelete} />
@@ -577,10 +577,10 @@ export default function Clientes() {
             onClick={() => setSelected(null)}>
             <motion.div initial={{ x: 400 }} animate={{ x: 0 }} exit={{ x: 400 }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="w-full max-w-md h-full overflow-y-auto"
+              className="w-full sm:max-w-md h-full overflow-y-auto"
               style={{ backgroundColor: 'rgb(var(--ink-900))', borderLeft: '1px solid rgb(var(--ink-600) / 0.4)' }}
               onClick={e => e.stopPropagation()}>
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-bold text-xl" style={{ color: 'rgb(var(--ink-100))' }}><T text={selected.company} /></h3>
                   <div className="flex items-center gap-2">

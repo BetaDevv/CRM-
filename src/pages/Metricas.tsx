@@ -79,8 +79,8 @@ function ConnectCTA({ platform, clientId, color, icon }: { platform: string; cli
   }
 
   return (
-    <div className="glass-card p-6 border border-white/5">
-      <div className="flex items-start gap-4">
+    <div className="glass-card p-4 sm:p-6 border border-white/5">
+      <div className="flex items-start gap-3 sm:gap-4">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white text-xl font-black"
           style={{ background: color }}>
           {icon}
@@ -207,7 +207,7 @@ export default function Metricas() {
           <h2 className="section-title">{t('admin:metrics.title')}</h2>
           <p className="text-ink-300 text-sm mt-1">{t('admin:metrics.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Days filter */}
           <div className="flex gap-1 bg-ink-800/60 rounded-xl p-1 border border-white/5">
             {[7, 30, 90].map(d => (
@@ -416,8 +416,8 @@ export default function Metricas() {
                 </>
               ) : activePlatform === 'web' ? (
                 isAdmin() ? (
-                  <div className="glass-card p-6 border border-white/5">
-                    <div className="flex items-start gap-4">
+                  <div className="glass-card p-4 sm:p-6 border border-white/5">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white"
                         style={{ background: WEB_COLOR }}>
                         <Globe size={20} />
@@ -594,7 +594,7 @@ function ImportLinkedInModal({ client, kind, onClose, onSuccess }: {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         onMouseDown={e => e.stopPropagation()}
-        className="glass-card p-6 w-full max-w-lg border border-white/10"
+        className="glass-card p-4 sm:p-6 w-full max-w-lg border border-white/10 mx-4"
       >
         <div className="flex items-start justify-between mb-5">
           <div>
@@ -800,7 +800,7 @@ function ImportPlausibleModal({ client, onClose, onSuccess }: {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         onMouseDown={e => e.stopPropagation()}
-        className="glass-card p-6 w-full max-w-lg border border-white/10"
+        className="glass-card p-4 sm:p-6 w-full max-w-lg border border-white/10 mx-4"
       >
         <div className="flex items-start justify-between mb-5">
           <div>
@@ -984,7 +984,7 @@ function ConnectPlausibleModal({ client, onClose, onSuccess }: {
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         onMouseDown={e => e.stopPropagation()}
-        className="glass-card p-6 w-full max-w-lg border border-white/10"
+        className="glass-card p-4 sm:p-6 w-full max-w-lg border border-white/10 mx-4"
       >
         <div className="flex items-start justify-between mb-5">
           <div>

@@ -14,6 +14,7 @@ import type { Idea, IdeaStatus } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
 import CreatorBadge from '../components/CreatorBadge'
+import ResponsiveKanbanBoard from '../components/responsive/ResponsiveKanbanBoard'
 
 const statusColumnKeys: { key: IdeaStatus; labelKey: string; icon: ReactNode }[] = [
   { key: 'brainstorm',  labelKey: 'ideas.columns.brainstorm',    icon: <Zap size={18} /> },
@@ -369,7 +370,7 @@ export default function Ideas() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statusColumns.map(s => {
           const cfg = ideaStatusConfig[s.key]
           const count = ideas.filter(i => i.status === s.key).length
@@ -385,12 +386,12 @@ export default function Ideas() {
 
       {/* Kanban */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <ResponsiveKanbanBoard columnCount={4}>
           {statusColumns.map(col => {
             const cfg = ideaStatusConfig[col.key]
             const items = ideas.filter(i => i.status === col.key)
             return (
-              <div key={col.key} className="space-y-3">
+              <div key={col.key} className="space-y-3 min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
                 <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                   <span style={{ color: cfg.color }}>{col.icon}</span>
                   <span className="text-sm font-semibold" style={{ color: cfg.color }}>{col.label}</span>
@@ -412,7 +413,7 @@ export default function Ideas() {
               </div>
             )
           })}
-        </div>
+        </ResponsiveKanbanBoard>
         <DragOverlay>
           {activeIdea ? (
             <div className="opacity-90 pointer-events-none">
@@ -430,11 +431,11 @@ export default function Ideas() {
             onMouseDown={() => setDetailIdea(null)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-0 w-full max-w-4xl max-h-[85vh] overflow-hidden flex"
+              className="glass-card p-0 w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col lg:flex-row mx-4"
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Left: Idea info */}
-              <div className="flex-1 p-6 overflow-y-auto thin-scrollbar">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto thin-scrollbar">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {detailIdea.emoji && <span className="text-2xl">{detailIdea.emoji}</span>}
@@ -479,7 +480,7 @@ export default function Ideas() {
               </div>
 
               {/* Right: Comments */}
-              <div className="w-[380px] border-l border-white/5 flex flex-col bg-ink-900/50">
+              <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col bg-ink-900/50">
                 <div className="p-4 border-b border-white/5">
                   <p className="text-sm font-medium text-white flex items-center gap-2">
                     <MessageSquare size={14} /> {t('common:notes.comments')} ({detailNotes.length})
@@ -564,7 +565,7 @@ export default function Ideas() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-md"
+              className="glass-card p-4 sm:p-6 w-full max-w-md mx-4"
               onMouseDown={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-5">

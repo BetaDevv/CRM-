@@ -104,7 +104,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h4 className="font-semibold text-white">{t('admin:metrics.followerGrowth')}</h4>
@@ -131,7 +131,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailyImpressions')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -147,7 +147,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h4 className="font-semibold text-white">{t('admin:metrics.engagementRate')}</h4>
@@ -167,7 +167,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
         </div>
 
         {data.demographics?.seniority?.length > 0 && (
-          <div className="glass-card p-5">
+          <div className="glass-card p-4 sm:p-5">
             <h4 className="font-semibold text-white mb-5">{t('admin:metrics.audienceSeniority')}</h4>
             <ResponsiveContainer width="100%" height={140}>
               <PieChart>
@@ -189,7 +189,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
         )}
 
         {data.demographics?.industry?.length > 0 && (
-          <div className="glass-card p-5">
+          <div className="glass-card p-4 sm:p-5">
             <h4 className="font-semibold text-white mb-4">{t('admin:metrics.followerIndustry')}</h4>
             <div className="space-y-2.5">
               {data.demographics.industry.map((item: any, i: number) => (
@@ -210,7 +210,7 @@ export function LinkedInPanel({ data, days }: { data: any; days: number }) {
       </div>
 
       {data.topPosts?.length > 0 && (
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-5">
             <TrendingUp size={16} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.topPosts')}
           </h4>
@@ -263,7 +263,7 @@ export function MetaPanel({ data, days }: { data: any; days: number }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.igGrowth')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.followersLastDays', { days })}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -283,7 +283,7 @@ export function MetaPanel({ data, days }: { data: any; days: number }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailyReach')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -335,7 +335,7 @@ export function GA4Panel({ data, days }: { data: any; days: number }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.dailySessions')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -355,7 +355,7 @@ export function GA4Panel({ data, days }: { data: any; days: number }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.pageViewsChart')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastTwoWeeks')}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -436,7 +436,7 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
 
       {/* Middle row: visitors area + pageviews bars */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.web.visitorsOverTime')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastDays', { days })}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -456,7 +456,7 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white mb-2">{t('admin:metrics.web.pageviewsOverTime')}</h4>
           <p className="text-xs text-ink-400 mb-5">{t('admin:metrics.lastDays', { days })}</p>
           <ResponsiveContainer width="100%" height={180}>
@@ -473,7 +473,7 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
 
       {/* Bottom row: top pages + channels donut + devices donut */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
             <FileText size={14} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.web.topPages')}
           </h4>
@@ -500,7 +500,7 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
           </div>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
             <Network size={14} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.web.channels')}
           </h4>
@@ -523,7 +523,7 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
           </div>
         </div>
 
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
             <Monitor size={14} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.web.devices')}
           </h4>
@@ -549,11 +549,11 @@ export function WebPanel({ data, days }: { data: any; days: number }) {
 
       {/* Footer row: top countries */}
       {countries.length > 0 && (
-        <div className="glass-card p-5">
+        <div className="glass-card p-4 sm:p-5">
           <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
             <MapPin size={14} style={{ color: 'var(--accent-light)' }} /> {t('admin:metrics.web.topCountries')}
           </h4>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {countries.slice(0, 10).map((c: any, i: number) => (
               <motion.div
                 key={i}

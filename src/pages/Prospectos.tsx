@@ -6,6 +6,7 @@ import { api, convertProspect } from '../lib/api'
 import type { Prospect, ProspectStatus } from '../types'
 import { useTranslation } from 'react-i18next'
 import T from '../components/TranslatedText'
+import ResponsiveKanbanBoard from '../components/responsive/ResponsiveKanbanBoard'
 
 const columns: { key: ProspectStatus; tKey: string }[] = [
   { key: 'new',         tKey: 'prospects.columns.new' },
@@ -198,7 +199,7 @@ function ProspectModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ duration: 0.2 }}
-        className="glass-card p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
+        className="glass-card p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto mx-4"
         onMouseDown={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -447,12 +448,12 @@ export default function Prospectos() {
 
       {/* Kanban View */}
       {!loading && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <ResponsiveKanbanBoard columnCount={6}>
           {columns.map(col => {
             const cfg = prospectStatusConfig[col.key]
             const items = byColumn(col.key)
             return (
-              <div key={col.key} className="space-y-3">
+              <div key={col.key} className="space-y-3 min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ background: cfg.color }} />
@@ -477,7 +478,7 @@ export default function Prospectos() {
               </div>
             )
           })}
-        </div>
+        </ResponsiveKanbanBoard>
       )}
 
       <AnimatePresence>

@@ -113,10 +113,10 @@ export default function Dashboard() {
   }
 
   return (
-    <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-8">
+    <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-4 sm:space-y-6 lg:space-y-8">
 
       {/* Hero Banner */}
-      <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl bg-ink-800 border border-white/5 p-8">
+      <motion.div variants={fadeUp} className="relative overflow-hidden rounded-3xl bg-ink-800 border border-white/5 p-4 sm:p-6 lg:p-8">
         <div className="absolute inset-0 bg-hero-gradient pointer-events-none" />
         <div className="absolute -right-10 -top-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }} />
         <div className="relative">
@@ -124,10 +124,10 @@ export default function Dashboard() {
             <Zap size={14} style={{ color: 'var(--accent-light)' }} fill="currentColor" />
             <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--accent-light)' }}>NextGenCRM</span>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
             {t('dashboard.greeting').split('<1>')[0]}<span className="text-gradient-crimson">{t('dashboard.greeting').split('<1>')[1]?.split('</1>')[0]}</span> 👋
           </h2>
-          <p className="text-ink-200 max-w-xl">
+          <p className="text-base sm:text-lg text-ink-200 max-w-xl">
             {t('dashboard.pendingPostsMessage', { pendingPosts, pendingTasks: todos.filter(tt => !tt.done).length }).replace(/<\/?[0-9]+>/g, '')}
           </p>
           <div className="mt-5 flex items-center gap-6">
@@ -136,7 +136,7 @@ export default function Dashboard() {
                 <span className="text-xs text-ink-300">{t('dashboard.weeklyProgress')}</span>
                 <span className="text-xs font-semibold text-white">{progress}%</span>
               </div>
-              <div className="w-48 h-1.5 bg-ink-600 rounded-full overflow-hidden">
+              <div className="w-full max-w-[12rem] h-1.5 bg-ink-600 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -150,7 +150,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Metrics */}
-      <motion.div variants={stagger} className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <motion.div variants={stagger} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {metrics.map((m) => (
           <motion.div key={m.label} variants={fadeUp} whileHover={{ y: -2 }} className="metric-card">
             <div className="flex items-start justify-between">
@@ -168,10 +168,10 @@ export default function Dashboard() {
         ))}
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
 
         {/* Client List */}
-        <motion.div variants={fadeUp} className="lg:col-span-2 glass-card p-6">
+        <motion.div variants={fadeUp} className="lg:col-span-2 glass-card p-4 sm:p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-semibold text-white">{t('dashboard.activeClientsTitle')}</h3>
             <Link to="/clientes" className="text-xs hover:opacity-80 flex items-center gap-1" style={{ color: 'var(--accent-light)' }}>
@@ -214,7 +214,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Activity Feed */}
-        <motion.div variants={fadeUp} className="glass-card p-6">
+        <motion.div variants={fadeUp} className="glass-card p-4 sm:p-6">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-semibold text-white">{t('dashboard.recentActivity')}</h3>
           </div>
@@ -258,14 +258,14 @@ export default function Dashboard() {
       </div>
 
       {/* Quick Links */}
-      <motion.div variants={stagger} className="grid grid-cols-3 gap-4">
+      <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { to: '/ideas', icon: Lightbulb, label: t('dashboard.ideas'), count: ideas.length, color: '#a78bfa' },
           { to: '/todo', icon: CheckSquare, label: t('dashboard.tasks'), count: todos.filter(tt => !tt.done).length, color: '#f59e0b' },
           { to: '/prospectos', icon: Users, label: t('dashboard.prospects'), count: prospects.length, color: '#60a5fa' },
         ].map(item => (
           <motion.div key={item.to} variants={fadeUp} whileHover={{ y: -3 }}>
-            <Link to={item.to} className="glass-card-hover p-5 flex items-center gap-4 block">
+            <Link to={item.to} className="glass-card-hover p-4 sm:p-5 flex items-center gap-4 block">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                 style={{ background: item.color + '15' }}>
                 <item.icon size={20} style={{ color: item.color }} />

@@ -34,14 +34,14 @@ export default function ClientPlan() {
       {plan ? (
         <>
           {/* Plan info */}
-          <div className="glass-card p-5">
-            <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="glass-card p-4 sm:p-5">
+            <div className="flex items-start justify-between gap-3 sm:gap-4 mb-4">
               <div>
-                <h3 className="font-bold text-white text-lg"><T text={plan.title} /></h3>
+                <h3 className="font-bold text-white text-base sm:text-lg"><T text={plan.title} /></h3>
                 <p className="text-xs text-ink-400 mt-0.5">{formatDate(plan.start_date)} → {formatDate(plan.end_date)}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-3xl font-black" style={{ color: 'var(--accent-hex)' }}>{planProgress}%</p>
+                <p className="text-2xl sm:text-3xl font-black" style={{ color: 'var(--accent-hex)' }}>{planProgress}%</p>
                 <p className="text-xs text-ink-400">{t('client:plan.completed')}</p>
               </div>
             </div>
@@ -53,9 +53,9 @@ export default function ClientPlan() {
 
           {/* KPIs */}
           {plan.kpis?.length > 0 && (
-            <div className="glass-card p-5">
+            <div className="glass-card p-4 sm:p-5">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2"><Target size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:plan.keyIndicators')}</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {plan.kpis.map((kpi: any, i: number) => {
                   const cur = parseFloat(kpi.current_value?.replace(/[^0-9.]/g, '') || '0')
                   const tgt = parseFloat(kpi.target?.replace(/[^0-9.]/g, '') || '100')
@@ -81,7 +81,7 @@ export default function ClientPlan() {
           )}
 
           {/* Timeline */}
-          <div className="glass-card p-5">
+          <div className="glass-card p-4 sm:p-5">
             <h4 className="font-semibold text-white mb-5 flex items-center gap-2"><Calendar size={16} style={{ color: 'var(--accent-light)' }} /> {t('client:plan.milestonesTimeline')}</h4>
             <div className="space-y-0">
               {plan.milestones?.map((m: any, i: number) => {

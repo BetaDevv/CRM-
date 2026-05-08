@@ -130,16 +130,16 @@ export default function ClientDocumentos() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="p-6 space-y-6 min-h-screen"
+      className="p-4 sm:p-6 space-y-4 sm:space-y-6 min-h-screen"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl" style={{ backgroundColor: 'rgb(var(--accent) / 0.2)' }}>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2.5 rounded-xl flex-shrink-0" style={{ backgroundColor: 'rgb(var(--accent) / 0.2)' }}>
             <FolderOpen size={24} style={{ color: 'var(--accent-light)' }} />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'rgb(var(--ink-100))' }}>
               {t('client:documents.title')}
             </h1>
             <p className="text-sm" style={{ color: 'rgb(var(--ink-400))' }}>
@@ -152,7 +152,7 @@ export default function ClientDocumentos() {
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors whitespace-nowrap"
           style={{ backgroundColor: 'rgb(var(--accent))', color: 'var(--accent-text)' }}
         >
           <Upload size={16} />
@@ -181,7 +181,7 @@ export default function ClientDocumentos() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" />
           <input
             type="text"
@@ -192,7 +192,7 @@ export default function ClientDocumentos() {
           />
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {categories.map(cat => (
             <button
               key={cat.value}

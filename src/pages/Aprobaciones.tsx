@@ -51,12 +51,12 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
       <div className="h-1 w-full" style={{ background: borderColor }} />
 
       {/* Header */}
-      <div className="p-5 border-b border-white/5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <div className="p-4 sm:p-5 border-b border-white/5">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
             <PlatformBadge platform={post.platform} />
-            <div>
-              <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
+            <div className="min-w-0">
+              <p className="font-semibold text-white text-sm break-words"><T text={post.title} /></p>
               <p className="text-xs text-ink-400 mt-0.5">
                 {platformConfig[post.platform]?.label || post.platform} · {formatDate(post.scheduled_date)}
               </p>
@@ -69,7 +69,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
       </div>
 
       {/* Content */}
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {/* Post type indicator */}
         <div className="flex items-center gap-2 mb-3">
           {post.type === 'design' ? <Image size={13} className="text-ink-400" /> : <FileText size={13} className="text-ink-400" />}
@@ -91,7 +91,7 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
                 <p className="text-xs text-[#9fa6ad]">{t('admin:approvals.scheduledPost', { date: formatDate(post.scheduled_date) })}</p>
               </div>
             </div>
-            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
+            <p className="text-sm text-[#e7e9ea] leading-relaxed whitespace-pre-wrap break-words"><T text={post.content} translatable /></p>
           </div>
         )}
 
@@ -105,13 +105,13 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
               </div>
               <p className="text-xs font-semibold text-white">{client?.company?.toLowerCase().replace(/ /g, '_')}</p>
             </div>
-            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
+            <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap break-words"><T text={post.content} translatable /></p>
           </div>
         )}
 
         {(post.platform === 'facebook' || post.platform === 'twitter') && (
           <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap"><T text={post.content} translatable /></p>
+            <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap break-words"><T text={post.content} translatable /></p>
           </div>
         )}
 
@@ -137,22 +137,22 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
         {post.feedback && (
           <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <p className="text-xs font-semibold text-amber-400 mb-1 flex items-center gap-1"><MessageSquare size={11} /> {t('admin:approvals.tbsFeedback')}</p>
-            <p className="text-sm text-amber-100"><T text={post.feedback} translatable /></p>
+            <p className="text-sm text-amber-100 break-words"><T text={post.feedback} translatable /></p>
           </div>
         )}
 
         {/* Actions for CLIENT */}
         {post.status === 'pending' && (
           <div className="space-y-2">
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => onStatusUpdate(post.id, 'approved')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 text-sm font-semibold hover:bg-green-500/20 transition-all">
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 text-sm font-semibold hover:bg-green-500/20 transition-all">
                 <ThumbsUp size={16} fill="currentColor" /> {t('admin:approvals.approve')}
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => setShowFeedback(v => !v)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
+                className="flex-1 min-w-[140px] flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all"
                 style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                 <RotateCcw size={14} /> {t('admin:approvals.requestChanges')}
               </motion.button>
@@ -160,10 +160,10 @@ function ClientPostCard({ post, client, onStatusUpdate }: { post: any; client?: 
             <AnimatePresence>
               {showFeedback && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="flex gap-2 pt-1">
-                    <input type="text" placeholder={t('admin:approvals.changeFeedback')} value={feedback} onChange={e => setFeedback(e.target.value)} className="input-dark text-sm flex-1" />
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <input type="text" placeholder={t('admin:approvals.changeFeedback')} value={feedback} onChange={e => setFeedback(e.target.value)} className="input-dark text-sm flex-1 min-w-[160px]" />
                     <button onClick={() => { onStatusUpdate(post.id, 'revision', feedback); setShowFeedback(false) }}
-                      className="px-4 py-2.5 rounded-xl transition-all"
+                      className="px-4 py-2.5 rounded-xl transition-all flex-shrink-0"
                       style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                       <Send size={15} />
                     </button>
@@ -217,16 +217,16 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       className="glass-card overflow-hidden"
     >
-      <div className="p-5 border-b border-white/5">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex items-center gap-3">
+      <div className="p-4 sm:p-5 border-b border-white/5">
+        <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
             <PlatformBadge platform={post.platform} size="sm" />
-            <div>
-              <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
-              <p className="text-xs text-ink-400">{client?.company} · {formatDate(post.scheduled_date)}</p>
+            <div className="min-w-0">
+              <p className="font-semibold text-white text-sm break-words"><T text={post.title} /></p>
+              <p className="text-xs text-ink-400 break-words">{client?.company} · {formatDate(post.scheduled_date)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={pillStyle}>{t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}</span>
             <button onClick={() => onEdit(post)} className="p-1.5 rounded-lg hover:bg-white/10 text-ink-500 hover:text-white transition-colors">
               <Pencil size={14} />
@@ -238,10 +238,10 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <div className="bg-ink-900/60 rounded-xl p-4 mb-4 border border-white/5">
-          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap line-clamp-4"><T text={post.content} translatable /></p>
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-ink-400">
+          <p className="text-sm text-ink-100 leading-relaxed whitespace-pre-wrap break-words line-clamp-4"><T text={post.content} translatable /></p>
+          <div className="flex items-center gap-3 sm:gap-4 mt-3 pt-3 border-t border-white/5 text-xs text-ink-400 flex-wrap">
             <span className="flex items-center gap-1 capitalize">{platformConfig[post.platform]?.label || post.platform}</span>
             <span className="flex items-center gap-1"><Calendar size={11} /> {formatDate(post.scheduled_date)}</span>
             {post.type === 'design' && <span className="flex items-center gap-1"><Image size={11} /> {t('admin:approvals.design')}</span>}
@@ -265,7 +265,7 @@ function AdminPostCard({ post, client, onStatusUpdate: _onStatusUpdate, onDelete
         {post.feedback && (
           <div className="mb-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-xs">
             <span className="text-amber-400 font-semibold">{t('admin:approvals.clientFeedback')}</span>
-            <span className="text-amber-200 ml-1.5"><T text={post.feedback} translatable /></span>
+            <span className="text-amber-200 ml-1.5 break-words"><T text={post.feedback} translatable /></span>
           </div>
         )}
 
@@ -522,15 +522,15 @@ export default function Aprobaciones() {
   const clientName = clients.find(c => c.id === user?.clientId)?.company || t('admin:approvals.yourCompany')
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header — different for admin vs client */}
       {isAdmin() ? (
-        <div className="page-header">
+        <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h2 className="section-title">{t('admin:approvals.title')}</h2>
+            <h2 className="section-title text-2xl sm:text-3xl lg:text-4xl">{t('admin:approvals.title')}</h2>
             <p className="text-ink-300 text-sm mt-1">{t('admin:approvals.pendingReview', { count: counts.pending })}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setShowTemplates(true)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-ink-800/60 border border-white/10 text-ink-200 hover:text-white hover:border-white/20 transition-all text-sm font-medium">
               <LayoutTemplate size={16} /> {t('admin:approvals.templates')}
@@ -541,12 +541,12 @@ export default function Aprobaciones() {
           </div>
         </div>
       ) : (
-        <div className="mb-8">
-          <div className="glass-card p-6 relative overflow-hidden mb-0">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="glass-card p-4 sm:p-6 relative overflow-hidden mb-0">
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none" style={{ background: 'rgb(var(--accent) / 0.05)' }} />
-            <h2 className="text-2xl font-bold text-white mb-1">{t('admin:approvals.contentApproval')}</h2>
-            <p className="text-ink-300"><Trans i18nKey="approvals.contentApprovalDesc" ns="admin" values={{ clientName }} components={{ 1: <strong className="text-white" /> }} /></p>
-            <div className="flex items-center gap-6 mt-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1">{t('admin:approvals.contentApproval')}</h2>
+            <p className="text-base sm:text-lg text-ink-300"><Trans i18nKey="approvals.contentApprovalDesc" ns="admin" values={{ clientName }} components={{ 1: <strong className="text-white" /> }} /></p>
+            <div className="flex items-center gap-4 sm:gap-6 mt-4 flex-wrap">
               {[
                 { label: t('admin:approvals.pending'), count: counts.pending, color: '#f59e0b' },
                 { label: t('admin:approvals.approved'), count: counts.approved, color: '#34d399' },
@@ -583,7 +583,7 @@ export default function Aprobaciones() {
       {loading ? (
         <div className="flex items-center justify-center py-16"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
           <AnimatePresence>
             {filtered.map(post => (
               isAdmin() ? (
@@ -594,7 +594,7 @@ export default function Aprobaciones() {
             ))}
           </AnimatePresence>
           {filtered.length === 0 && (
-            <div className="col-span-2 flex flex-col items-center justify-center py-16 text-ink-500">
+            <div className="col-span-1 lg:col-span-2 flex flex-col items-center justify-center py-16 text-ink-500">
               <ThumbsUp size={40} className="mb-3 opacity-20" />
               <p className="text-sm">{isAdmin() ? t('admin:approvals.noPostsAdmin') : t('admin:approvals.noPostsClient')}</p>
             </div>
@@ -613,7 +613,7 @@ export default function Aprobaciones() {
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Panel header */}
-              <div className="sticky top-0 bg-ink-900/95 backdrop-blur-sm z-10 p-5 border-b border-white/10">
+              <div className="sticky top-0 bg-ink-900/95 backdrop-blur-sm z-10 p-4 sm:p-5 border-b border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgb(var(--accent) / 0.2)' }}>
@@ -641,7 +641,7 @@ export default function Aprobaciones() {
               </div>
 
               {/* New template button */}
-              <div className="p-5 pb-0">
+              <div className="p-4 sm:p-5 pb-0">
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   onClick={() => { setEditingTemplate(null); setTemplateForm({ title: '', content: '', platform: 'linkedin', category: 'general', industry: '', tags: '', variables: '' }); setShowTemplateForm(true) }}
                   className="w-full py-3 rounded-xl border border-dashed border-white/20 text-sm text-ink-300 hover:text-white hover:border-[rgb(var(--accent)_/_0.4)] transition-all flex items-center justify-center gap-2">
@@ -650,7 +650,7 @@ export default function Aprobaciones() {
               </div>
 
               {/* Template cards */}
-              <div className="p-5 space-y-3">
+              <div className="p-4 sm:p-5 space-y-3">
                 {loadingTemplates ? (
                   <div className="flex items-center justify-center py-12"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent-light)' }} /></div>
                 ) : templates.length === 0 ? (
@@ -679,7 +679,7 @@ export default function Aprobaciones() {
 
                         {/* Content preview */}
                         <div className="bg-ink-900/60 rounded-lg p-3 mb-3 border border-white/5">
-                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap"><T text={tpl.content} translatable /></p>
+                          <p className="text-xs text-ink-200 leading-relaxed line-clamp-3 whitespace-pre-wrap break-words"><T text={tpl.content} translatable /></p>
                         </div>
 
                         {/* Variable pills */}
@@ -705,10 +705,10 @@ export default function Aprobaciones() {
                         )}
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                        <div className="flex items-center gap-2 pt-2 border-t border-white/5 flex-wrap">
                           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                             onClick={() => handleUseTemplate(tpl)}
-                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-semibold transition-all" style={{ background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.2)' }}>
+                            className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-semibold transition-all" style={{ background: 'rgb(var(--accent) / 0.15)', color: 'var(--accent-light)', borderColor: 'rgb(var(--accent) / 0.2)' }}>
                             <Copy size={13} /> {t('admin:approvals.templates.use')}
                           </motion.button>
                           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -739,7 +739,7 @@ export default function Aprobaciones() {
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
             onMouseDown={() => setShowTemplateForm(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="glass-card p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
               onMouseDown={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingTemplate ? t('admin:approvals.templates.editTemplate') : t('admin:approvals.templates.newTemplate')}</h3>
@@ -748,7 +748,7 @@ export default function Aprobaciones() {
               <div className="space-y-3">
                 <input type="text" placeholder={t('admin:approvals.templates.titlePlaceholder')} value={templateForm.title}
                   onChange={e => setTemplateForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <select value={templateForm.platform} onChange={e => setTemplateForm(p => ({ ...p, platform: e.target.value }))} className="input-dark text-sm">
                     <option value="linkedin" className="bg-ink-800">LinkedIn</option>
                     <option value="instagram" className="bg-ink-800">Instagram</option>
@@ -777,9 +777,9 @@ export default function Aprobaciones() {
                 <input type="text" placeholder={t('admin:approvals.templates.tagsPlaceholder')} value={templateForm.tags}
                   onChange={e => setTemplateForm(p => ({ ...p, tags: e.target.value }))} className="input-dark text-sm" />
               </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowTemplateForm(false)} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
-                <button onClick={handleSaveTemplate} disabled={savingTemplate} className="btn-primary flex-1 justify-center">
+              <div className="flex flex-wrap gap-3 mt-5">
+                <button onClick={() => setShowTemplateForm(false)} className="btn-ghost flex-1 min-w-[120px] justify-center">{t('common:common.cancel')}</button>
+                <button onClick={handleSaveTemplate} disabled={savingTemplate} className="btn-primary flex-1 min-w-[120px] justify-center">
                   {savingTemplate ? <><Loader2 size={15} className="animate-spin" /> {t('admin:approvals.templates.saving')}</> : <><CheckCircle size={15} /> {editingTemplate ? t('admin:approvals.templates.update') : t('admin:approvals.templates.create')}</>}
                 </button>
               </div>
@@ -795,7 +795,7 @@ export default function Aprobaciones() {
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
             onClick={() => setUseTemplateModal(null)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="glass-card p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -813,7 +813,7 @@ export default function Aprobaciones() {
 
               {/* Template preview */}
               <div className="bg-ink-900/60 rounded-xl p-4 mb-5 border border-white/5">
-                <p className="text-sm text-ink-200 leading-relaxed whitespace-pre-wrap">{
+                <p className="text-sm text-ink-200 leading-relaxed whitespace-pre-wrap break-words">{
                   (() => {
                     let preview = useTemplateModal.content
                     for (const [key, value] of Object.entries(templateVars)) {
@@ -841,11 +841,11 @@ export default function Aprobaciones() {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <button onClick={() => setUseTemplateModal(null)} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={() => setUseTemplateModal(null)} className="btn-ghost flex-1 min-w-[120px] justify-center">{t('common:common.cancel')}</button>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={handleApplyTemplate} disabled={applyingTemplate}
-                  className="btn-primary flex-1 justify-center">
+                  className="btn-primary flex-1 min-w-[120px] justify-center">
                   {applyingTemplate ? <><Loader2 size={15} className="animate-spin" /> {t('admin:approvals.templates.applying')}</> : <><Send size={15} /> {t('admin:approvals.templates.applyAndCreate')}</>}
                 </motion.button>
               </div>
@@ -861,7 +861,7 @@ export default function Aprobaciones() {
             className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onMouseDown={() => setShowModal(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              className="glass-card p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto mx-4"
               onMouseDown={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-white text-lg">{editingPost ? t('admin:approvals.editPost') : t('admin:approvals.newPostDesign')}</h3>
@@ -883,7 +883,7 @@ export default function Aprobaciones() {
                   {clients.map(c => <option key={c.id} value={c.id} className="bg-ink-800">{c.company}</option>)}
                 </select>
                 <input type="text" placeholder={t('admin:approvals.titlePlaceholder')} value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} className="input-dark text-sm" />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <select value={form.platform} onChange={e => setForm(p => ({ ...p, platform: e.target.value }))} className="input-dark text-sm">
                     <option value="linkedin" className="bg-ink-800">LinkedIn</option>
                     <option value="instagram" className="bg-ink-800">Instagram</option>
@@ -916,9 +916,9 @@ export default function Aprobaciones() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="btn-ghost flex-1 justify-center">{t('common:common.cancel')}</button>
-                <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1 justify-center">
+              <div className="flex flex-wrap gap-3 mt-5">
+                <button onClick={() => { setShowModal(false); setEditingPost(null) }} className="btn-ghost flex-1 min-w-[120px] justify-center">{t('common:common.cancel')}</button>
+                <button onClick={handleSubmit} disabled={submitting} className="btn-primary flex-1 min-w-[120px] justify-center">
                   {submitting
                     ? <><Loader2 size={15} className="animate-spin" /> {editingPost ? t('common:common.save') : t('admin:approvals.uploading')}</>
                     : editingPost
@@ -951,11 +951,11 @@ export default function Aprobaciones() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{t('admin:approvals.deleteTitle')}</h3>
                 <p className="text-ink-400 text-sm mb-6">{t('admin:approvals.deleteMessage')}</p>
-                <div className="flex gap-3">
-                  <button onClick={() => setConfirmDeletePost(null)} className="flex-1 px-4 py-2 bg-ink-700 text-ink-300 rounded-xl hover:bg-ink-600 transition-colors">
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => setConfirmDeletePost(null)} className="flex-1 min-w-[100px] px-4 py-2 bg-ink-700 text-ink-300 rounded-xl hover:bg-ink-600 transition-colors">
                     {t('common:common.cancel')}
                   </button>
-                  <button onClick={handleDeletePost} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors">
+                  <button onClick={handleDeletePost} className="flex-1 min-w-[100px] px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-500 transition-colors">
                     {t('common:common.delete')}
                   </button>
                 </div>

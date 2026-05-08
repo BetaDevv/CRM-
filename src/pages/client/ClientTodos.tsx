@@ -11,6 +11,7 @@ import { getTodos, createTodo as createTodoApi, deleteTodo as deleteTodoApi, upd
 import type { ItemNote, TodoAttachment, CalendarUser } from '../../lib/api'
 import { priorityConfig, localToday, getLocale } from '../../lib/utils'
 import type { Priority, TodoItem } from '../../types'
+import ResponsiveKanbanBoard from '../../components/responsive/ResponsiveKanbanBoard'
 
 const categoryKeys: Record<string, string> = {
   'Contenido': 'categories.content',
@@ -357,7 +358,7 @@ export default function ClientTodos() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="page-header">
         <div>
@@ -366,22 +367,22 @@ export default function ClientTodos() {
             {t('client:todos.completedCount', { done: todos.filter(t => t.status === 'done').length, total: todos.length })}
           </p>
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingTodo(null); setShowModal(true) }} className="btn-primary">
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingTodo(null); setShowModal(true) }} className="btn-primary whitespace-nowrap">
           <Plus size={16} /> {t('client:todos.newTask')}
         </motion.button>
       </div>
 
       {/* Progress */}
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
+      <div className="glass-card p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="min-w-0">
             <p className="font-semibold text-white">{t('client:todos.yourProgress')}</p>
             <p className="text-xs text-ink-300 mt-0.5">
               {new Date().toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-white">{progress}%</p>
+          <div className="text-right flex-shrink-0">
+            <p className="text-2xl sm:text-3xl font-bold text-white">{progress}%</p>
             <p className="text-xs text-ink-400">{t('client:todos.completed')}</p>
           </div>
         </div>
@@ -398,7 +399,7 @@ export default function ClientTodos() {
         </div>
 
         {/* Priority breakdown */}
-        <div className="grid grid-cols-4 gap-3 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
           {(['high', 'medium', 'low'] as Priority[]).map(p => {
             const cfg = priorityConfig[p]
             const count = todos.filter(td => td.priority === p && td.status !== 'done').length
@@ -439,9 +440,9 @@ export default function ClientTodos() {
 
       {/* Tasks - 3 columns with DnD */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ResponsiveKanbanBoard columnCount={3}>
           {/* Pendientes */}
-          <div>
+          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={16} className="text-amber-400" />
               <h3 className="font-semibold text-amber-400">{t('client:todos.pending')}</h3>
@@ -468,7 +469,7 @@ export default function ClientTodos() {
           </div>
 
           {/* Desarrollando */}
-          <div>
+          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <Wrench size={16} className="text-blue-400" />
               <h3 className="font-semibold text-blue-400">{t('client:todos.developing')}</h3>
@@ -495,7 +496,7 @@ export default function ClientTodos() {
           </div>
 
           {/* Completadas */}
-          <div>
+          <div className="min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
               <CheckCircle2 size={16} className="text-emerald-400" />
               <h3 className="font-semibold text-emerald-400">{t('client:todos.completedLabel')}</h3>
@@ -515,7 +516,7 @@ export default function ClientTodos() {
               </div>
             </DroppableColumn>
           </div>
-        </div>
+        </ResponsiveKanbanBoard>
 
         <DragOverlay>
           {activeDragTodo ? (
@@ -567,7 +568,7 @@ export default function ClientTodos() {
                   rows={3}
                   className="input-dark text-sm resize-none"
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-ink-300 mb-1.5">{t('client:todos.startDateTime')}</p>
                     <input
@@ -587,7 +588,7 @@ export default function ClientTodos() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <p className="text-xs text-ink-300 mb-1.5">{t('client:todos.priorityLabel')}</p>
                     <div className="flex flex-col gap-1.5">
@@ -703,12 +704,12 @@ export default function ClientTodos() {
             onMouseDown={() => { setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-6 w-full max-w-4xl max-h-[85vh] overflow-y-auto thin-scrollbar"
+              className="glass-card p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto thin-scrollbar"
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="font-bold text-lg text-white">{detailTodo.title}</h3>
+              <div className="flex items-center justify-between mb-5 gap-3">
+                <h3 className="font-bold text-base sm:text-lg text-white break-words min-w-0">{detailTodo.title}</h3>
                 <div className="flex items-center gap-2">
                   {isOwn(detailTodo) && (
                     <button onClick={() => { openEdit(detailTodo); setDetailTodo(null); setDetailNotes([]); setNewNoteContent(''); setEditingNoteId(null) }}
@@ -792,7 +793,7 @@ export default function ClientTodos() {
                 ) : (
                   <div className="space-y-2">
                     {detailAttachments.filter(a => a.mime_type.startsWith('image/')).length > 0 && (
-                      <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
                         {detailAttachments.filter(a => a.mime_type.startsWith('image/')).map(att => (
                           <div key={att.id} className="group/att relative rounded-xl overflow-hidden border border-white/5">
                             <img src={att.url} alt={att.original_name} className="w-full h-28 object-cover" />

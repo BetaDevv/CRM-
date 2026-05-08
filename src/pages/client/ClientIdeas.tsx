@@ -12,6 +12,7 @@ import { getIdeas, createIdea as createIdeaApi, updateIdea as updateIdeaApi, del
 import type { ItemNote } from '../../lib/api'
 import { ideaStatusConfig, localToday, getLocale } from '../../lib/utils'
 import type { Idea, IdeaStatus } from '../../types'
+import ResponsiveKanbanBoard from '../../components/responsive/ResponsiveKanbanBoard'
 
 const commonTags = ['LinkedIn', 'Instagram', 'Video', 'Diseno', 'SEO', 'Email', 'Contenido', 'Estrategia', 'Branding', 'Campana']
 
@@ -338,19 +339,19 @@ export default function ClientIdeas() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="page-header">
         <div>
           <h2 className="section-title">{t('client:ideas.title')}</h2>
           <p className="text-ink-300 text-sm mt-1">{t('client:ideas.subtitle', { count: ideas.length })}</p>
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingIdea(null); setShowModal(true) }} className="btn-primary">
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => { resetForm(); setEditingIdea(null); setShowModal(true) }} className="btn-primary whitespace-nowrap">
           <Sparkles size={16} /> {t('client:ideas.newIdea')}
         </motion.button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statusColumns.map(s => {
           const cfg = ideaStatusConfig[s.key]
           const count = ideas.filter(i => i.status === s.key).length
@@ -366,12 +367,12 @@ export default function ClientIdeas() {
 
       {/* Kanban with DnD */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        <ResponsiveKanbanBoard columnCount={4}>
           {statusColumns.map(col => {
             const cfg = ideaStatusConfig[col.key]
             const items = ideas.filter(i => i.status === col.key)
             return (
-              <div key={col.key} className="space-y-3">
+              <div key={col.key} className="space-y-3 min-w-[85vw] sm:min-w-[60vw] lg:min-w-0 snap-start flex-shrink-0">
                 <div className="flex items-center gap-2 pb-3 border-b border-white/5">
                   <span style={{ color: cfg.color }}>{col.icon}</span>
                   <span className="text-sm font-semibold" style={{ color: cfg.color }}>{col.label}</span>
@@ -393,7 +394,7 @@ export default function ClientIdeas() {
               </div>
             )
           })}
-        </div>
+        </ResponsiveKanbanBoard>
 
         <DragOverlay>
           {activeDragIdea ? (
@@ -419,11 +420,11 @@ export default function ClientIdeas() {
             onMouseDown={() => setDetailIdea(null)}>
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card p-0 w-full max-w-4xl max-h-[85vh] overflow-hidden flex"
+              className="glass-card p-0 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col lg:flex-row"
               onMouseDown={e => e.stopPropagation()}>
 
               {/* Left: Idea info */}
-              <div className="flex-1 p-6 overflow-y-auto thin-scrollbar">
+              <div className="flex-1 p-4 sm:p-6 overflow-y-auto thin-scrollbar">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {detailIdea.emoji && <span className="text-2xl">{detailIdea.emoji}</span>}
@@ -470,7 +471,7 @@ export default function ClientIdeas() {
               </div>
 
               {/* Right: Comments */}
-              <div className="w-[380px] border-l border-white/5 flex flex-col bg-ink-900/50">
+              <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col bg-ink-900/50 max-h-[50vh] lg:max-h-none">
                 <div className="p-4 border-b border-white/5">
                   <p className="text-sm font-medium text-white flex items-center gap-2">
                     <MessageSquare size={14} /> {t('common:notes.comments')} ({detailNotes.length})

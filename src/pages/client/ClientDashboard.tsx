@@ -70,9 +70,9 @@ export default function ClientDashboard() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Hero */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl bg-ink-800 border border-white/5 p-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden rounded-3xl bg-ink-800 border border-white/5 p-4 sm:p-6 lg:p-8">
         <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at top left, rgb(var(--accent) / 0.15) 0%, transparent 60%)` }} />
         <div className="absolute -right-10 -top-10 w-64 h-64 rounded-full blur-3xl pointer-events-none" style={{ backgroundColor: 'rgb(var(--accent) / 0.1)' }} />
         <div className="relative">
@@ -80,7 +80,7 @@ export default function ClientDashboard() {
             <Zap size={14} style={{ color: 'var(--accent-light)' }} fill="currentColor" />
             <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--accent-light)' }}>{client?.company || 'Portal'}</span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
             {t('client:dashboard.hello', { name: user?.name?.split(' ')[0] })} 👋
           </h1>
           <p className="text-ink-200 max-w-xl text-sm">
@@ -88,7 +88,7 @@ export default function ClientDashboard() {
           </p>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
             {[
               { label: t('client:dashboard.planProgress'), value: `${planProgress}%`, color: 'var(--accent-hex)', sub: t('client:dashboard.milestones', { completed: completedMilestones, total: totalMilestones }) },
               { label: t('client:dashboard.publications'), value: posts.length.toString(), color: '#7C3AED', sub: t('client:dashboard.pendingApproval', { count: pendingPosts.length }) },
@@ -105,7 +105,7 @@ export default function ClientDashboard() {
       </motion.div>
 
       {/* Recent Activity */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card p-4 sm:p-6">
         <h3 className="font-semibold text-white mb-5">{t('admin:dashboard.recentActivity')}</h3>
         <div className="space-y-4">
           {activity.length === 0 ? (

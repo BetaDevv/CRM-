@@ -57,20 +57,20 @@ export default function ClientPosts() {
         return (
           <motion.div key={post.id} layout className="glass-card overflow-hidden">
             <div className="h-1" style={{ background: borderColor }} />
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3">
+            <div className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: platformConfig[post.platform]?.color || '#6b7280' }}>{platformConfig[post.platform]?.short || '?'}</div>
-                  <div>
-                    <p className="font-semibold text-white text-sm"><T text={post.title} /></p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-white text-sm break-words"><T text={post.title} /></p>
                     <p className="text-xs text-ink-400">{post.platform} · {formatDate(post.scheduled_date)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                   {post.created_by_name && (
                     <CreatorBadge name={post.created_by_name} avatar={post.created_by_avatar} size="sm" variant="compact" />
                   )}
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={pillStyle}>{t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}</span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style={pillStyle}>{t(`common:postStatus.${post.status}`, { defaultValue: cfg.label })}</span>
                 </div>
               </div>
 
@@ -95,13 +95,13 @@ export default function ClientPosts() {
 
               {post.status === 'pending' && (
                 <div className="space-y-2">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => handleStatusUpdate(post.id, 'approved')}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 text-sm font-bold hover:bg-green-500/20 transition-all">
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-400 border border-green-500/20 text-sm font-bold hover:bg-green-500/20 transition-all whitespace-nowrap">
                       <ThumbsUp size={16} fill="currentColor" /> {t('client:posts.approve')}
                     </motion.button>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleFeedback(post.id)}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap"
                       style={{ background: 'rgb(var(--accent) / 0.12)', color: 'var(--accent-light)', border: '1px solid rgb(var(--accent) / 0.25)' }}>
                       <RotateCcw size={14} /> {t('client:posts.requestChanges')}
                     </motion.button>

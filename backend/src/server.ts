@@ -29,6 +29,7 @@ import documentRoutes from './routes/documents'
 import apiKeyRoutes    from './routes/apiKeys'
 import publicApiRoutes from './routes/publicApi'
 import translateRoutes from './routes/translate'
+import i18nRoutes from './routes/i18n'
 
 import { v4 as uuid } from 'uuid'
 
@@ -67,6 +68,7 @@ app.use('/api/calendar', calendarRoutes)
 app.use('/api/templates', templateRoutes)
 app.use('/api/documents', documentRoutes)
 app.use('/api/api-keys',  apiKeyRoutes)
+app.use('/api/i18n',      i18nRoutes)
 app.use('/api/v1',         publicApiRoutes)
 app.use('/api/translate',  translateRoutes)
 

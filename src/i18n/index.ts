@@ -26,8 +26,11 @@ i18n
       en: { common: commonEn, admin: adminEn, client: clientEn },
       de: { common: commonDe, admin: adminDe, client: clientDe },
     },
-    lng: 'es', // default language
-    fallbackLng: 'es',
+    // Neutral first-paint default. The actual language is resolved at boot
+    // in this order: localStorage > /api/i18n/detect (Accept-Language) > 'en'.
+    // See src/lib/detectLanguage.ts.
+    lng: 'en',
+    fallbackLng: 'en',
     defaultNS: 'common',
     interpolation: { escapeValue: false },
     react: { useSuspense: false },

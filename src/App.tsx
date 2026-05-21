@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/useAuthStore'
 import { useAccentStore } from './store/useAccentStore'
+import { bootstrapLanguage } from './lib/detectLanguage'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -58,6 +59,9 @@ function AppRoutes() {
 
   useEffect(() => {
     restoreSession()
+    // First-time visitors (no language cached locally and not logged in yet)
+    // get an Accept-Language-based default from the backend.
+    bootstrapLanguage()
   }, [])
 
   return (
